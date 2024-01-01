@@ -15,7 +15,7 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
 ![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/80cb98fa-c466-4dac-a100-aa1b1eddd724)
 
-**目前已支持的功能** **Features** **:**
+**功能** **Features** **:**
 
 1. 现阶段仅支持exr输出。可以选择将颜色和数据分开输出成两份文件，或者合并输出。分开输出时可以使用小体积的16位exr输出颜色aov（实用主义至上，颜色aov用32位没必要，当然你也可以选择用32位）
    
