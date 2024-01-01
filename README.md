@@ -7,7 +7,7 @@
 ![屏幕截图 2024-01-01 002028](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/ef18474b-957f-44e7-9403-d23930317e36)
 ![屏幕截图 2024-01-01 142309](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/203f13c8-905d-467f-91ac-a46270f21a9d)
 
-目前支持3.2 - 4.0 Supports blender 3.2 - 4.0 by now (2024.1.1)
+目前支持3.2 - 4.1 Supports blender 3.2 - 4.1 by now (2024.1.1)
 
 支持材质通道分层与灯光组分层，也支持混合分层。从设计之初就支持多视图层。本插件可以智能地帮你连接渲染aov与图层，智能地根据输出类型使用降噪节点，将三维数据层（position/normal）转换为nuke标准（fusion理论上也可以直接用）。
 
