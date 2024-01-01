@@ -17,7 +17,7 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
 **功能** **Features** **:**
 
-1. 现阶段仅支持exr输出。可以选择将颜色和数据分开输出成两份文件，或者合并输出。分开输出时可以使用小体积的16位exr输出颜色aov（实用主义至上，颜色aov用32位没必要，当然你也可以选择用32位）
+1. 现阶段仅支持exr输出。可以选择将颜色和数据分开输出成两份文件，或者合并输出。分开输出时可以使用小体积的16位exr输出颜色aov（实用主义至上，颜色aov没有用32位的必要，当然你也可以选择用32位）
    
    Now only support exr fileoutput. The ability to seperate color and data passes into 2 seperate files, or output to 1 single file. If seperated then it's able to use 16bit exr for color （better "Pragmatism" option, color aovs use 32 bit is a waste, but you can still choose 32 bit）
 
