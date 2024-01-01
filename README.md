@@ -1,7 +1,7 @@
 # Industrial-AOV-Connector / 工业化AOV输出器
 ### 简洁而强大的AOV输出工具，为专业合成而生。
 
-### Simple yet Powerful AOV Output Tool, born for professional compositing.
+### Simple And Powerful AOV Output Tool, born for professional compositing.
 ======================
 
 ![屏幕截图 2024-01-01 002028](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/ef18474b-957f-44e7-9403-d23930317e36)
