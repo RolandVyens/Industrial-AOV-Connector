@@ -9,7 +9,7 @@
 
 目前支持3.2 - 4.1 Supports blender 3.2 - 4.1 by now (2024.1.1)
 
-支持材质通道分层与灯光组分层，也支持混合分层。从设计之初就支持多视图层。本插件可以智能地帮你连接渲染aov与图层，智能地根据输出类型使用降噪节点，将三维数据层（position/normal）转换为nuke标准（fusion理论上也可以直接用）。
+支持材质通道分层与灯光组分层，也支持混合分层。从设计之初就支持多个视图层。本插件可以智能地帮你连接渲染aov与图层，智能地根据输出类型使用降噪节点，将三维数据层（position/normal）转换为nuke标准（fusion理论上也可以直接用）。
 
 Supports material based aovs and light group based aovs, also can do hybrid. Supports multiple Viewlayers from scratch. This plugin can make output nodes automatically for you, intelligently make denoise nodes based on the outputs' type, convert position/normal pass to nuke standard passes (fusion can also use in theory).
 
