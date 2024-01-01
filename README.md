@@ -40,7 +40,7 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 ![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/8ac3ee41-234b-4b69-918b-bd74fbfffa5f)
 ![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/05438c57-dffb-4e71-a7ba-de449aad2017)
 
-8. 自动排列在合成器中的生成的节点树
+8. 自动排列在合成器中生成的节点树
 
    Auto arrange nodes generated in compositor
 
