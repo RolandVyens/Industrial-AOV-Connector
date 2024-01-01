@@ -47,3 +47,5 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 9. 一键删除无用的blender默认渲染文件（可选开关）
 
    One click remove useless default render output files (Optional)
+
+Join Discord for discussion: https://discord.com/invite/qGyYXUNTnm
