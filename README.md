@@ -1,3 +1,5 @@
+![IAC](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/95a2f623-6158-438b-aaa7-34e6ac099c47)
+
 # Industrial-AOV-Connector / 工业化AOV输出器
 ### 简洁而强大的AOV输出工具，为专业合成而生。
 
