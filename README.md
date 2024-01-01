@@ -31,8 +31,7 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
    Can output to renderpath or each outputs' subfolder(based on blender render path)
 
-![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/ce355486-4b5c-4a20-af02-ca8e8b98a5c0)
-![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/a85d9720-2ddf-4bd5-9c49-6cf403b3e00b)
+![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/89ab46e7-2d0c-4269-9881-7be85dbcb0a2)
 
 6. 可以选择是否使用降噪节点
 
