@@ -21,8 +21,7 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
    
    Now only support exr fileoutput. The ability to seperate color and data passes into 2 seperate files, or output to 1 single file. If seperated then it's able to use 16bit exr for color （better "Pragmatism" option, color aovs use 32 bit is a waste, but you can still choose 32 bit）
 
-![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/a9119343-2201-4281-863d-ac62d0b912bf)
-![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/5c3a3f5b-a56c-4c14-b89e-5a5f3da183e0)
+![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/caf3b9f9-274f-4289-a4aa-5a0762e43315)
    
 3. 可以一次性创建所有视图层的输出节点，也可以只创建或更新当前视图层的节点
 
