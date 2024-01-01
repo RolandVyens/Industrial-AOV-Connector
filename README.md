@@ -23,28 +23,28 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
 ![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/caf3b9f9-274f-4289-a4aa-5a0762e43315)
    
-3. 可以一次性创建所有视图层的输出节点，也可以只创建或更新当前视图层的节点
+2. 可以一次性创建所有视图层的输出节点，也可以只创建或更新当前视图层的节点
 
    Can build nodetree for all viewlayers at once, or only buid or update current viewlayer's nodetree.
 
-4. 可以选择将输出的文件保存至渲染文件夹或是各个输出子文件夹内（基于原生渲染设置里的输出路径）
+3. 可以选择将输出的文件保存至渲染文件夹或是各个输出子文件夹内（基于原生渲染设置里的输出路径）
 
    Can output to renderpath or each outputs' subfolder(based on blender render path)
 
 ![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/89ab46e7-2d0c-4269-9881-7be85dbcb0a2)
 
-6. 可以选择是否使用降噪节点
+4. 可以选择是否使用降噪节点
 
    Can choose whether to use Denoise nodes
 
 ![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/8ac3ee41-234b-4b69-918b-bd74fbfffa5f)
 ![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/05438c57-dffb-4e71-a7ba-de449aad2017)
 
-8. 自动排列在合成器中生成的节点树
+5. 自动排列在合成器中生成的节点树
 
    Auto arrange nodes generated in compositor
 
-9. 一键删除无用的blender默认渲染文件（可选开关）
+6. 一键删除无用的blender默认渲染文件（可选开关）
 
    One click remove useless default render output files (Optional)
 
