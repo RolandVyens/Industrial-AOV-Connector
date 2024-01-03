@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (1, 0, 1),  # bump doc_url as well!
+    "version": (1, 0, 2),  # bump doc_url as well!
     "blender": (3, 2, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -747,7 +747,10 @@ def auto_connect():  # 主要功能函数之建立连接
                     scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                     scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
                 )
-            if viewlayer_full[f"{view_layer}Crypto"]:
+            if (
+                viewlayer_full[f"{view_layer}Crypto"]
+                or viewlayer_full[f"{view_layer}Data"]
+            ):
                 for node in viewlayer_full[f"{view_layer}Crypto"]:
                     scene.node_tree.links.new(
                         scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
@@ -847,7 +850,10 @@ def auto_connect():  # 主要功能函数之建立连接
                     scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                     scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
                 )
-            if viewlayer_full[f"{view_layer}Crypto"]:
+            if (
+                viewlayer_full[f"{view_layer}Crypto"]
+                or viewlayer_full[f"{view_layer}Data"]
+            ):
                 scene.node_tree.links.new(
                     scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
                     scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
@@ -1359,7 +1365,10 @@ def update_connect():  # 新建当前视图层的连接
                 scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
             )
         if viewlayer_full[f"{view_layer}Crypto"]:
-            for node in viewlayer_full[f"{view_layer}Crypto"]:
+            for node in (
+                viewlayer_full[f"{view_layer}Crypto"]
+                or viewlayer_full[f"{view_layer}Data"]
+            ):
                 scene.node_tree.links.new(
                     scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                     scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
@@ -1445,7 +1454,7 @@ def update_connect():  # 新建当前视图层的连接
                 scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                 scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
             )
-        if viewlayer_full[f"{view_layer}Crypto"]:
+        if viewlayer_full[f"{view_layer}Crypto"] or viewlayer_full[f"{view_layer}Data"]:
             scene.node_tree.links.new(
                 scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
                 scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
