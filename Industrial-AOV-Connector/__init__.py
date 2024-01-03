@@ -1364,11 +1364,8 @@ def update_connect():  # 新建当前视图层的连接
                 scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                 scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
             )
-        if viewlayer_full[f"{view_layer}Crypto"]:
-            for node in (
-                viewlayer_full[f"{view_layer}Crypto"]
-                or viewlayer_full[f"{view_layer}Data"]
-            ):
+        if viewlayer_full[f"{view_layer}Crypto"] or viewlayer_full[f"{view_layer}Data"]:
+            for node in viewlayer_full[f"{view_layer}Crypto"]:
                 scene.node_tree.links.new(
                     scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                     scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
