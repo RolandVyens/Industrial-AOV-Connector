@@ -1813,11 +1813,14 @@ class IDS_OutputPanel(bpy.types.Panel):
             box.label(text="↓↓↓Turn on Use Nodes in compositor.↓↓↓", icon="ERROR")
             box.operator(Compositor_OT_enable_use_nodes.bl_idname)
         if bpy.context.scene.render.engine == "CYCLES":
+            passes_denoised = True
             for viewlayer in bpy.context.scene.view_layers:
                 if viewlayer.cycles.denoising_store_passes is False:
-                    box = layout.box()
-                    box.label(text="↓↓↓Turn on Denoise Passes.↓↓↓", icon="ERROR")
-                    box.operator(IDS_Turn_Denoise.bl_idname)
+                    passes_denoised = False
+            if passes_denoised == False:
+                box = layout.box()
+                box.label(text="↓↓↓Turn on Denoise Passes.↓↓↓", icon="ERROR")
+                box.operator(IDS_Turn_Denoise.bl_idname)
         else:
             box = layout.box()
             box.label(text="Not using Cycles, no need to denoise")
