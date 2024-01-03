@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (1, 0, 0),  # bump doc_url as well!
+    "version": (1, 0, 1),  # bump doc_url as well!
     "blender": (3, 2, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
