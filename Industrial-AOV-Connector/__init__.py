@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (1, 0, 2),  # bump doc_url as well!
+    "version": (1, 0, 3),  # bump doc_url as well!
     "blender": (3, 2, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -103,6 +103,13 @@ bpy.types.Scene.IDS_UsedN = bpy.props.BoolProperty(  # 是否使用降噪
     name="Use Denoise Nodes",
     description="Add denoise to RGBA passes, Turn it off if you use other render engine than Cycles",
     default=True,
+)
+
+
+bpy.types.Scene.IDS_Autoarr = bpy.props.BoolProperty(  # 是否使用降噪
+    name="Auto Arrange Nodes at generating (experimental)",
+    description="Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
+    default=False,
 )
 
 
@@ -1705,7 +1712,8 @@ class IDS_Make_Tree(bpy.types.Operator):
 
     def execute(self, context):
         auto_connect()
-        bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+        if bpy.context.scene.IDS_Autoarr is True:
+            bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
         auto_arrange_viewlayer()
         auto_arr_denoisenode()
         auto_arr_outputnode()
@@ -1725,7 +1733,8 @@ class IDS_Update_Tree(bpy.types.Operator):
 
     def execute(self, context):
         update_connect()
-        bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+        if bpy.context.scene.IDS_Autoarr is True:
+            bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
         auto_arrange_viewlayer()
         auto_arr_denoisenode()
         auto_arr_outputnode()
@@ -1837,6 +1846,7 @@ class IDS_OutputPanel(bpy.types.Panel):
         row.prop(context.scene, "IDS_FileloC", toggle=True)
         row.prop(context.scene, "IDS_UsedN", toggle=True)
         # layout.operator(IDS_file_loc.bl_idname)
+        layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
         col.operator(IDS_Make_Tree.bl_idname, icon="NODETREE")

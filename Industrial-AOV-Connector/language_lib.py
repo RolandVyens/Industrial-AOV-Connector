@@ -157,6 +157,14 @@ language_dict = {
             "*",
             "Show useless renders clean button",
         ): "显示清理无用渲染输出的按钮",
+        (
+            "*",
+            "Auto Arrange Nodes at generating (experimental)",
+        ): "自动整理节点于生成时（实验性）",
+        (
+            "*",
+            "Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
+        ): "在生成节点树时自动排列，仅在合成器可见时有效。如果场景特别大请谨慎使用",
     },
     "zh_HANS": {
         (
@@ -316,5 +324,13 @@ language_dict = {
             "*",
             "Show useless renders clean button",
         ): "显示清理无用渲染输出的按钮",
+        (
+            "*",
+            "Auto Arrange Nodes at generating (experimental)",
+        ): "自动整理节点于生成时（实验性）",
+        (
+            "*",
+            "Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
+        ): "在生成节点树时自动排列，仅在合成器可见时有效。如果场景特别大请谨慎使用",
     },
 }
