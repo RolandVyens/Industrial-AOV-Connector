@@ -6,6 +6,8 @@
 ### Simple But Powerful AOV Output Tool, born for professional compositing.
 ======================
 
+Buy me a coffee if you want: https://blendermarket.com/products/industrial-aov-connector
+
 ![屏幕截图 2024-01-01 002028](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/ef18474b-957f-44e7-9403-d23930317e36)
 ![屏幕截图 2024-01-01 142309](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/203f13c8-905d-467f-91ac-a46270f21a9d)
 
