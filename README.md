@@ -11,7 +11,7 @@ Buy me a coffee if you want: https://blendermarket.com/products/industrial-aov-c
 Update Log:
 2024.2.11: version 1.1.0
 
-1. In blender conversion of motion vector pass, to use in nuke, simply add a vector blur node and choose "Arnold" preset. 
+1. In blender conversion of motion vector pass, to use in nuke, simply shuffle vector pass to motion, then add a vector blur node and choose "Arnold" preset. 
 
 2. Make all conversion nodes collapse by default
 
