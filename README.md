@@ -8,6 +8,17 @@
 
 Buy me a coffee if you want: https://blendermarket.com/products/industrial-aov-connector
 
+Update Log:
+2024.2.11: version 1.1.0
+
+1. In blender conversion of motion vector pass, to use in nuke, simply add a vector blur node and choose "Arnold" preset. 
+
+2. Make all conversion nodes collapse by default
+
+3. Removed 3.2 support because motion vector conversion needs
+
+=========================
+
 ![屏幕截图 2024-01-01 002028](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/ef18474b-957f-44e7-9403-d23930317e36)
 ![屏幕截图 2024-01-01 142309](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/203f13c8-905d-467f-91ac-a46270f21a9d)
 
