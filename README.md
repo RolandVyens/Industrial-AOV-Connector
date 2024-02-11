@@ -63,4 +63,11 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
    One click remove useless default render output files (Optional)
 
+7. 自动在输出时将数据转换成nuke标准
+
+   In blender data conversion for nuke standard passes
+
+   ![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/7998260a-116f-4936-8830-bf4fca9e3936)
+
+
 Join Discord for discussion: https://discord.com/invite/qGyYXUNTnm
