@@ -8,9 +8,15 @@
 
 Buy me a coffee if you want: https://blendermarket.com/products/industrial-aov-connector
 
+======================
+
+**Tips:**
+
 **本插件支持保留已经存在的节点，非破坏性编辑合成节点树，创建节点时按“更新当前可视层的节点”即可**
 
 **This plug-in supports retaining existing nodes and non-destructively editing. Just press "Update Current ViewLayer"**
+
+======================
 
 Update Log:
 2024.2.11: version 1.1.0
