@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (1, 1, 0),  # bump doc_url as well!
+    "version": (1, 1, 1),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -307,6 +307,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                     FO_RGB_node.location = 1200, 0  # initial location
                     FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_RGB_node.format.color_depth = "16"
+                    FO_RGB_node.format.exr_codec = "ZIPS"
                     if bpy.context.scene.IDS_FileloC is True:
                         current_render_path = file_output_to_subfolder_loc()
                         FO_RGB_node.base_path = (
@@ -372,6 +373,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         FO_DATA_node.location = 1200, 0
                         FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
                         FO_DATA_node.format.color_depth = "32"
+                        FO_DATA_node.format.exr_codec = "ZIPS"
                         if bpy.context.scene.IDS_FileloC is True:
                             current_render_path = file_output_to_subfolder_loc()
                             FO_DATA_node.base_path = (
@@ -460,6 +462,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                     FO_RGB_node.location = 1200, 0  # initial location
                     FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_RGB_node.format.color_depth = "32"
+                    FO_RGB_node.format.exr_codec = "ZIPS"
                     if bpy.context.scene.IDS_FileloC is True:
                         current_render_path = file_output_to_subfolder_loc()
                         FO_RGB_node.base_path = (
@@ -525,6 +528,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         FO_DATA_node.location = 1200, 0
                         FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
                         FO_DATA_node.format.color_depth = "32"
+                        FO_DATA_node.format.exr_codec = "ZIPS"
                         if bpy.context.scene.IDS_FileloC is True:
                             current_render_path = file_output_to_subfolder_loc()
                             FO_DATA_node.base_path = (
@@ -613,6 +617,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                     FO_RGB_node.location = 1200, 0  # initial location
                     FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_RGB_node.format.color_depth = "32"
+                    FO_RGB_node.format.exr_codec = "ZIPS"
                     if bpy.context.scene.IDS_FileloC is True:
                         current_render_path = file_output_to_subfolder_loc()
                         FO_RGB_node.base_path = (
@@ -1112,6 +1117,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                 FO_RGB_node.location = 1200, 0  # initial location
                 FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                 FO_RGB_node.format.color_depth = "16"
+                FO_RGB_node.format.exr_codec = "ZIPS"
                 if bpy.context.scene.IDS_FileloC is True:
                     current_render_path = file_output_to_subfolder_loc()
                     FO_RGB_node.base_path = (
@@ -1173,6 +1179,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     FO_DATA_node.location = 1200, 0
                     FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_DATA_node.format.color_depth = "32"
+                    FO_DATA_node.format.exr_codec = "ZIPS"
                     if bpy.context.scene.IDS_FileloC is True:
                         current_render_path = file_output_to_subfolder_loc()
                         FO_DATA_node.base_path = (
@@ -1254,6 +1261,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                 FO_RGB_node.location = 1200, 0  # initial location
                 FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                 FO_RGB_node.format.color_depth = "32"
+                FO_RGB_node.format.exr_codec = "ZIPS"
                 if bpy.context.scene.IDS_FileloC is True:
                     current_render_path = file_output_to_subfolder_loc()
                     FO_RGB_node.base_path = (
@@ -1315,6 +1323,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     FO_DATA_node.location = 1200, 0
                     FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_DATA_node.format.color_depth = "32"
+                    FO_DATA_node.format.exr_codec = "ZIPS"
                     if bpy.context.scene.IDS_FileloC is True:
                         current_render_path = file_output_to_subfolder_loc()
                         FO_DATA_node.base_path = (
@@ -1396,6 +1405,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                 FO_RGB_node.location = 1200, 0  # initial location
                 FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                 FO_RGB_node.format.color_depth = "32"
+                FO_RGB_node.format.exr_codec = "ZIPS"
                 if bpy.context.scene.IDS_FileloC is True:
                     current_render_path = file_output_to_subfolder_loc()
                     FO_RGB_node.base_path = (
