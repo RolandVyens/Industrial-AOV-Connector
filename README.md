@@ -22,7 +22,7 @@ Update Log:
 
 2024.4.15: version 1.1.1
 
-   changed exr codec to ZIPS for faster processing inside comp
+1. changed exr codec to ZIPS for faster processing inside comp
 
 2024.2.11: version 1.1.0
 
