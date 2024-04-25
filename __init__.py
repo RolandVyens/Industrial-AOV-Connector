@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (1, 1, 1),  # bump doc_url as well!
+    "version": (2, 0, 0),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -333,7 +333,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 for socket in viewlayer_full.get(f"{view_layer}Color"):
                                     if (
                                         socket != "Image"
-                                        and socket != "Emit"
+                                        # and socket != "Emit"
                                         and socket != "Shadow Catcher"
                                         and socket not in material_aovs
                                     ):
@@ -349,7 +349,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 for socket in viewlayer_full.get(f"{view_layer}Color"):
                                     if (
                                         socket != "Image"
-                                        and socket != "Emit"
+                                        # and socket != "Emit"
                                         and socket != "Shadow Catcher"
                                         and socket != "DiffCol"
                                         and socket != "GlossCol"
@@ -488,7 +488,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 for socket in viewlayer_full.get(f"{view_layer}Color"):
                                     if (
                                         socket != "Image"
-                                        and socket != "Emit"
+                                        # and socket != "Emit"
                                         and socket != "Shadow Catcher"
                                         and socket not in material_aovs
                                     ):
@@ -504,7 +504,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 for socket in viewlayer_full.get(f"{view_layer}Color"):
                                     if (
                                         socket != "Image"
-                                        and socket != "Emit"
+                                        # and socket != "Emit"
                                         and socket != "Shadow Catcher"
                                         and socket != "DiffCol"
                                         and socket != "GlossCol"
@@ -641,7 +641,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 for socket in viewlayer_full.get(f"{view_layer}Color"):
                                     if (
                                         socket != "Image"
-                                        and socket != "Emit"
+                                        # and socket != "Emit"
                                         and socket != "Shadow Catcher"
                                         and socket not in material_aovs
                                     ):
@@ -657,7 +657,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 for socket in viewlayer_full.get(f"{view_layer}Color"):
                                     if (
                                         socket != "Image"
-                                        and socket != "Emit"
+                                        # and socket != "Emit"
                                         and socket != "Shadow Catcher"
                                         and socket != "DiffCol"
                                         and socket != "GlossCol"
@@ -1143,7 +1143,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             for socket in viewlayer_full.get(f"{view_layer}Color"):
                                 if (
                                     socket != "Image"
-                                    and socket != "Emit"
+                                    # and socket != "Emit"
                                     and socket != "Shadow Catcher"
                                     and socket not in material_aovs
                                 ):
@@ -1157,7 +1157,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             for socket in viewlayer_full.get(f"{view_layer}Color"):
                                 if (
                                     socket != "Image"
-                                    and socket != "Emit"
+                                    # and socket != "Emit"
                                     and socket != "Shadow Catcher"
                                     and socket != "DiffCol"
                                     and socket != "GlossCol"
@@ -1287,7 +1287,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             for socket in viewlayer_full.get(f"{view_layer}Color"):
                                 if (
                                     socket != "Image"
-                                    and socket != "Emit"
+                                    # and socket != "Emit"
                                     and socket != "Shadow Catcher"
                                     and socket not in material_aovs
                                 ):
@@ -1301,7 +1301,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             for socket in viewlayer_full.get(f"{view_layer}Color"):
                                 if (
                                     socket != "Image"
-                                    and socket != "Emit"
+                                    # and socket != "Emit"
                                     and socket != "Shadow Catcher"
                                     and socket != "DiffCol"
                                     and socket != "GlossCol"
@@ -1429,7 +1429,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             for socket in viewlayer_full.get(f"{view_layer}Color"):
                                 if (
                                     socket != "Image"
-                                    and socket != "Emit"
+                                    # and socket != "Emit"
                                     and socket != "Shadow Catcher"
                                     and socket not in material_aovs
                                 ):
@@ -1443,7 +1443,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             for socket in viewlayer_full.get(f"{view_layer}Color"):
                                 if (
                                     socket != "Image"
-                                    and socket != "Emit"
+                                    # and socket != "Emit"
                                     and socket != "Shadow Catcher"
                                     and socket != "DiffCol"
                                     and socket != "GlossCol"
