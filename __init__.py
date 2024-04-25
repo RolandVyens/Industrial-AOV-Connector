@@ -113,6 +113,16 @@ bpy.types.Scene.IDS_Autoarr = bpy.props.BoolProperty(  # 是否使用降噪
 )
 
 
+"""以下为高级模式使用的配置"""
+
+
+bpy.types.Scene.IDS_AdvMode = bpy.props.BoolProperty(  # 是否使用高级模式
+    name="--> Advanced Mode <--",
+    description="Go to advanced mode for more customized control",
+    default=False,
+)
+
+
 """以下为输出路径自动调整函数"""
 
 
@@ -2162,7 +2172,9 @@ class IDS_OutputPanel(bpy.types.Panel):
         else:
             box = layout.box()
             box.label(text="Not using Cycles, no need to denoise")
-        layout.prop(context.scene, "IDS_ConfIg")
+        layout.prop(context.scene, "IDS_AdvMode", toggle=True)
+        if bpy.context.scene.IDS_AdvMode is False:
+            layout.prop(context.scene, "IDS_ConfIg")
         box = layout.box()
         box.label(text="Settings:")
         row = box.row()
