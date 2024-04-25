@@ -107,9 +107,9 @@ bpy.types.Scene.IDS_UsedN = bpy.props.BoolProperty(  # 是否使用降噪
 
 
 bpy.types.Scene.IDS_Autoarr = bpy.props.BoolProperty(  # 是否使用降噪
-    name="Auto Arrange Nodes at generating (experimental)",
+    name="Auto Arrange Nodes at generating",
     description="Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
-    default=False,
+    default=True,
 )
 
 
@@ -117,8 +117,8 @@ bpy.types.Scene.IDS_Autoarr = bpy.props.BoolProperty(  # 是否使用降噪
 
 
 bpy.types.Scene.IDS_AdvMode = bpy.props.BoolProperty(  # 是否使用高级模式
-    name="--> Advanced Mode <--",
-    description="Go to advanced mode for more customized control",
+    name="Use Advanced Mode",
+    description="Go to advanced mode for more customized control, under developing",
     default=False,
 )
 
@@ -2046,7 +2046,12 @@ class IDS_Make_Tree(bpy.types.Operator):
     def execute(self, context):
         auto_connect()
         if bpy.context.scene.IDS_Autoarr is True:
-            bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+            all_aeras = bpy.context.screen.areas[:]
+            area_types = []
+            for i in all_aeras:
+                area_types.append(i.ui_type)
+            if "CompositorNodeTree" in area_types:
+                bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
         auto_arrange_viewlayer()
         auto_arr_denoisenode()
         auto_arr_outputnode()
@@ -2067,7 +2072,12 @@ class IDS_Update_Tree(bpy.types.Operator):
     def execute(self, context):
         update_connect()
         if bpy.context.scene.IDS_Autoarr is True:
-            bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+            all_aeras = bpy.context.screen.areas[:]
+            area_types = []
+            for i in all_aeras:
+                area_types.append(i.ui_type)
+            if "CompositorNodeTree" in area_types:
+                bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
         auto_arrange_viewlayer()
         auto_arr_denoisenode()
         auto_arr_outputnode()

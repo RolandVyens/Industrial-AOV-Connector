@@ -159,8 +159,8 @@ language_dict = {
         ): "显示清理无用渲染输出的按钮",
         (
             "*",
-            "Auto Arrange Nodes at generating (experimental)",
-        ): "自动整理节点于生成时（实验性）",
+            "Auto Arrange Nodes at generating",
+        ): "自动整理节点于生成时",
         (
             "*",
             "Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
@@ -326,8 +326,8 @@ language_dict = {
         ): "显示清理无用渲染输出的按钮",
         (
             "*",
-            "Auto Arrange Nodes at generating (experimental)",
-        ): "自动整理节点于生成时（实验性）",
+            "Auto Arrange Nodes at generating",
+        ): "自动整理节点于生成时",
         (
             "*",
             "Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
