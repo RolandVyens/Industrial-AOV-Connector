@@ -130,6 +130,13 @@ bpy.types.Scene.IDS_AdvMode = bpy.props.BoolProperty(  # 是否使用高级模�
 )
 
 
+bpy.types.Scene.IDS_UseDATALayer = bpy.props.BoolProperty(  # 是否使用独立数据视图层
+    name="Use Dedicate DATA Layer",
+    description="Use A dedicated viewlayer only for data and cryptomatte",
+    default=False,
+)
+
+
 """以下为输出路径自动调整函数"""
 
 
@@ -2241,6 +2248,59 @@ class IDS_Delete_Trash(bpy.types.Operator):
         return {"FINISHED"}
 
 
+"""以下为高级模式使用的操作符"""
+
+
+class IDS_Make_DatalayerNew(Operator):
+    bl_idname = "viewlayer.makedatalayernew"
+    bl_label = "Brand New DATA Viewlayer"
+    bl_description = "make a data exclusive viewlayer with all collections turned on, without any data passes"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        bpy.ops.scene.view_layer_add(type="NEW")  # (type='NEW','COPY','EMPTY')
+
+        return {"FINISHED"}
+
+
+class IDS_Make_DatalayerCopy(Operator):
+    bl_idname = "viewlayer.makedatalayercopy"
+    bl_label = "New DATA Viewlayer Based On Current Viewlayer"
+    bl_description = "make a data exclusive viewlayer that copys current viewlayer settings and passes"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        bpy.ops.scene.view_layer_add(type="COPY")  # (type='NEW','COPY','EMPTY')
+
+        return {"FINISHED"}
+
+
+class IDS_Make_DatalayerMenu(bpy.types.Menu):
+    bl_label = "Make DATA Exclusive Viewlayer"
+    bl_idname = "viewlayer.makedatalayer"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator(
+            IDS_Make_DatalayerCopy.bl_idname, text=IDS_Make_DatalayerCopy.bl_label
+        )
+        layout.operator(
+            IDS_Make_DatalayerNew.bl_idname, text=IDS_Make_DatalayerNew.bl_label
+        )
+
+
+class IDS_Draw_DataMenu(Operator):
+    bl_idname = "wm.drawdatalayermenu"
+    bl_label = "Make A DATA Layer"
+    bl_description = "make a data exclusive viewlayer that copys current viewlayer settings and passes"
+    bl_options = {"REGISTER"}
+
+    def execute(self, context):
+        bpy.ops.wm.call_menu(name=IDS_Make_DatalayerMenu.bl_idname)
+
+        return {"FINISHED"}
+
+
 """以下为控制面板"""
 
 
@@ -2285,6 +2345,10 @@ class IDS_OutputPanel(bpy.types.Panel):
         if bpy.context.scene.IDS_AdvMode is True:
             box1 = layout.box()
             box1.label(text="Advanced:")
+            box2 = box1.box()
+            box2.label(text="Dedicate DATA Layer Config:")
+            box2.prop(context.scene, "IDS_UseDATALayer")
+            box2.operator(IDS_Draw_DataMenu.bl_idname)
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
@@ -2329,6 +2393,10 @@ reg_clss = [
     # IDS_file_loc,
     IDS_Update_Tree,
     IDS_Delete_Trash,
+    IDS_Make_DatalayerNew,
+    IDS_Make_DatalayerCopy,
+    IDS_Make_DatalayerMenu,
+    IDS_Draw_DataMenu,
 ]
 
 
