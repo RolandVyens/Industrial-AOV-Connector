@@ -106,10 +106,17 @@ bpy.types.Scene.IDS_UsedN = bpy.props.BoolProperty(  # 是否使用降噪
 )
 
 
-bpy.types.Scene.IDS_Autoarr = bpy.props.BoolProperty(  # 是否使用降噪
+bpy.types.Scene.IDS_Autoarr = bpy.props.BoolProperty(  # 是否使用自动排列节点
     name="Auto Arrange Nodes at generating",
     description="Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
     default=True,
+)
+
+
+bpy.types.Scene.IDS_SepCryptO = bpy.props.BoolProperty(  # 是否单独输出cryptomatte
+    name="Separate Cryptomatte Output",
+    description="Separate cryptomatte to an independent file output",
+    default=False,
 )
 
 
@@ -150,11 +157,12 @@ def file_output_to_subfolder_loc():  # 按文件夹分类
         if bpy.context.scene.IDS_ConfIg != "OPTION2":
             rgb_output_path = current_render_path + "RGBAs\\"
             data_output_path = current_render_path + "DATAs\\"
+            crypto_output_path = current_render_path + "Cryptomatte\\"
         else:
             rgb_output_path = current_render_path
             data_output_path = current_render_path
-        # crypto_output_path = current_render_path + "Cryptomatte\\"
-    render_path = [rgb_output_path, data_output_path]
+            crypto_output_path = current_render_path
+    render_path = [rgb_output_path, data_output_path, crypto_output_path]
     return render_path
 
 
@@ -374,8 +382,9 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                         DN_node.location = 600, 0
                                         DN_node.hide = True
 
-                    if viewlayer_full.get(f"{view_layer}Data") or viewlayer_full.get(
-                        f"{view_layer}Crypto"
+                    if viewlayer_full.get(f"{view_layer}Data") or (
+                        viewlayer_full.get(f"{view_layer}Crypto")
+                        and not bpy.context.scene.IDS_SepCryptO
                     ):
                         FO_DATA_node = tree.nodes.new("CompositorNodeOutputFile")
                         FO_DATA_node.name = f"{view_layer}--DaTA"
@@ -449,18 +458,33 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                             Convert_node.location = 660, 0
 
                     if viewlayer_full.get(f"{view_layer}Crypto"):
-                        # FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
-                        # FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
-                        # FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
-                        # FO_Crypto_node.location = 1200, 0
-                        # FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
-                        # FO_Crypto_node.format.color_depth = "32"
-                        # FO_Crypto_node.base_path = (
-                        #     current_render_path + f"\\{view_layer}_CryptoMatte_.exr"
-                        # )
-                        # FO_Crypto_node.file_slots.new("Image")
-                        for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_DATA_node.file_slots.new(f"{input}")
+                        if bpy.context.scene.IDS_SepCryptO is True:
+                            FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
+                            FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
+                            FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
+                            FO_Crypto_node.location = 1200, 0
+                            FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
+                            FO_Crypto_node.format.color_depth = "32"
+                            FO_Crypto_node.format.exr_codec = "ZIPS"
+                            if bpy.context.scene.IDS_FileloC is True:
+                                current_render_path = file_output_to_subfolder_loc()
+                                FO_Crypto_node.base_path = (
+                                    current_render_path[1]
+                                    + f"{view_layer}\\"
+                                    + f"{view_layer}_Cryptomatte_"
+                                )
+                            else:
+                                FO_Crypto_node.base_path = (
+                                    file_output_to_1folder_loc()
+                                    + f"{view_layer}_Cryptomatte_"
+                                )
+                            FO_Crypto_node.inputs.clear()
+                            FO_Crypto_node.file_slots.new("Image")
+                            for input in viewlayer_full[f"{view_layer}Crypto"]:
+                                FO_Crypto_node.file_slots.new(f"{input}")
+                        else:
+                            for input in viewlayer_full[f"{view_layer}Crypto"]:
+                                FO_DATA_node.file_slots.new(f"{input}")
                         # FO_Crypto_node.hide = True
     elif bpy.context.scene.IDS_ConfIg == "OPTION3":  # config 3
         for view_layer in viewlayers:
@@ -980,18 +1004,13 @@ def auto_connect():  # 主要功能函数之建立连接
                     scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
                 )
             if (
-                viewlayer_full[f"{view_layer}Crypto"]
-                or viewlayer_full[f"{view_layer}Data"]
-            ):
+                viewlayer_full.get(f"{view_layer}Crypto")
+                and not bpy.context.scene.IDS_SepCryptO
+            ) or viewlayer_full.get(f"{view_layer}Data"):
                 scene.node_tree.links.new(
                     scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
                     scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
                 )
-                for node in viewlayer_full[f"{view_layer}Crypto"]:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
-                    )
                 for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                     viewlayer_full[f"{view_layer}Vector"]
                 ):
@@ -1095,6 +1114,34 @@ def auto_connect():  # 主要功能函数之建立连接
                             scene.node_tree.nodes[
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["Z"],
+                        )
+            if viewlayer_full.get(f"{view_layer}Crypto"):
+                for node in viewlayer_full[f"{view_layer}Crypto"]:
+                    if bpy.context.scene.IDS_SepCryptO is False:
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                                "Image"
+                            ],
+                        ),
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                                f"{node}"
+                            ],
+                        )
+                    else:
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                            scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                                "Image"
+                            ],
+                        )
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                                f"{node}"
+                            ],
                         )
 
 
@@ -1857,6 +1904,7 @@ def auto_arr_outputnode():  # 排列输出节点
     RGBA_dimension_y = {}
     DATA_location_y = {}
     DATA_dimension_y = {}
+    outnode_positions = []
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.add(view_layer.name)
     for view_layer in viewlayers:
@@ -1894,26 +1942,25 @@ def auto_arr_outputnode():  # 排列输出节点
             node.width = 420
             DATA_location_y[node.name] = node.location.y
             DATA_dimension_y[node.name] = node.dimensions.y
-    # for node in bpy.context.scene.node_tree.nodes:
-    #     if node.type == "OUTPUT_FILE" and "CryptoMaTTe" in node.name:
-    #         if node.name[: node.name.rfind("--")] + "--DaTA" in DATA_location_y:
-    #             node.location.y = (
-    #                 DATA_location_y.get(node.name[: node.name.rfind("--")] + "--DaTA")
-    #                 - DATA_dimension_y.get(
-    #                     node.name[: node.name.rfind("--")] + "--DaTA"
-    #                 )
-    #                 - 20
-    #             )
-
-    #         else:
-    #             node.location.y = (
-    #                 RGBA_location_y.get(node.name[: node.name.rfind("--")] + "--RgBA")
-    #                 - RGBA_dimension_y.get(
-    #                     node.name[: node.name.rfind("--")] + "--RgBA"
-    #                 )
-    #                 - 20
-    #             )
-    #         node.width = 220
+    for node in bpy.context.scene.node_tree.nodes:
+        if node.type == "OUTPUT_FILE" and "CryptoMaTTe" in node.name:
+            if node.name[: node.name.rfind("--")] + "--DaTA" in DATA_location_y:
+                node.location = 1200, (
+                    DATA_location_y.get(node.name[: node.name.rfind("--")] + "--DaTA")
+                    - DATA_dimension_y.get(
+                        node.name[: node.name.rfind("--")] + "--DaTA"
+                    )
+                    - 20
+                )
+            else:
+                node.location = 1200, (
+                    RGBA_location_y.get(node.name[: node.name.rfind("--")] + "--RgBA")
+                    - RGBA_dimension_y.get(
+                        node.name[: node.name.rfind("--")] + "--RgBA"
+                    )
+                    - 20
+                )
+            node.width = 420
 
 
 def auto_arr_denoisenode():  # 排列降噪节点
@@ -2190,6 +2237,7 @@ class IDS_OutputPanel(bpy.types.Panel):
         row = box.row()
         row.prop(context.scene, "IDS_FileloC", toggle=True)
         row.prop(context.scene, "IDS_UsedN", toggle=True)
+        box.prop(context.scene, "IDS_SepCryptO", toggle=True)
         # layout.operator(IDS_file_loc.bl_idname)
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
