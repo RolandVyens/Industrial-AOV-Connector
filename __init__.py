@@ -86,7 +86,7 @@ bpy.types.Scene.IDS_ConfIg = bpy.props.EnumProperty(  # 输出配置
             "32bit all in 1",
             "Only if you use ACEScg colorspace! Otherwise datas may be screwed when compositing. Recommend to use default config even for ACEScg",
         ),
-        ("OPTION3", "32bit RGBA + 32bit DATA", "If you really want 32bit somehow"),
+        # ("OPTION3", "32bit RGBA + 32bit DATA", "If you really want 32bit somehow"),
     ],
     default="OPTION1",
 )
@@ -154,14 +154,14 @@ def file_output_to_subfolder_loc():  # 按文件夹分类
     if "trash_output" in current_render_path:
         current_render_path = current_render_path.replace("trash_output\\", "")
     if "trash_output" not in current_render_path:
-        if bpy.context.scene.IDS_ConfIg != "OPTION2":
-            rgb_output_path = current_render_path + "RGBAs\\"
-            data_output_path = current_render_path + "DATAs\\"
-            crypto_output_path = current_render_path + "Cryptomatte\\"
-        else:
-            rgb_output_path = current_render_path
-            data_output_path = current_render_path
-            crypto_output_path = current_render_path
+        # if bpy.context.scene.IDS_ConfIg != "OPTION2":
+        #     rgb_output_path = current_render_path + "RGBAs\\"
+        #     data_output_path = current_render_path + "DATAs\\"
+        #     crypto_output_path = current_render_path + "Cryptomatte\\"
+        # else:
+        rgb_output_path = current_render_path
+        data_output_path = current_render_path
+        crypto_output_path = current_render_path
     render_path = [rgb_output_path, data_output_path, crypto_output_path]
     return render_path
 
@@ -331,6 +331,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         FO_RGB_node.base_path = (
                             current_render_path[0]
                             + f"{view_layer}\\"
+                            + "RGBA\\"
                             + f"{view_layer}_RGBA_"
                         )
                     else:
@@ -398,6 +399,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                             FO_DATA_node.base_path = (
                                 current_render_path[1]
                                 + f"{view_layer}\\"
+                                + "DATA\\"
                                 + f"{view_layer}_DATA_"
                             )
                         else:
@@ -469,8 +471,9 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                             if bpy.context.scene.IDS_FileloC is True:
                                 current_render_path = file_output_to_subfolder_loc()
                                 FO_Crypto_node.base_path = (
-                                    current_render_path[1]
+                                    current_render_path[2]
                                     + f"{view_layer}\\"
+                                    + "Cryptomatte\\"
                                     + f"{view_layer}_Cryptomatte_"
                                 )
                             else:
@@ -486,7 +489,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
                                 FO_DATA_node.file_slots.new(f"{input}")
                         # FO_Crypto_node.hide = True
-    elif bpy.context.scene.IDS_ConfIg == "OPTION3":  # config 3
+    elif bpy.context.scene.IDS_ConfIg == "OPTION3":  # config 3 ---2.0后隐藏，不再使用
         for view_layer in viewlayers:
             for node in bpy.context.scene.node_tree.nodes:
                 if node.type == "R_LAYERS" and node.layer == view_layer:
