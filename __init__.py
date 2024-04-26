@@ -1183,6 +1183,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     FO_RGB_node.base_path = (
                         current_render_path[0]
                         + f"{view_layer}\\"
+                        + "RGBA\\"
                         + f"{view_layer}_RGBA_"
                     )
                 else:
@@ -1230,8 +1231,9 @@ def update_tree_denoise():  # 新建当前视图层的节点
                                     DN_node.location = 600, 0
                                     DN_node.hide = True
 
-                if viewlayer_full.get(f"{view_layer}Data") or viewlayer_full.get(
-                    f"{view_layer}Crypto"
+                if viewlayer_full.get(f"{view_layer}Data") or (
+                    viewlayer_full.get(f"{view_layer}Crypto")
+                    and not bpy.context.scene.IDS_SepCryptO
                 ):
                     FO_DATA_node = tree.nodes.new("CompositorNodeOutputFile")
                     FO_DATA_node.name = f"{view_layer}--DaTA"
@@ -1245,6 +1247,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                         FO_DATA_node.base_path = (
                             current_render_path[1]
                             + f"{view_layer}\\"
+                            + "DATA\\"
                             + f"{view_layer}_DATA_"
                         )
                     else:
@@ -1299,20 +1302,36 @@ def update_tree_denoise():  # 新建当前视图层的节点
                         Convert_node.location = 660, 0
 
                 if viewlayer_full.get(f"{view_layer}Crypto"):
-                    # FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
-                    # FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
-                    # FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
-                    # FO_Crypto_node.location = 1200, 0
-                    # FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
-                    # FO_Crypto_node.format.color_depth = "32"
-                    # FO_Crypto_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_CryptoMatte_.exr"
-                    # )
-                    # FO_Crypto_node.file_slots.new("Image")
-                    for input in viewlayer_full[f"{view_layer}Crypto"]:
-                        FO_DATA_node.file_slots.new(f"{input}")
+                    if bpy.context.scene.IDS_SepCryptO is True:
+                        FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
+                        FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
+                        FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
+                        FO_Crypto_node.location = 1200, 0
+                        FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
+                        FO_Crypto_node.format.color_depth = "32"
+                        FO_Crypto_node.format.exr_codec = "ZIPS"
+                        if bpy.context.scene.IDS_FileloC is True:
+                            current_render_path = file_output_to_subfolder_loc()
+                            FO_Crypto_node.base_path = (
+                                current_render_path[2]
+                                + f"{view_layer}\\"
+                                + "Cryptomatte\\"
+                                + f"{view_layer}_Cryptomatte_"
+                            )
+                        else:
+                            FO_Crypto_node.base_path = (
+                                file_output_to_1folder_loc()
+                                + f"{view_layer}_Cryptomatte_"
+                            )
+                        FO_Crypto_node.inputs.clear()
+                        FO_Crypto_node.file_slots.new("Image")
+                        for input in viewlayer_full[f"{view_layer}Crypto"]:
+                            FO_Crypto_node.file_slots.new(f"{input}")
+                    else:
+                        for input in viewlayer_full[f"{view_layer}Crypto"]:
+                            FO_DATA_node.file_slots.new(f"{input}")
                     # FO_Crypto_node.hide = True
-    elif bpy.context.scene.IDS_ConfIg == "OPTION3":  # config 3
+    elif bpy.context.scene.IDS_ConfIg == "OPTION3":  # config 3 ---2.0后不再使用
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
@@ -1776,16 +1795,14 @@ def update_connect():  # 新建当前视图层的连接
                 scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                 scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
             )
-        if viewlayer_full[f"{view_layer}Crypto"] or viewlayer_full[f"{view_layer}Data"]:
+        if (
+            viewlayer_full.get(f"{view_layer}Crypto")
+            and not bpy.context.scene.IDS_SepCryptO
+        ) or viewlayer_full.get(f"{view_layer}Data"):
             scene.node_tree.links.new(
                 scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
                 scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
             )
-            for node in viewlayer_full[f"{view_layer}Crypto"]:
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
-                )
             for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                 viewlayer_full[f"{view_layer}Vector"]
             ):
@@ -1880,6 +1897,30 @@ def update_connect():  # 新建当前视图层的连接
                         scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[0],
                         scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
                             "Z"
+                        ],
+                    )
+        if viewlayer_full.get(f"{view_layer}Crypto"):
+            for node in viewlayer_full[f"{view_layer}Crypto"]:
+                if bpy.context.scene.IDS_SepCryptO is False:
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+                    ),
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    )
+                else:
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                            "Image"
+                        ],
+                    )
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                            f"{node}"
                         ],
                     )
 
