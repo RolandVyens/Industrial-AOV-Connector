@@ -34,8 +34,8 @@ language_dict = {
         ): "主要配置",
         (
             "*",
-            "Settings:",
-        ): "设置：",
+            "Output Settings:",
+        ): "输出设置：",
         (
             "*",
             "Write To Subfolder",
@@ -201,8 +201,8 @@ language_dict = {
         ): "主要配置",
         (
             "*",
-            "Settings:",
-        ): "设置：",
+            "Output Settings:",
+        ): "输出设置：",
         (
             "*",
             "Write To Subfolder",

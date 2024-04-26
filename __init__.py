@@ -2277,12 +2277,14 @@ class IDS_OutputPanel(bpy.types.Panel):
         if bpy.context.scene.IDS_AdvMode is False:
             layout.prop(context.scene, "IDS_ConfIg")
         box = layout.box()
-        box.label(text="Settings:")
+        box.label(text="Output Settings:")
         row = box.row()
         row.prop(context.scene, "IDS_FileloC", toggle=True)
         row.prop(context.scene, "IDS_UsedN", toggle=True)
         box.prop(context.scene, "IDS_SepCryptO", toggle=True)
-        # layout.operator(IDS_file_loc.bl_idname)
+        if bpy.context.scene.IDS_AdvMode is True:
+            box1 = layout.box()
+            box1.label(text="Advanced:")
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
