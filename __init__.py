@@ -137,6 +137,44 @@ bpy.types.Scene.IDS_UseDATALayer = bpy.props.BoolProperty(  # 是否使用独立
 )
 
 
+bpy.types.Scene.IDS_Compression = bpy.props.EnumProperty(
+    name="RGBA compression",
+    items=[
+        (
+            "ZIP",
+            "ZIP",
+            "Lossless. Provides Decently high compression rate, also playbacks fast. The balanced choice",
+        ),
+        (
+            "PIZ",
+            "PIZ",
+            "Lossless. Compression rate is the highest for grainy images, but slower to read than other Lossless method",
+        ),
+        (
+            "RLE",
+            "RLE",
+            "Lossless. Fastest for read & write, but significantly larger than other lossless method",
+        ),
+        (
+            "ZIPS",
+            "ZIPS",
+            "Lossless. Provides identical compression rate with ZIP, but nearly 40% faster to playback in Nuke (tested by me with a decent machine). The recommended method",
+        ),
+        (
+            "PXR24",
+            "PXR24",
+            "Lossy. Compress 32bit to 24 bit, leaving 16bit and 8bit untouched. Not suitable for Cryptomatte but may be used with other type of DATA to reduce file size",
+        ),
+        ("B44", "B44", "Lossy"),
+        ("B44A", "B44A", "Lossy"),
+        ("DWAA", "DWAA", "Lossy. Small"),
+        ("DWAB", "DWAB", "Lossy. Small"),
+        ("NONE", "NONE", "No compress"),
+    ],
+    default="",
+)
+
+
 """以下为输出路径自动调整函数"""
 
 
