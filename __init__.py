@@ -2560,6 +2560,398 @@ def auto_connect_adv():  # 高级模式建立连接
                         )
 
 
+def update_tree_denoise_adv():  # 高级模式节点创建
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons[__name__].preferences
+    current_render_path = bpy.context.scene.render.filepath
+    viewlayer_full = sort_passes()
+    # print(viewlayer_full)
+    tree = bpy.context.scene.node_tree
+    view_layer = bpy.context.view_layer.name
+    material_aovs = set()
+    for scene in bpy.data.scenes:
+        for layer in bpy.data.scenes[str(scene.name)].view_layers:
+            for aov in (
+                bpy.data.scenes[str(scene.name)].view_layers[str(layer.name)].aovs
+            ):
+                material_aovs.add(aov.name)
+
+    for node in bpy.context.scene.node_tree.nodes:
+        if node.type != "R_LAYERS" and node.name[: node.name.rfind("--")] == view_layer:
+            bpy.context.scene.node_tree.nodes.remove(node)
+
+    for node in bpy.context.scene.node_tree.nodes:
+        if node.type == "R_LAYERS" and node.layer == view_layer:
+            if node.layer[:6] != "-_-exP_" and "_DATA" not in node.layer:
+                FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
+                FO_RGB_node.name = f"{view_layer}--RgBA"
+                FO_RGB_node.label = f"{view_layer}_RGBA"
+                FO_RGB_node.location = 1200, 0  # initial location
+                FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
+                FO_RGB_node.format.color_depth = "16"
+                FO_RGB_node.format.exr_codec = "ZIPS"
+                if bpy.context.scene.IDS_FileloC is True:
+                    current_render_path = file_output_to_subfolder_loc()
+                    FO_RGB_node.base_path = (
+                        current_render_path[0]
+                        + f"{view_layer}\\"
+                        + "RGBA\\"
+                        + f"{view_layer}_RGBA_"
+                    )
+                else:
+                    FO_RGB_node.base_path = (
+                        file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
+                    )
+                # FO_RGB_node.base_path = (
+                #     current_render_path + f"\\{view_layer}_RGBA_"
+                # )
+                FO_RGB_node.inputs.clear()
+                for input in viewlayer_full[f"{view_layer}Color"]:
+                    FO_RGB_node.file_slots.new(f"{input}")
+                # FO_RGB_node.hide = True
+
+                if bpy.context.scene.IDS_UsedN is True:
+                    if addon_prefs.Denoise_Col is True:
+                        if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
+                            for socket in viewlayer_full.get(f"{view_layer}Color"):
+                                if (
+                                    socket != "Image"
+                                    # and socket != "Emit"
+                                    and socket != "Shadow Catcher"
+                                    and socket not in material_aovs
+                                ):
+                                    DN_node = tree.nodes.new("CompositorNodeDenoise")
+                                    DN_node.name = f"{view_layer}--{socket}_Dn"
+                                    DN_node.label = f"{view_layer}_{socket}_DN"
+                                    DN_node.location = 600, 0
+                                    DN_node.hide = True
+                    else:
+                        if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
+                            for socket in viewlayer_full.get(f"{view_layer}Color"):
+                                if (
+                                    socket != "Image"
+                                    # and socket != "Emit"
+                                    and socket != "Shadow Catcher"
+                                    and socket != "DiffCol"
+                                    and socket != "GlossCol"
+                                    and socket != "TransCol"
+                                    and socket not in material_aovs
+                                ):
+                                    DN_node = tree.nodes.new("CompositorNodeDenoise")
+                                    DN_node.name = f"{view_layer}--{socket}_Dn"
+                                    DN_node.label = f"{view_layer}_{socket}_DN"
+                                    DN_node.location = 600, 0
+                                    DN_node.hide = True
+
+            # elif node.layer[:6] == "-_-exP_" and "_DATA" in node.layer:
+            else:
+                if viewlayer_full.get(f"{view_layer}Data") or (
+                    viewlayer_full.get(f"{view_layer}Crypto")
+                    and not bpy.context.scene.IDS_SepCryptO
+                ):
+                    FO_DATA_node = tree.nodes.new("CompositorNodeOutputFile")
+                    FO_DATA_node.name = f"{view_layer}--DaTA"
+                    FO_DATA_node.label = f"{view_layer}_DATA"
+                    FO_DATA_node.location = 1200, 0
+                    FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
+                    FO_DATA_node.format.color_depth = "32"
+                    FO_DATA_node.format.exr_codec = "ZIPS"
+                    if bpy.context.scene.IDS_FileloC is True:
+                        current_render_path = file_output_to_subfolder_loc()
+                        layer_core = extract_string_between_patterns(
+                            f"{view_layer}", "-_-exP_", "_DATA"
+                        )
+                        FO_DATA_node.base_path = (
+                            current_render_path[1]
+                            + f"{layer_core}_DATA\\"
+                            + "DATA\\"
+                            + f"{layer_core}_DATA_"
+                        )
+                    else:
+                        layer_core = extract_string_between_patterns(
+                            f"{view_layer}", "-_-exP_", "_DATA"
+                        )
+                        FO_DATA_node.base_path = (
+                            file_output_to_1folder_loc() + f"{layer_core}_DATA_"
+                        )
+                    # FO_DATA_node.base_path = (
+                    #     current_render_path + f"\\{view_layer}_DATA_"
+                    # )
+                    FO_DATA_node.inputs.clear()
+                    FO_DATA_node.file_slots.new("Image")
+                    for input in viewlayer_full[f"{view_layer}Data"]:
+                        FO_DATA_node.file_slots.new(f"{input}")
+                    # FO_DATA_node.hide = True
+
+                    if "Vector" in viewlayer_full.get(f"{view_layer}Data"):
+                        Vector_Con_node = tree.nodes.new("CompositorNodeSeparateColor")
+                        Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
+                        Vector_Con_node.label = f"{view_layer}_Vector_VECTORIN"
+                        Vector_Con_node.hide = True
+                        Vector_Con_node.location = 550, 0
+                        Vector_Con_node = tree.nodes.new("CompositorNodeCombineColor")
+                        Vector_Con_node.name = f"{view_layer}--Vector_VectorOut"
+                        Vector_Con_node.label = f"{view_layer}_Vector_VECTOROUT"
+                        Vector_Con_node.hide = True
+                        Vector_Con_node.location = 780, 0
+
+                if viewlayer_full.get(f"{view_layer}Vector"):
+                    if "Denoising Normal" in viewlayer_full.get(f"{view_layer}Vector"):
+                        viewlayer_full.get(f"{view_layer}Vector").remove(
+                            "Denoising Normal"
+                        )
+                    for socket in viewlayer_full.get(f"{view_layer}Vector"):
+                        Convert_node = tree.nodes.new("CompositorNodeSeparateXYZ")
+                        Convert_node.name = f"{view_layer}--{socket}_Break"
+                        Convert_node.label = f"{view_layer}_{socket}_BREAK"
+                        Convert_node.hide = True
+                        Convert_node.location = 500, 0
+                    for socket in viewlayer_full.get(f"{view_layer}Vector"):
+                        Convert_node = tree.nodes.new("CompositorNodeCombineXYZ")
+                        Convert_node.name = f"{view_layer}--{socket}_Combine"
+                        Convert_node.label = f"{view_layer}_{socket}_COMBINE"
+                        Convert_node.hide = True
+                        Convert_node.location = 820, 0
+                    for socket in viewlayer_full.get(f"{view_layer}Vector"):
+                        Convert_node = tree.nodes.new("CompositorNodeMath")
+                        Convert_node.name = f"{view_layer}--{socket}_Inv"
+                        Convert_node.label = f"{view_layer}_{socket}_INVERT"
+                        Convert_node.operation = "MULTIPLY"
+                        Convert_node.inputs[1].default_value = -1
+                        Convert_node.hide = True
+                        Convert_node.location = 660, 0
+
+                if viewlayer_full.get(f"{view_layer}Crypto"):
+                    if bpy.context.scene.IDS_SepCryptO is True:
+                        FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
+                        FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
+                        FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
+                        FO_Crypto_node.location = 1200, 0
+                        FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
+                        FO_Crypto_node.format.color_depth = "32"
+                        FO_Crypto_node.format.exr_codec = "ZIPS"
+                        if bpy.context.scene.IDS_FileloC is True:
+                            current_render_path = file_output_to_subfolder_loc()
+                            layer_core = extract_string_between_patterns(
+                                f"{view_layer}", "-_-exP_", "_DATA"
+                            )
+                            base_path = (
+                                current_render_path[2]
+                                + f"{layer_core}_DATA\\"
+                                + "Cryptomatte\\"
+                                + f"{layer_core}_Cryptomatte_"
+                            )
+                            final_path = base_path.replace("-_-exP_", "")
+                            FO_Crypto_node.base_path = final_path
+                        else:
+                            layer_core = extract_string_between_patterns(
+                                f"{view_layer}", "-_-exP_", "_DATA"
+                            )
+                            base_path = (
+                                file_output_to_1folder_loc()
+                                + f"{layer_core}_Cryptomatte_"
+                            )
+                            final_path = base_path.replace("-_-exP_", "")
+                            FO_Crypto_node.base_path = final_path
+                        FO_Crypto_node.inputs.clear()
+                        FO_Crypto_node.file_slots.new("Image")
+                        for input in viewlayer_full[f"{view_layer}Crypto"]:
+                            FO_Crypto_node.file_slots.new(f"{input}")
+                    else:
+                        for input in viewlayer_full[f"{view_layer}Crypto"]:
+                            FO_DATA_node.file_slots.new(f"{input}")
+                    # FO_Crypto_node.hide = True
+    return viewlayer_full
+
+
+def update_connect_adv():  # 高级模式建立连接
+    denoise_nodes_all = []
+    denoise_nodes = {}
+    denoise_nodes_temp = []
+    view_layer = bpy.context.view_layer.name
+    viewlayer_full = update_tree_denoise_adv()
+    material_aovs = set()
+    for scene in bpy.data.scenes:
+        for layer in bpy.data.scenes[str(scene.name)].view_layers:
+            for aov in (
+                bpy.data.scenes[str(scene.name)].view_layers[str(layer.name)].aovs
+            ):
+                material_aovs.add(aov.name)
+    for node in bpy.context.scene.node_tree.nodes:  # get denoise nodes
+        if node.type == "DENOISE":
+            denoise_nodes_all.append(node.name)
+
+        # get denoise nodes per layer
+        for node in denoise_nodes_all:
+            if view_layer == node[: node.rfind("--")]:
+                denoise_nodes_temp.append(
+                    extract_string_between_patterns(node, "--", "_Dn")
+                )
+        denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
+        denoise_nodes_temp.clear()
+    # print(denoise_nodes)
+
+    scene = bpy.context.scene
+    if view_layer[:6] != "-_-exP_" and "_DATA" not in view_layer:
+        # connect denoise passes
+        for node in denoise_nodes[view_layer]:
+            scene.node_tree.links.new(
+                scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
+            )
+            if bpy.context.scene.render.engine == "CYCLES":
+                scene.node_tree.links.new(
+                    scene.node_tree.nodes[f"{view_layer}"].outputs["Denoising Normal"],
+                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Normal"],
+                )
+                scene.node_tree.links.new(
+                    scene.node_tree.nodes[f"{view_layer}"].outputs["Denoising Albedo"],
+                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Albedo"],
+                )
+            scene.node_tree.links.new(
+                scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
+                scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
+            )
+        # connect non denoise passes
+        for node in set(viewlayer_full[f"{view_layer}Color"]) - set(
+            denoise_nodes[view_layer]
+        ):
+            scene.node_tree.links.new(
+                scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
+            )
+    # elif view_layer[:6] == "-_-exP_" and "_DATA" in view_layer:
+    else:
+        if (
+            viewlayer_full.get(f"{view_layer}Crypto")
+            and not bpy.context.scene.IDS_SepCryptO
+        ) or viewlayer_full.get(f"{view_layer}Data"):
+            scene.node_tree.links.new(
+                scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+            )
+            for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
+                viewlayer_full[f"{view_layer}Vector"]
+            ):
+                if node != "Vector":
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    ),
+                else:
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].inputs[
+                            "Image"
+                        ],
+                    ),
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[
+                            f"{view_layer}--Vector_VectorOut"
+                        ].outputs["Image"],
+                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    ),
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                            "Green"
+                        ],
+                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                            "Blue"
+                        ],
+                    ),
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                            "Blue"
+                        ],
+                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                            "Red"
+                        ],
+                    ),
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                            "Blue"
+                        ],
+                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                            "Alpha"
+                        ],
+                    ),
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                            "Alpha"
+                        ],
+                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                            "Green"
+                        ],
+                    ),
+        if viewlayer_full[f"{view_layer}Vector"]:
+            for node in viewlayer_full[f"{view_layer}Vector"]:
+                scene.node_tree.links.new(
+                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    scene.node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
+                        "Vector"
+                    ],
+                ),
+                scene.node_tree.links.new(
+                    scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
+                        "Vector"
+                    ],
+                    scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                ),
+                if node == "Normal" or "Position":
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                            "X"
+                        ],
+                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                            "X"
+                        ],
+                    )
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                            "Z"
+                        ],
+                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                            "Y"
+                        ],
+                    )
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                            "Y"
+                        ],
+                        scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[0],
+                    )
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[0],
+                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                            "Z"
+                        ],
+                    )
+        if viewlayer_full.get(f"{view_layer}Crypto"):
+            for node in viewlayer_full[f"{view_layer}Crypto"]:
+                if bpy.context.scene.IDS_SepCryptO is False:
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+                    ),
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    )
+                else:
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                            "Image"
+                        ],
+                    )
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                            f"{node}"
+                        ],
+                    )
+
+
 """以下为操作符"""
 
 
@@ -2627,7 +3019,13 @@ class IDS_Update_Tree(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        update_connect()
+        if (
+            bpy.context.scene.IDS_AdvMode is True
+            and bpy.context.scene.IDS_UseDATALayer is True
+        ):
+            update_connect_adv()
+        else:
+            update_connect()
         if bpy.context.scene.IDS_Autoarr is True:
             all_aeras = bpy.context.screen.areas[:]
             area_types = []
