@@ -131,7 +131,7 @@ bpy.types.Scene.IDS_AdvMode = bpy.props.BoolProperty(  # 是否使用高级模�
 
 
 bpy.types.Scene.IDS_UseDATALayer = bpy.props.BoolProperty(  # 是否使用独立数据视图层
-    name="Use Dedicate DATA Layer",
+    name="Use Independent DATA Layer",
     description="Use A dedicated viewlayer only for data and cryptomatte, enable this will make plugin disable other viewlayers' data output",
     default=False,
 )
