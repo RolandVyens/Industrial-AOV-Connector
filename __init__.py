@@ -132,7 +132,7 @@ bpy.types.Scene.IDS_AdvMode = bpy.props.BoolProperty(  # 是否使用高级模�
 
 bpy.types.Scene.IDS_UseDATALayer = bpy.props.BoolProperty(  # 是否使用独立数据视图层
     name="Use Dedicate DATA Layer",
-    description="Use A dedicated viewlayer only for data and cryptomatte",
+    description="Use A dedicated viewlayer only for data and cryptomatte, enable this will make plugin disable other viewlayers' data output",
     default=False,
 )
 
@@ -2259,6 +2259,26 @@ class IDS_Make_DatalayerNew(Operator):
 
     def execute(self, context):
         bpy.ops.scene.view_layer_add(type="NEW")  # (type='NEW','COPY','EMPTY')
+        newlayer = bpy.context.view_layer
+        newlayer.name = "DATA_Layer--exP"
+        if bpy.context.scene.render.engine == "CYCLES":
+            newlayer.samples = 192
+        for material in bpy.data.materials:
+            if material.name == "override--exP":
+                newlayer.material_override = "override--exP"
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/", filename="override--exP"
+                )
+                newlayer.material_override = "override--exP"
 
         return {"FINISHED"}
 
@@ -2270,7 +2290,28 @@ class IDS_Make_DatalayerCopy(Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
+        current_layer_name = bpy.context.view_layer.name
         bpy.ops.scene.view_layer_add(type="COPY")  # (type='NEW','COPY','EMPTY')
+        newlayer = bpy.context.view_layer
+        newlayer.name = f"{current_layer_name}_DATA--exP"
+        if bpy.context.scene.render.engine == "CYCLES":
+            newlayer.samples = 192
+        for material in bpy.data.materials:
+            if material.name == "override--exP":
+                newlayer.material_override = bpy.data.materials.get("override--exP")
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/", filename="override--exP"
+                )
+                newlayer.material_override = bpy.data.materials.get("override--exP")
 
         return {"FINISHED"}
 
