@@ -2258,32 +2258,31 @@ class IDS_Make_DatalayerNew(Operator):
     bl_options = {"REGISTER"}
 
     def execute(self, context):
-        current_viewlayers=bpy.context.scene.view_layers[:]
-        viewlayer_names=[]
+        current_viewlayers = bpy.context.scene.view_layers[:]
+        viewlayer_names = []
         for viewlayer in current_viewlayers:
             viewlayer_names.append(viewlayer.name)
-        current_layer_name = bpy.context.view_layer.name
-        if "--exP_Dedicated_DATA" not in viewlayer_names:
-            bpy.ops.scene.view_layer_add(type="NEW")  # (type='NEW','COPY','EMPTY')
-            newlayer = bpy.context.view_layer
-            newlayer.name = "--exP_Dedicated_DATA"
-            if bpy.context.scene.render.engine == "CYCLES":
-                newlayer.samples = 192
-            if "override--exP" in bpy.data.materials:
-                newlayer.material_override = bpy.data.materials.get("override--exP")
-            else:
-                user_path = bpy.utils.resource_path("USER")
-                asset_path = os.path.join(
-                    user_path,
-                    "scripts",
-                    "addons",
-                    "Industrial-AOV-Connector",
-                    "asset.blend",
-                )
-                bpy.ops.wm.append(
-                    directory=asset_path + "/Material/", filename="override--exP"
-                )
-                newlayer.material_override = bpy.data.materials.get("override--exP")
+        bpy.ops.scene.view_layer_add(type="NEW")  # (type='NEW','COPY','EMPTY')
+        newlayer = bpy.context.view_layer
+        newlayer.name = "--exP_Dedicated_DATA"
+        if bpy.context.scene.render.engine == "CYCLES":
+            newlayer.samples = 192
+        if "override--exP" in bpy.data.materials:
+            newlayer.material_override = bpy.data.materials.get("override--exP")
+        else:
+            user_path = bpy.utils.resource_path("USER")
+            asset_path = os.path.join(
+                user_path,
+                "scripts",
+                "addons",
+                "Industrial-AOV-Connector",
+                "asset.blend",
+            )
+            bpy.ops.wm.append(
+                directory=asset_path + "/Material/", filename="override--exP"
+            )
+            newlayer.material_override = bpy.data.materials.get("override--exP")
+        self.report({"INFO"}, bpy.app.translations.pgettext("New DATA Layer Created"))
 
         return {"FINISHED"}
 
@@ -2295,12 +2294,16 @@ class IDS_Make_DatalayerCopy(Operator):
     bl_options = {"REGISTER"}
 
     def execute(self, context):
-        current_viewlayers=bpy.context.scene.view_layers[:]
-        viewlayer_names=[]
+        current_viewlayers = bpy.context.scene.view_layers[:]
+        viewlayer_names = []
         for viewlayer in current_viewlayers:
             viewlayer_names.append(viewlayer.name)
         current_layer_name = bpy.context.view_layer.name
-        if extract_string_between_patterns(current_layer_name, "--exP_", "_DATA") not in viewlayer_names:
+        if (
+            extract_string_between_patterns(current_layer_name, "--exP_", "_DATA")
+            not in viewlayer_names
+            and current_layer_name != "--exP_Dedicated_DATA"
+        ):
             bpy.ops.scene.view_layer_add(type="COPY")  # (type='NEW','COPY','EMPTY')
             newlayer = bpy.context.view_layer
             newlayer.name = f"--exP_{current_layer_name}_DATA"
@@ -2321,6 +2324,61 @@ class IDS_Make_DatalayerCopy(Operator):
                     directory=asset_path + "/Material/", filename="override--exP"
                 )
                 newlayer.material_override = bpy.data.materials.get("override--exP")
+            self.report(
+                {"INFO"}, bpy.app.translations.pgettext("Duplicate DATA Layer Created")
+            )
+        elif current_layer_name == "--exP_Dedicated_DATA":
+            bpy.ops.scene.view_layer_add(type="COPY")  # (type='NEW','COPY','EMPTY')
+            newlayer = bpy.context.view_layer
+            newlayer.name = "--exP_Dedicated_DATA"
+            if bpy.context.scene.render.engine == "CYCLES":
+                newlayer.samples = 192
+            if "override--exP" in bpy.data.materials:
+                newlayer.material_override = bpy.data.materials.get("override--exP")
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/", filename="override--exP"
+                )
+                newlayer.material_override = bpy.data.materials.get("override--exP")
+            self.report(
+                {"INFO"}, bpy.app.translations.pgettext("Duplicate DATA Layer Created")
+            )
+        elif (
+            extract_string_between_patterns(current_layer_name, "--exP_", "_DATA")
+            in viewlayer_names
+            and current_layer_name != "--exP_Dedicated_DATA"
+        ):
+            bpy.ops.scene.view_layer_add(type="COPY")  # (type='NEW','COPY','EMPTY')
+            newlayer = bpy.context.view_layer
+            newlayer.name = current_layer_name
+            if bpy.context.scene.render.engine == "CYCLES":
+                newlayer.samples = 192
+            if "override--exP" in bpy.data.materials:
+                newlayer.material_override = bpy.data.materials.get("override--exP")
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/", filename="override--exP"
+                )
+                newlayer.material_override = bpy.data.materials.get("override--exP")
+            self.report(
+                {"INFO"}, bpy.app.translations.pgettext("Duplicate DATA Layer Created")
+            )
 
         return {"FINISHED"}
 
