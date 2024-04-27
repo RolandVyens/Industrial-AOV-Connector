@@ -46,6 +46,50 @@ language_dict = {
             "Use Nodes",
         ): "使用节点",
         (
+            "*",
+            "Use Advanced Mode",
+        ): "使用高级模式",
+        (
+            "*",
+            "Separate Cryptomatte Output",
+        ): "单独输出Cryptomatte",
+        (
+            "*",
+            "Advanced:",
+        ): "高级:",
+        (
+            "*",
+            'Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:',
+        ): '专门的数据层(名字中包含"-_-exP_" & "_DATA")配置:',
+        (
+            "*",
+            "Use Independent DATA Layer",
+        ): "使用专门的数据层",
+        (
+            "Operator",
+            "Make A DATA Layer",
+        ): "新建一个数据层",
+        (
+            "Operator",
+            "Convert To DATA Layer",
+        ): "将当前层转换为数据层",
+        (
+            "Operator",
+            "Override Layer Material To A Diffuse BSDF",
+        ): "给层赋予一个漫射材质覆盖",
+        (
+            "*",
+            "EXR Codec:",
+        ): "EXR编码器:",
+        (
+            "Operator",
+            "Brand New DATA Viewlayer",
+        ): "全新的数据层",
+        (
+            "Operator",
+            "New DATA Viewlayer Based On Current Viewlayer",
+        ): "继承当前视图层各项属性的视图层",
+        (
             "Operator",
             "Turn On Denoise For All Layers",
         ): "打开所有层的降噪数据",
@@ -165,6 +209,30 @@ language_dict = {
             "*",
             "Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
         ): "在生成节点树时自动排列，仅在合成器可见时有效。如果场景特别大请谨慎使用",
+        (
+            "*",
+            "Use A dedicated viewlayer only for data and cryptomatte, enable this will make plugin disable other viewlayers' data output",
+        ): "使用专门的数据层输出数据和Cryptomatte，打开此项会使插件停止输出其他视图层的数据",
+        (
+            "*",
+            "Lossless. Provides Decently high compression rate, also playbacks fast. The balanced choice",
+        ): "无损。提供了非常不错的压缩率，播放也很快。平衡的选择",
+        (
+            "*",
+            "Lossless. Compression rate is the highest for grainy images, but slower to read than other Lossless method",
+        ): "无损。面对噪点多的图像提供最高的压缩效率，但是读取起来相比其他无损压缩更慢",
+        (
+            "*",
+            "Lossless. Fastest for read & write, but significantly larger than other lossless method",
+        ): "无损。读写性能最好的压缩格式，但是体积显著大于其他压缩方式",
+        (
+            "*",
+            "Lossless. Provides identical compression rate with ZIP, but nearly 40% faster to playback in Nuke (tested by me with a decent machine). The recommended method",
+        ): "无损。提供与ZIP几乎一致的压缩率，但在nuke中回放时比ZIP快接近40%（本人使用一台好电脑亲测）。推荐的编码器",
+        (
+            "*",
+            "Lossy. Compress 32bit to 24 bit, leaving 16bit and 8bit untouched. Not suitable for Cryptomatte but may be used with other type of DATA to reduce file size",
+        ): "有损。将32位通道压缩为24位，不改变16位或8位的通道。不适用于Cryptomatte，但与其他数据通道结合使用或许可以减少文件大小",
     },
     "zh_HANS": {
         (
@@ -213,6 +281,50 @@ language_dict = {
             "Use Nodes",
         ): "使用节点",
         (
+            "*",
+            "Use Advanced Mode",
+        ): "使用高级模式",
+        (
+            "*",
+            "Separate Cryptomatte Output",
+        ): "单独输出Cryptomatte",
+        (
+            "*",
+            "Advanced:",
+        ): "高级:",
+        (
+            "*",
+            'Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:',
+        ): '专门的数据层(名字中包含"-_-exP_" & "_DATA")配置:',
+        (
+            "*",
+            "Use Independent DATA Layer",
+        ): "使用专门的数据层",
+        (
+            "Operator",
+            "Make A DATA Layer",
+        ): "新建一个数据层",
+        (
+            "Operator",
+            "Convert To DATA Layer",
+        ): "将当前层转换为数据层",
+        (
+            "Operator",
+            "Override Layer Material To A Diffuse BSDF",
+        ): "给层赋予一个漫射材质覆盖",
+        (
+            "*",
+            "EXR Codec:",
+        ): "EXR编码器:",
+        (
+            "Operator",
+            "Brand New DATA Viewlayer",
+        ): "全新的数据层",
+        (
+            "Operator",
+            "New DATA Viewlayer Based On Current Viewlayer",
+        ): "继承当前视图层各项属性的视图层",
+        (
             "Operator",
             "Turn On Denoise For All Layers",
         ): "打开所有层的降噪数据",
@@ -332,5 +444,29 @@ language_dict = {
             "*",
             "Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
         ): "在生成节点树时自动排列，仅在合成器可见时有效。如果场景特别大请谨慎使用",
+        (
+            "*",
+            "Use A dedicated viewlayer only for data and cryptomatte, enable this will make plugin disable other viewlayers' data output",
+        ): "使用专门的数据层输出数据和Cryptomatte，打开此项会使插件停止输出其他视图层的数据",
+        (
+            "*",
+            "Lossless. Provides Decently high compression rate, also playbacks fast. The balanced choice",
+        ): "无损。提供了非常不错的压缩率，播放也很快。平衡的选择",
+        (
+            "*",
+            "Lossless. Compression rate is the highest for grainy images, but slower to read than other Lossless method",
+        ): "无损。面对噪点多的图像提供最高的压缩效率，但是读取起来相比其他无损压缩更慢",
+        (
+            "*",
+            "Lossless. Fastest for read & write, but significantly larger than other lossless method",
+        ): "无损。读写性能最好的压缩格式，但是体积显著大于其他压缩方式",
+        (
+            "*",
+            "Lossless. Provides identical compression rate with ZIP, but nearly 40% faster to playback in Nuke (tested by me with a decent machine). The recommended method",
+        ): "无损。提供与ZIP几乎一致的压缩率，但在nuke中回放时比ZIP快接近40%（本人使用一台好电脑亲测）。推荐的编码器",
+        (
+            "*",
+            "Lossy. Compress 32bit to 24 bit, leaving 16bit and 8bit untouched. Not suitable for Cryptomatte but may be used with other type of DATA to reduce file size",
+        ): "有损。将32位通道压缩为24位，不改变16位或8位的通道。不适用于Cryptomatte，但与其他数据通道结合使用或许可以减少文件大小",
     },
 }

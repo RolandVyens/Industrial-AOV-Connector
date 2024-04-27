@@ -125,7 +125,7 @@ bpy.types.Scene.IDS_SepCryptO = bpy.props.BoolProperty(  # 是否单独输出cry
 
 bpy.types.Scene.IDS_AdvMode = bpy.props.BoolProperty(  # 是否使用高级模式
     name="Use Advanced Mode",
-    description="Go to advanced mode for more customized control, under developing",
+    description="Go to advanced mode for more customized control",
     default=False,
 )
 
@@ -137,8 +137,8 @@ bpy.types.Scene.IDS_UseDATALayer = bpy.props.BoolProperty(  # 是否使用独立
 )
 
 
-bpy.types.Scene.IDS_Compression = bpy.props.EnumProperty(
-    name="RGBA compression",
+bpy.types.Scene.IDS_RGBACompression = bpy.props.EnumProperty(
+    name="RGBA",
     items=[
         (
             "ZIP",
@@ -171,7 +171,73 @@ bpy.types.Scene.IDS_Compression = bpy.props.EnumProperty(
         ("DWAB", "DWAB", "Lossy. Small"),
         ("NONE", "NONE", "No compress"),
     ],
-    default="",
+    default="ZIPS",
+)
+
+
+bpy.types.Scene.IDS_DATACompression = bpy.props.EnumProperty(
+    name="DATA",
+    items=[
+        (
+            "ZIP",
+            "ZIP",
+            "Lossless. Provides Decently high compression rate, also playbacks fast. The balanced choice",
+        ),
+        (
+            "PIZ",
+            "PIZ",
+            "Lossless. Compression rate is the highest for grainy images, but slower to read than other Lossless method",
+        ),
+        (
+            "RLE",
+            "RLE",
+            "Lossless. Fastest for read & write, but significantly larger than other lossless method",
+        ),
+        (
+            "ZIPS",
+            "ZIPS",
+            "Lossless. Provides identical compression rate with ZIP, but nearly 40% faster to playback in Nuke (tested by me with a decent machine). The recommended method",
+        ),
+        (
+            "PXR24",
+            "PXR24",
+            "Lossy. Compress 32bit to 24 bit, leaving 16bit and 8bit untouched. Not suitable for Cryptomatte but may be used with other type of DATA to reduce file size",
+        ),
+        ("B44", "B44", "Lossy"),
+        ("B44A", "B44A", "Lossy"),
+        ("DWAA", "DWAA", "Lossy. Small"),
+        ("DWAB", "DWAB", "Lossy. Small"),
+        ("NONE", "NONE", "No compress"),
+    ],
+    default="ZIPS",
+)
+
+
+bpy.types.Scene.IDS_CryptoCompression = bpy.props.EnumProperty(
+    name="Cryptomatte",
+    items=[
+        (
+            "ZIP",
+            "ZIP",
+            "Lossless. Provides Decently high compression rate, also playbacks fast. The balanced choice",
+        ),
+        (
+            "PIZ",
+            "PIZ",
+            "Lossless. Compression rate is the highest for grainy images, but slower to read than other Lossless method",
+        ),
+        (
+            "RLE",
+            "RLE",
+            "Lossless. Fastest for read & write, but significantly larger than other lossless method",
+        ),
+        (
+            "ZIPS",
+            "ZIPS",
+            "Lossless. Provides identical compression rate with ZIP, but nearly 40% faster to playback in Nuke (tested by me with a decent machine). The recommended method",
+        ),
+    ],
+    default="ZIPS",
 )
 
 
@@ -360,7 +426,10 @@ def make_tree_denoise():  # 主要功能函数之建立节点
         if node.type != "R_LAYERS":
             bpy.context.scene.node_tree.nodes.remove(node)
 
-    if bpy.context.scene.IDS_ConfIg == "OPTION1":  # config 1
+    if (
+        bpy.context.scene.IDS_ConfIg == "OPTION1"
+        or bpy.context.scene.IDS_AdvMode is True
+    ):  # config 1
         for view_layer in viewlayers:
             for node in bpy.context.scene.node_tree.nodes:
                 if node.type == "R_LAYERS" and node.layer == view_layer:
@@ -370,7 +439,12 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                     FO_RGB_node.location = 1200, 0  # initial location
                     FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_RGB_node.format.color_depth = "16"
-                    FO_RGB_node.format.exr_codec = "ZIPS"
+                    if bpy.context.scene.IDS_AdvMode is False:
+                        FO_RGB_node.format.exr_codec = "ZIPS"
+                    else:
+                        FO_RGB_node.format.exr_codec = (
+                            bpy.context.scene.IDS_RGBACompression
+                        )
                     if bpy.context.scene.IDS_FileloC is True:
                         current_render_path = file_output_to_subfolder_loc()
                         FO_RGB_node.base_path = (
@@ -438,7 +512,12 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         FO_DATA_node.location = 1200, 0
                         FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
                         FO_DATA_node.format.color_depth = "32"
-                        FO_DATA_node.format.exr_codec = "ZIPS"
+                        if bpy.context.scene.IDS_AdvMode is False:
+                            FO_DATA_node.format.exr_codec = "ZIPS"
+                        else:
+                            FO_DATA_node.format.exr_codec = (
+                                bpy.context.scene.IDS_DATACompression
+                            )
                         if bpy.context.scene.IDS_FileloC is True:
                             current_render_path = file_output_to_subfolder_loc()
                             FO_DATA_node.base_path = (
@@ -512,7 +591,12 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                             FO_Crypto_node.location = 1200, 0
                             FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
                             FO_Crypto_node.format.color_depth = "32"
-                            FO_Crypto_node.format.exr_codec = "ZIPS"
+                            if bpy.context.scene.IDS_AdvMode is False:
+                                FO_Crypto_node.format.exr_codec = "ZIPS"
+                            else:
+                                FO_Crypto_node.format.exr_codec = (
+                                    bpy.context.scene.IDS_CryptoCompression
+                                )
                             if bpy.context.scene.IDS_FileloC is True:
                                 current_render_path = file_output_to_subfolder_loc()
                                 FO_Crypto_node.base_path = (
@@ -861,7 +945,10 @@ def auto_connect():  # 主要功能函数之建立连接
     # print(denoise_nodes)
 
     scene = bpy.context.scene
-    if bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2
+    if (
+        bpy.context.scene.IDS_ConfIg == "OPTION2"
+        and bpy.context.scene.IDS_AdvMode is False
+    ):  # config 2
         for view_layer in viewlayers:
             # connect denoise passes
             for node in denoise_nodes[view_layer]:
@@ -1013,7 +1100,8 @@ def auto_connect():  # 主要功能函数之建立连接
                         )
     elif (
         bpy.context.scene.IDS_ConfIg == "OPTION1"
-        or bpy.context.scene.IDS_ConfIg == "OPTION3"
+        or bpy.context.scene.IDS_AdvMode is True
+        # or bpy.context.scene.IDS_ConfIg == "OPTION3"
     ):
         for view_layer in viewlayers:
             # connect denoise passes
@@ -1213,7 +1301,10 @@ def update_tree_denoise():  # 新建当前视图层的节点
         if node.type != "R_LAYERS" and node.name[: node.name.rfind("--")] == view_layer:
             bpy.context.scene.node_tree.nodes.remove(node)
 
-    if bpy.context.scene.IDS_ConfIg == "OPTION1":  # config 1
+    if (
+        bpy.context.scene.IDS_ConfIg == "OPTION1"
+        or bpy.context.scene.IDS_AdvMode is True
+    ):  # config 1
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
@@ -1222,7 +1313,10 @@ def update_tree_denoise():  # 新建当前视图层的节点
                 FO_RGB_node.location = 1200, 0  # initial location
                 FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                 FO_RGB_node.format.color_depth = "16"
-                FO_RGB_node.format.exr_codec = "ZIPS"
+                if bpy.context.scene.IDS_AdvMode is False:
+                    FO_RGB_node.format.exr_codec = "ZIPS"
+                else:
+                    FO_RGB_node.format.exr_codec = bpy.context.scene.IDS_RGBACompression
                 if bpy.context.scene.IDS_FileloC is True:
                     current_render_path = file_output_to_subfolder_loc()
                     FO_RGB_node.base_path = (
@@ -1286,7 +1380,12 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     FO_DATA_node.location = 1200, 0
                     FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_DATA_node.format.color_depth = "32"
-                    FO_DATA_node.format.exr_codec = "ZIPS"
+                    if bpy.context.scene.IDS_AdvMode is False:
+                        FO_DATA_node.format.exr_codec = "ZIPS"
+                    else:
+                        FO_DATA_node.format.exr_codec = (
+                            bpy.context.scene.IDS_DATACompression
+                        )
                     if bpy.context.scene.IDS_FileloC is True:
                         current_render_path = file_output_to_subfolder_loc()
                         FO_DATA_node.base_path = (
@@ -1354,7 +1453,12 @@ def update_tree_denoise():  # 新建当前视图层的节点
                         FO_Crypto_node.location = 1200, 0
                         FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
                         FO_Crypto_node.format.color_depth = "32"
-                        FO_Crypto_node.format.exr_codec = "ZIPS"
+                        if bpy.context.scene.IDS_AdvMode is False:
+                            FO_Crypto_node.format.exr_codec = "ZIPS"
+                        else:
+                            FO_Crypto_node.format.exr_codec = (
+                                bpy.context.scene.IDS_CryptoCompression
+                            )
                         if bpy.context.scene.IDS_FileloC is True:
                             current_render_path = file_output_to_subfolder_loc()
                             FO_Crypto_node.base_path = (
@@ -1679,7 +1783,10 @@ def update_connect():  # 新建当前视图层的连接
     # print(denoise_nodes)
 
     scene = bpy.context.scene
-    if bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2
+    if (
+        bpy.context.scene.IDS_ConfIg == "OPTION2"
+        and bpy.context.scene.IDS_AdvMode is False
+    ):  # config 2
         # connect denoise passes
         for node in denoise_nodes[view_layer]:
             scene.node_tree.links.new(
@@ -1811,7 +1918,8 @@ def update_connect():  # 新建当前视图层的连接
                     )
     elif (
         bpy.context.scene.IDS_ConfIg == "OPTION1"
-        or bpy.context.scene.IDS_ConfIg == "OPTION3"
+        or bpy.context.scene.IDS_AdvMode is True
+        # or bpy.context.scene.IDS_ConfIg == "OPTION3"
     ):
         # connect denoise passes
         for node in denoise_nodes[view_layer]:
@@ -2202,7 +2310,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                     FO_RGB_node.location = 1200, 0  # initial location
                     FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_RGB_node.format.color_depth = "16"
-                    FO_RGB_node.format.exr_codec = "ZIPS"
+                    FO_RGB_node.format.exr_codec = bpy.context.scene.IDS_RGBACompression
                     if bpy.context.scene.IDS_FileloC is True:
                         current_render_path = file_output_to_subfolder_loc()
                         FO_RGB_node.base_path = (
@@ -2272,7 +2380,9 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                         FO_DATA_node.location = 1200, 0
                         FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
                         FO_DATA_node.format.color_depth = "32"
-                        FO_DATA_node.format.exr_codec = "ZIPS"
+                        FO_DATA_node.format.exr_codec = (
+                            bpy.context.scene.IDS_DATACompression
+                        )
                         if bpy.context.scene.IDS_FileloC is True:
                             current_render_path = file_output_to_subfolder_loc()
                             layer_core = extract_string_between_patterns(
@@ -2352,7 +2462,9 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             FO_Crypto_node.location = 1200, 0
                             FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
                             FO_Crypto_node.format.color_depth = "32"
-                            FO_Crypto_node.format.exr_codec = "ZIPS"
+                            FO_Crypto_node.format.exr_codec = (
+                                bpy.context.scene.IDS_CryptoCompression
+                            )
                             if bpy.context.scene.IDS_FileloC is True:
                                 current_render_path = file_output_to_subfolder_loc()
                                 layer_core = extract_string_between_patterns(
@@ -2627,7 +2739,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                 FO_RGB_node.location = 1200, 0  # initial location
                 FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                 FO_RGB_node.format.color_depth = "16"
-                FO_RGB_node.format.exr_codec = "ZIPS"
+                FO_RGB_node.format.exr_codec = bpy.context.scene.IDS_RGBACompression
                 if bpy.context.scene.IDS_FileloC is True:
                     current_render_path = file_output_to_subfolder_loc()
                     FO_RGB_node.base_path = (
@@ -2693,7 +2805,9 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                     FO_DATA_node.location = 1200, 0
                     FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_DATA_node.format.color_depth = "32"
-                    FO_DATA_node.format.exr_codec = "ZIPS"
+                    FO_DATA_node.format.exr_codec = (
+                        bpy.context.scene.IDS_DATACompression
+                    )
                     if bpy.context.scene.IDS_FileloC is True:
                         current_render_path = file_output_to_subfolder_loc()
                         layer_core = extract_string_between_patterns(
@@ -2767,7 +2881,9 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         FO_Crypto_node.location = 1200, 0
                         FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
                         FO_Crypto_node.format.color_depth = "32"
-                        FO_Crypto_node.format.exr_codec = "ZIPS"
+                        FO_Crypto_node.format.exr_codec = (
+                            bpy.context.scene.IDS_CryptoCompression
+                        )
                         if bpy.context.scene.IDS_FileloC is True:
                             current_render_path = file_output_to_subfolder_loc()
                             layer_core = extract_string_between_patterns(
@@ -3239,7 +3355,7 @@ class IDS_Convert_DATALayer(Operator):
 class IDS_Override_DATAMaT(Operator):
     bl_idname = "viewlayer.overridedatamat"
     bl_label = "Override Layer Material To A Diffuse BSDF"
-    bl_description = "Convert current layer to DATA layer"
+    bl_description = "Override Layer Material To A Diffuse BSDF"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -3340,11 +3456,16 @@ class IDS_OutputPanel(bpy.types.Panel):
             box1 = layout.box()
             box1.label(text="Advanced:")
             box2 = box1.box()
-            box2.label(text="Independent DATA Layer Config:")
+            box2.label(text='Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:')
             box2.prop(context.scene, "IDS_UseDATALayer")
             box2.operator(IDS_Draw_DataMenu.bl_idname)
             box2.operator(IDS_Convert_DATALayer.bl_idname)
             box2.operator(IDS_Override_DATAMaT.bl_idname)
+            box1.label(text="EXR Codec:")
+            box1.prop(context.scene, "IDS_RGBACompression")
+            box1.prop(context.scene, "IDS_DATACompression")
+            if bpy.context.scene.IDS_SepCryptO is True:
+                box1.prop(context.scene, "IDS_CryptoCompression")
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
