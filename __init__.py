@@ -425,9 +425,9 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
 def make_tree_denoise():  # 主要功能函数之建立节点
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons[__name__].preferences
-    viewlayers = set()
+    viewlayers = []
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
+        viewlayers.append(view_layer.name)
     current_render_path = bpy.context.scene.render.filepath
     viewlayer_full = sort_passes()
     # print(viewlayer_full)
@@ -935,12 +935,12 @@ def make_tree_denoise():  # 主要功能函数之建立节点
 
 
 def auto_connect():  # 主要功能函数之建立连接
-    viewlayers = set()
+    viewlayers = []
     denoise_nodes_all = []
     denoise_nodes = {}
     denoise_nodes_temp = []
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
+        viewlayers.append(view_layer.name)
     viewlayer_full = make_tree_denoise()
     material_aovs = set()
     for scene in bpy.data.scenes:
@@ -2098,9 +2098,9 @@ def update_connect():  # 新建当前视图层的连接
 
 
 def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
-    viewlayers = set()
+    viewlayers = []
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
+        viewlayers.append(view_layer.name)
     for view_layer in viewlayers:
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
@@ -2115,7 +2115,7 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
 
 
 def auto_arr_outputnode():  # 排列输出节点
-    viewlayers = set()
+    viewlayers = []
     RGBA_location_y = {}
     RGBA_dimension_y = {}
     DATA_location_y = {}
@@ -2123,7 +2123,7 @@ def auto_arr_outputnode():  # 排列输出节点
     VIEWLAYER_location_y = {}
     outnode_positions = []
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
+        viewlayers.append(view_layer.name)
     for view_layer in viewlayers:
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
@@ -2151,19 +2151,8 @@ def auto_arr_outputnode():  # 排列输出节点
     # print(RGBA_location_y)
     # print(RGBA_location_y.get(node.name[: node.name.rfind("_")] + "_RgBA"))
     for node in bpy.context.scene.node_tree.nodes:
-        if (
-            bpy.context.scene.IDS_AdvMode is True
-            and bpy.context.scene.IDS_UseDATALayer is True
-        ):
-            if node.type == "OUTPUT_FILE" and "DaTA" in node.name:
-                node.location = 1200, VIEWLAYER_location_y.get(
-                    node.name[: node.name.rfind("--")]
-                )
-                node.width = 420
-                DATA_location_y[node.name] = node.location.y
-                DATA_dimension_y[node.name] = node.dimensions.y
-        else:
-            if node.type == "OUTPUT_FILE" and "DaTA" in node.name:
+        if node.type == "OUTPUT_FILE" and "DaTA" in node.name:
+            if node.name[: node.name.rfind("--")] + "--RgBA" in RGBA_location_y:
                 node.location = 1200, (
                     RGBA_location_y.get(node.name[: node.name.rfind("--")] + "--RgBA")
                     - RGBA_dimension_y.get(
@@ -2171,9 +2160,16 @@ def auto_arr_outputnode():  # 排列输出节点
                     )
                     - 20
                 )
-                node.width = 420
-                DATA_location_y[node.name] = node.location.y
-                DATA_dimension_y[node.name] = node.dimensions.y
+            else:
+                node.location = 1200, VIEWLAYER_location_y.get(
+                    node.name[: node.name.rfind("--")]
+                )
+            node.width = 420
+            DATA_location_y[node.name] = node.location.y
+            DATA_dimension_y[node.name] = node.dimensions.y
+            node.width = 420
+            DATA_location_y[node.name] = node.location.y
+            DATA_dimension_y[node.name] = node.dimensions.y
     for node in bpy.context.scene.node_tree.nodes:
         if node.type == "OUTPUT_FILE" and "CryptoMaTTe" in node.name:
             if node.name[: node.name.rfind("--")] + "--DaTA" in DATA_location_y:
@@ -2201,11 +2197,11 @@ def auto_arr_outputnode():  # 排列输出节点
 
 
 def auto_arr_denoisenode():  # 排列降噪节点
-    viewlayers = set()
+    viewlayers = []
     DN_location_y = 0
     DN_dimension_y = 0
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
+        viewlayers.append(view_layer.name)
     for view_layer in viewlayers:
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
@@ -2226,11 +2222,11 @@ def auto_arr_denoisenode():  # 排列降噪节点
 
 
 def auto_arr_mathnode():  # 排列数学运算节点
-    viewlayers = set()
+    viewlayers = []
     MA_location_y = 0
     MA_dimension_y = 0
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
+        viewlayers.append(view_layer.name)
     for view_layer in viewlayers:
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
@@ -2299,9 +2295,9 @@ def auto_arr_mathnode():  # 排列数学运算节点
 def make_tree_denoise_adv():  # 高级模式节点创建
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons[__name__].preferences
-    viewlayers = set()
+    viewlayers = []
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
+        viewlayers.append(view_layer.name)
     current_render_path = bpy.context.scene.render.filepath
     viewlayer_full = sort_passes()
     # print(viewlayer_full)
@@ -2567,12 +2563,12 @@ def make_tree_denoise_adv():  # 高级模式节点创建
 
 
 def auto_connect_adv():  # 高级模式建立连接
-    viewlayers = set()
+    viewlayers = []
     denoise_nodes_all = []
     denoise_nodes = {}
     denoise_nodes_temp = []
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
+        viewlayers.append(view_layer.name)
     viewlayer_full = make_tree_denoise_adv()
     material_aovs = set()
     for scene in bpy.data.scenes:
@@ -2934,7 +2930,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         FO_Crypto_node.file_slots.new("Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
                             FO_Crypto_node.file_slots.new(f"{input}")
-                    else:
+                    elif bpy.context.scene.IDS_UseDATALayer is False:
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
                             FO_DATA_node.file_slots.new(f"{input}")
 
@@ -3121,8 +3117,10 @@ def update_connect_adv():  # 高级模式建立连接
                 scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                 scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
             )
-        if bpy.context.scene.IDS_UseAdvCrypto is True and viewlayer_full.get(
-            f"{view_layer}Crypto"
+        if (
+            bpy.context.scene.IDS_SepCryptO is True
+            and bpy.context.scene.IDS_UseAdvCrypto is True
+            and viewlayer_full.get(f"{view_layer}Crypto")
         ):
             for node in viewlayer_full[f"{view_layer}Crypto"]:
                 if bpy.context.scene.IDS_SepCryptO is False:
