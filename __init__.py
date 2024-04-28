@@ -3485,6 +3485,11 @@ class IDS_OutputPanel(bpy.types.Panel):
         if bpy.context.scene.IDS_AdvMode is True:
             box1 = layout.box()
             box1.label(text="Advanced:")
+            box1.label(text="EXR Codec:")
+            box1.prop(context.scene, "IDS_RGBACompression")
+            box1.prop(context.scene, "IDS_DATACompression")
+            if bpy.context.scene.IDS_SepCryptO is True:
+                box1.prop(context.scene, "IDS_CryptoCompression")
             box2 = box1.box()
             box2.label(
                 text='Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:'
@@ -3493,11 +3498,6 @@ class IDS_OutputPanel(bpy.types.Panel):
             box2.operator(IDS_Draw_DataMenu.bl_idname)
             box2.operator(IDS_Convert_DATALayer.bl_idname)
             box2.operator(IDS_Override_DATAMaT.bl_idname)
-            box1.label(text="EXR Codec:")
-            box1.prop(context.scene, "IDS_RGBACompression")
-            box1.prop(context.scene, "IDS_DATACompression")
-            if bpy.context.scene.IDS_SepCryptO is True:
-                box1.prop(context.scene, "IDS_CryptoCompression")
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
