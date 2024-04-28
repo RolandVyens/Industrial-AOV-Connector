@@ -48,7 +48,7 @@ def arrange_list(strings):
 
     # Combine the sorted matching strings with the remaining strings
     remaining_strings = [s for s in strings if s not in matching_strings]
-    arranged_list = matching_strings + remaining_strings
+    arranged_list = remaining_strings + matching_strings
 
     return arranged_list
 
