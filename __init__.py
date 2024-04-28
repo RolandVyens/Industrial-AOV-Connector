@@ -42,6 +42,17 @@ def has_subfolder(folder):  # 判断文件夹内是否存在子文件夹
     return False
 
 
+def arrange_list(strings):
+    # Filter strings that start with "-_-exP_"
+    matching_strings = [s for s in strings if s[:7] == "-_-exP_"]
+
+    # Combine the sorted matching strings with the remaining strings
+    remaining_strings = [s for s in strings if s not in matching_strings]
+    arranged_list = matching_strings + remaining_strings
+
+    return arranged_list
+
+
 """以下为全局配置"""
 
 
@@ -388,12 +399,13 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
 
 
 def auto_arrange_viewlayer():  # 自动排列视图层节点
-    viewlayers = set()
+    viewlayers_raw = set()
     # bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
+        viewlayers_raw.add(view_layer.name)
     renderlayer_node_position = 0
     renderlayer_node_y = []
+    viewlayers = arrange_list(viewlayers_raw)
     for view_layer in viewlayers:
         #        for node in bpy.context.scene.node_tree.nodes:
         #            if node.type == "R_LAYERS" and node.layer == view_layer:
@@ -2303,7 +2315,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
     for view_layer in viewlayers:
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
-                if node.layer[:6] != "-_-exP_" and "_DATA" not in node.layer:
+                if node.layer[:7] != "-_-exP_" and "_DATA" not in node.layer:
                     FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
                     FO_RGB_node.name = f"{view_layer}--RgBA"
                     FO_RGB_node.label = f"{view_layer}_RGBA"
@@ -2368,7 +2380,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                         DN_node.location = 600, 0
                                         DN_node.hide = True
 
-                # elif node.layer[:6] == "-_-exP_" and "_DATA" in node.layer:
+                # elif node.layer[:7] == "-_-exP_" and "_DATA" in node.layer:
                 else:
                     if viewlayer_full.get(f"{view_layer}Data") or (
                         viewlayer_full.get(f"{view_layer}Crypto")
@@ -2530,7 +2542,7 @@ def auto_connect_adv():  # 高级模式建立连接
 
     scene = bpy.context.scene
     for view_layer in viewlayers:
-        if view_layer[:6] != "-_-exP_" and "_DATA" not in view_layer:
+        if view_layer[:7] != "-_-exP_" and "_DATA" not in view_layer:
             # connect denoise passes
             for node in denoise_nodes[view_layer]:
                 scene.node_tree.links.new(
@@ -2566,7 +2578,7 @@ def auto_connect_adv():  # 高级模式建立连接
                     scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                     scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
                 )
-        # elif view_layer[:6] == "-_-exP_" and "_DATA" in view_layer:
+        # elif view_layer[:7] == "-_-exP_" and "_DATA" in view_layer:
         else:
             if (
                 viewlayer_full.get(f"{view_layer}Crypto")
@@ -2732,7 +2744,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
 
     for node in bpy.context.scene.node_tree.nodes:
         if node.type == "R_LAYERS" and node.layer == view_layer:
-            if node.layer[:6] != "-_-exP_" and "_DATA" not in node.layer:
+            if node.layer[:7] != "-_-exP_" and "_DATA" not in node.layer:
                 FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
                 FO_RGB_node.name = f"{view_layer}--RgBA"
                 FO_RGB_node.label = f"{view_layer}_RGBA"
@@ -2793,7 +2805,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                                     DN_node.location = 600, 0
                                     DN_node.hide = True
 
-            # elif node.layer[:6] == "-_-exP_" and "_DATA" in node.layer:
+            # elif node.layer[:7] == "-_-exP_" and "_DATA" in node.layer:
             else:
                 if viewlayer_full.get(f"{view_layer}Data") or (
                     viewlayer_full.get(f"{view_layer}Crypto")
@@ -2946,7 +2958,7 @@ def update_connect_adv():  # 高级模式建立连接
     # print(denoise_nodes)
 
     scene = bpy.context.scene
-    if view_layer[:6] != "-_-exP_" and "_DATA" not in view_layer:
+    if view_layer[:7] != "-_-exP_" and "_DATA" not in view_layer:
         # connect denoise passes
         for node in denoise_nodes[view_layer]:
             scene.node_tree.links.new(
@@ -2974,7 +2986,7 @@ def update_connect_adv():  # 高级模式建立连接
                 scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                 scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
             )
-    # elif view_layer[:6] == "-_-exP_" and "_DATA" in view_layer:
+    # elif view_layer[:7] == "-_-exP_" and "_DATA" in view_layer:
     else:
         if (
             viewlayer_full.get(f"{view_layer}Crypto")
@@ -3106,6 +3118,21 @@ def update_connect_adv():  # 高级模式建立连接
                     )
 
 
+def frame_DATA():
+    for node in bpy.context.scene.node_tree.nodes:
+        if node.name == "DataFramE":
+            bpy.context.scene.node_tree.nodes.remove(node)
+    tree = bpy.context.scene.node_tree
+    FrameNode = tree.nodes.new("NodeFrame")
+    FrameNode.name = "DataFramE"
+    FrameNode.label = "DATA Layers"
+    FrameNode.use_custom_color = True
+    FrameNode.color = (0.04, 0.04, 0.227)
+    for node in bpy.context.scene.node_tree.nodes:
+        if node.name[:7] == "-_-exP_":
+            node.parent = FrameNode
+
+
 """以下为操作符"""
 
 
@@ -3159,6 +3186,7 @@ class IDS_Make_Tree(bpy.types.Operator):
         auto_arr_denoisenode()
         auto_arr_outputnode()
         auto_arr_mathnode()
+        frame_DATA()
         auto_rename()
         origin_render_path_change_loc()
         self.report({"INFO"}, bpy.app.translations.pgettext("All Outputs Updated"))
@@ -3191,6 +3219,8 @@ class IDS_Update_Tree(bpy.types.Operator):
         auto_arr_denoisenode()
         auto_arr_outputnode()
         auto_arr_mathnode()
+        if bpy.context.view_layer.name[:7] == "-_-exP_":
+            frame_DATA()
         auto_rename()
         origin_render_path_change_loc()
         self.report(
@@ -3336,7 +3366,7 @@ class IDS_Convert_DATALayer(Operator):
     def execute(self, context):
         newlayer = bpy.context.view_layer
         current_layer_name = bpy.context.view_layer.name
-        if current_layer_name[:6] != "-_-exP_" and "_DATA" not in current_layer_name:
+        if current_layer_name[:7] != "-_-exP_" and "_DATA" not in current_layer_name:
             newlayer.name = "-_-exP_" + current_layer_name + "_DATA"
             self.report(
                 {"INFO"},
@@ -3456,7 +3486,9 @@ class IDS_OutputPanel(bpy.types.Panel):
             box1 = layout.box()
             box1.label(text="Advanced:")
             box2 = box1.box()
-            box2.label(text='Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:')
+            box2.label(
+                text='Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:'
+            )
             box2.prop(context.scene, "IDS_UseDATALayer")
             box2.operator(IDS_Draw_DataMenu.bl_idname)
             box2.operator(IDS_Convert_DATALayer.bl_idname)
