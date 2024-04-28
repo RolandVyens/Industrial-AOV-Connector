@@ -399,10 +399,10 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
 
 
 def auto_arrange_viewlayer():  # 自动排列视图层节点
-    viewlayers_raw = set()
+    viewlayers_raw = []
     # bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers_raw.add(view_layer.name)
+        viewlayers_raw.append(view_layer.name)
     renderlayer_node_position = 0
     renderlayer_node_y = []
     viewlayers = arrange_list(viewlayers_raw)
