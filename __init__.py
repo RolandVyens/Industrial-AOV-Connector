@@ -148,6 +148,13 @@ bpy.types.Scene.IDS_UseDATALayer = bpy.props.BoolProperty(  # 是否使用独立
 )
 
 
+bpy.types.Scene.IDS_UseAdvCrypto = bpy.props.BoolProperty(  # 是否从独立数据视图层输出cryptomatte
+    name="Output Cryptomatte From RGBA Layers",
+    description="Instead of cryptomatte from DATA Layer, output it from each RGBA pass",
+    default=False,
+)
+
+
 bpy.types.Scene.IDS_RGBACompression = bpy.props.EnumProperty(
     name="RGBA",
     items=[
@@ -2380,6 +2387,51 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                         DN_node.location = 600, 0
                                         DN_node.hide = True
 
+                    if (
+                        bpy.context.scene.IDS_UseAdvCrypto is True
+                        and viewlayer_full.get(f"{view_layer}Crypto")
+                    ):
+                        if bpy.context.scene.IDS_SepCryptO is True:
+                            FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
+                            FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
+                            FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
+                            FO_Crypto_node.location = 1200, 0
+                            FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
+                            FO_Crypto_node.format.color_depth = "32"
+                            FO_Crypto_node.format.exr_codec = (
+                                bpy.context.scene.IDS_CryptoCompression
+                            )
+                            if bpy.context.scene.IDS_FileloC is True:
+                                current_render_path = file_output_to_subfolder_loc()
+                                layer_core = extract_string_between_patterns(
+                                    f"{view_layer}", "-_-exP_", "_DATA"
+                                )
+                                base_path = (
+                                    current_render_path[2]
+                                    + f"{layer_core}_DATA\\"
+                                    + "Cryptomatte\\"
+                                    + f"{layer_core}_Cryptomatte_"
+                                )
+                                final_path = base_path.replace("-_-exP_", "")
+                                FO_Crypto_node.base_path = final_path
+                            else:
+                                layer_core = extract_string_between_patterns(
+                                    f"{view_layer}", "-_-exP_", "_DATA"
+                                )
+                                base_path = (
+                                    file_output_to_1folder_loc()
+                                    + f"{layer_core}_Cryptomatte_"
+                                )
+                                final_path = base_path.replace("-_-exP_", "")
+                                FO_Crypto_node.base_path = final_path
+                            FO_Crypto_node.inputs.clear()
+                            FO_Crypto_node.file_slots.new("Image")
+                            for input in viewlayer_full[f"{view_layer}Crypto"]:
+                                FO_Crypto_node.file_slots.new(f"{input}")
+                        elif bpy.context.scene.IDS_UseDATALayer is False:
+                            for input in viewlayer_full[f"{view_layer}Crypto"]:
+                                FO_DATA_node.file_slots.new(f"{input}")
+
                 # elif node.layer[:7] == "-_-exP_" and "_DATA" in node.layer:
                 else:
                     if viewlayer_full.get(f"{view_layer}Data") or (
@@ -2466,7 +2518,10 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             Convert_node.hide = True
                             Convert_node.location = 660, 0
 
-                    if viewlayer_full.get(f"{view_layer}Crypto"):
+                    if (
+                        bpy.context.scene.IDS_UseAdvCrypto is False
+                        and viewlayer_full.get(f"{view_layer}Crypto")
+                    ):
                         if bpy.context.scene.IDS_SepCryptO is True:
                             FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
                             FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
@@ -2578,6 +2633,38 @@ def auto_connect_adv():  # 高级模式建立连接
                     scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                     scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
                 )
+            if (
+                bpy.context.scene.IDS_SepCryptO is True
+                and bpy.context.scene.IDS_UseAdvCrypto is True
+                and viewlayer_full.get(f"{view_layer}Crypto")
+            ):
+                for node in viewlayer_full[f"{view_layer}Crypto"]:
+                    if bpy.context.scene.IDS_SepCryptO is False:
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                                "Image"
+                            ],
+                        ),
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                                f"{node}"
+                            ],
+                        )
+                    else:
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                            scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                                "Image"
+                            ],
+                        )
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                                f"{node}"
+                            ],
+                        )
         # elif view_layer[:7] == "-_-exP_" and "_DATA" in view_layer:
         else:
             if (
@@ -2692,7 +2779,9 @@ def auto_connect_adv():  # 高级模式建立连接
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["Z"],
                         )
-            if viewlayer_full.get(f"{view_layer}Crypto"):
+            if bpy.context.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(
+                f"{view_layer}Crypto"
+            ):
                 for node in viewlayer_full[f"{view_layer}Crypto"]:
                     if bpy.context.scene.IDS_SepCryptO is False:
                         scene.node_tree.links.new(
@@ -2805,6 +2894,50 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                                     DN_node.location = 600, 0
                                     DN_node.hide = True
 
+                if bpy.context.scene.IDS_UseAdvCrypto is True and viewlayer_full.get(
+                    f"{view_layer}Crypto"
+                ):
+                    if bpy.context.scene.IDS_SepCryptO is True:
+                        FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
+                        FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
+                        FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
+                        FO_Crypto_node.location = 1200, 0
+                        FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
+                        FO_Crypto_node.format.color_depth = "32"
+                        FO_Crypto_node.format.exr_codec = (
+                            bpy.context.scene.IDS_CryptoCompression
+                        )
+                        if bpy.context.scene.IDS_FileloC is True:
+                            current_render_path = file_output_to_subfolder_loc()
+                            layer_core = extract_string_between_patterns(
+                                f"{view_layer}", "-_-exP_", "_DATA"
+                            )
+                            base_path = (
+                                current_render_path[2]
+                                + f"{layer_core}_DATA\\"
+                                + "Cryptomatte\\"
+                                + f"{layer_core}_Cryptomatte_"
+                            )
+                            final_path = base_path.replace("-_-exP_", "")
+                            FO_Crypto_node.base_path = final_path
+                        else:
+                            layer_core = extract_string_between_patterns(
+                                f"{view_layer}", "-_-exP_", "_DATA"
+                            )
+                            base_path = (
+                                file_output_to_1folder_loc()
+                                + f"{layer_core}_Cryptomatte_"
+                            )
+                            final_path = base_path.replace("-_-exP_", "")
+                            FO_Crypto_node.base_path = final_path
+                        FO_Crypto_node.inputs.clear()
+                        FO_Crypto_node.file_slots.new("Image")
+                        for input in viewlayer_full[f"{view_layer}Crypto"]:
+                            FO_Crypto_node.file_slots.new(f"{input}")
+                    else:
+                        for input in viewlayer_full[f"{view_layer}Crypto"]:
+                            FO_DATA_node.file_slots.new(f"{input}")
+
             # elif node.layer[:7] == "-_-exP_" and "_DATA" in node.layer:
             else:
                 if viewlayer_full.get(f"{view_layer}Data") or (
@@ -2885,7 +3018,9 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         Convert_node.hide = True
                         Convert_node.location = 660, 0
 
-                if viewlayer_full.get(f"{view_layer}Crypto"):
+                if bpy.context.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(
+                    f"{view_layer}Crypto"
+                ):
                     if bpy.context.scene.IDS_SepCryptO is True:
                         FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
                         FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
@@ -2986,6 +3121,32 @@ def update_connect_adv():  # 高级模式建立连接
                 scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                 scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
             )
+        if bpy.context.scene.IDS_UseAdvCrypto is True and viewlayer_full.get(
+            f"{view_layer}Crypto"
+        ):
+            for node in viewlayer_full[f"{view_layer}Crypto"]:
+                if bpy.context.scene.IDS_SepCryptO is False:
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+                    ),
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    )
+                else:
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                            "Image"
+                        ],
+                    )
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                            f"{node}"
+                        ],
+                    )
     # elif view_layer[:7] == "-_-exP_" and "_DATA" in view_layer:
     else:
         if (
@@ -3092,7 +3253,9 @@ def update_connect_adv():  # 高级模式建立连接
                             "Z"
                         ],
                     )
-        if viewlayer_full.get(f"{view_layer}Crypto"):
+        if bpy.context.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(
+            f"{view_layer}Crypto"
+        ):
             for node in viewlayer_full[f"{view_layer}Crypto"]:
                 if bpy.context.scene.IDS_SepCryptO is False:
                     scene.node_tree.links.new(
@@ -3495,6 +3658,11 @@ class IDS_OutputPanel(bpy.types.Panel):
                 text='Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:'
             )
             box2.prop(context.scene, "IDS_UseDATALayer")
+            if (
+                bpy.context.scene.IDS_UseDATALayer is True
+                and bpy.context.scene.IDS_SepCryptO is True
+            ):
+                box2.prop(context.scene, "IDS_UseAdvCrypto")
             box2.operator(IDS_Draw_DataMenu.bl_idname)
             box2.operator(IDS_Convert_DATALayer.bl_idname)
             box2.operator(IDS_Override_DATAMaT.bl_idname)
