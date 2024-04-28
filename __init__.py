@@ -376,7 +376,11 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
         ]
         real_data = []
         for i in float_data + vector_data:
-            if "Alpha" not in i and "Denoising" not in i:
+            if (
+                "Alpha" not in i
+                and "Denoising Normal" not in i
+                and "Denoising Albedo" not in i
+            ):
                 real_data.append(i)
         viewlayer_full[viewlayer + "Data"] = real_data
         if "UV" in vector_data:
@@ -2098,20 +2102,18 @@ def update_connect():  # 新建当前视图层的连接
 
 
 def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
-    viewlayers = []
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
-    for view_layer in viewlayers:
-        for node in bpy.context.scene.node_tree.nodes:
-            if node.type == "R_LAYERS" and node.layer == view_layer:
-                for node1 in bpy.context.scene.node_tree.nodes:
-                    if (
-                        node1.type == "OUTPUT_FILE"
-                        and node1.name[: node1.name.rfind("--")] == node.layer
-                    ):
-                        for slot in node1.layer_slots:
-                            slot.name = slot.name.replace("Image", "rgba")
-                            slot.name = slot.name.replace("Combined", "RGBA")
+    # viewlayers = []
+    # for view_layer in bpy.context.scene.view_layers:
+    #     viewlayers.append(view_layer.name)
+    # for view_layer in viewlayers:
+    for node in bpy.context.scene.node_tree.nodes:
+        # if node.type == "R_LAYERS" and node.layer == view_layer:
+        #     for node1 in bpy.context.scene.node_tree.nodes:
+        if node.type == "OUTPUT_FILE":
+            for slot in node.layer_slots:
+                slot.name = slot.name.replace("Image", "rgba")
+                slot.name = slot.name.replace("Combined", "RGBA")
+                slot.name = slot.name.replace("Denoising Depth", "Artistic Depth")
 
 
 def auto_arr_outputnode():  # 排列输出节点
