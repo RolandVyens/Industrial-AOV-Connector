@@ -34,8 +34,8 @@ language_dict = {
         ): "主要配置",
         (
             "*",
-            "Settings:",
-        ): "设置：",
+            "Output Settings:",
+        ): "输出设置：",
         (
             "*",
             "Write To Subfolder",
@@ -45,6 +45,66 @@ language_dict = {
             "*",
             "Use Nodes",
         ): "使用节点",
+        (
+            "*",
+            "Use Advanced Mode",
+        ): "使用高级模式",
+        (
+            "*",
+            "Separate Cryptomatte Output",
+        ): "单独输出Cryptomatte",
+        (
+            "*",
+            "Advanced:",
+        ): "高级:",
+        (
+            "*",
+            'Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:',
+        ): '专门的数据层(名字中包含"-_-exP_" & "_DATA")配置:',
+        (
+            "*",
+            "Use Independent DATA Layer",
+        ): "使用专门的数据层",
+        (
+            "*",
+            "Output Artistic Depth",
+        ): "输出艺用Depth",
+        (
+            "*",
+            "Output Denoised Depth Pass as a 0-1 depth channel, should be much more precise in terms of pixel filtering, also way less noise. But the depth value will not be as correct as the default depth channel",
+        ): "把降噪用Depth转换为一个0-1的深度通道，像素排列精确度将会更高，噪点会更少。但深度数值不如默认深度精确",
+        (
+            "*",
+            "Output Cryptomatte From RGBA Layers",
+        ): "从非数据层输出Cryptomatte",
+        (
+            "*",
+            "Instead of cryptomatte from DATA Layer, output it from each RGBA pass",
+        ): "从每层RGBA输出Cryptomatte，而不是从专门数据层",
+        (
+            "Operator",
+            "Make A DATA Layer",
+        ): "新建一个数据层",
+        (
+            "Operator",
+            "Convert To DATA Layer",
+        ): "将当前层转换为数据层",
+        (
+            "Operator",
+            "Override Layer Material To A Diffuse BSDF",
+        ): "给层赋予一个漫射材质覆盖",
+        (
+            "*",
+            "EXR Codec:",
+        ): "EXR编码器:",
+        (
+            "Operator",
+            "Brand New DATA Viewlayer",
+        ): "全新的数据层",
+        (
+            "Operator",
+            "New DATA Viewlayer Based On Current Viewlayer",
+        ): "继承当前视图层各项属性的视图层",
         (
             "Operator",
             "Turn On Denoise For All Layers",
@@ -159,12 +219,36 @@ language_dict = {
         ): "显示清理无用渲染输出的按钮",
         (
             "*",
-            "Auto Arrange Nodes at generating (experimental)",
-        ): "自动整理节点于生成时（实验性）",
+            "Auto Arrange Nodes at generating",
+        ): "自动整理节点于生成时",
         (
             "*",
             "Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
         ): "在生成节点树时自动排列，仅在合成器可见时有效。如果场景特别大请谨慎使用",
+        (
+            "*",
+            "Use A dedicated viewlayer only for data and cryptomatte, enable this will make plugin disable other viewlayers' data output",
+        ): "使用专门的数据层输出数据和Cryptomatte，打开此项会使插件停止输出其他视图层的数据",
+        (
+            "*",
+            "Lossless. Provides Decently high compression rate, also playbacks fast. The balanced choice",
+        ): "无损。提供了非常不错的压缩率，播放也很快。平衡的选择",
+        (
+            "*",
+            "Lossless. Compression rate is the highest for grainy images, but slower to read than other Lossless method",
+        ): "无损。面对噪点多的图像提供最高的压缩效率，但是读取起来相比其他无损压缩更慢",
+        (
+            "*",
+            "Lossless. Fastest for read & write, but significantly larger than other lossless method",
+        ): "无损。读写性能最好的压缩格式，但是体积显著大于其他压缩方式",
+        (
+            "*",
+            "Lossless. Provides identical compression rate with ZIP, but nearly 40% faster to playback in Nuke (tested by me with a decent machine). The recommended method",
+        ): "无损。提供与ZIP几乎一致的压缩率，但在nuke中回放时比ZIP快接近40%（本人使用一台好电脑亲测）。推荐的编码器",
+        (
+            "*",
+            "Lossy. Compress 32bit to 24 bit, leaving 16bit and 8bit untouched. Not suitable for Cryptomatte but may be used with other type of DATA to reduce file size",
+        ): "有损。将32位通道压缩为24位，不改变16位或8位的通道。不适用于Cryptomatte，但与其他数据通道结合使用或许可以减少文件大小",
     },
     "zh_HANS": {
         (
@@ -201,8 +285,8 @@ language_dict = {
         ): "主要配置",
         (
             "*",
-            "Settings:",
-        ): "设置：",
+            "Output Settings:",
+        ): "输出设置：",
         (
             "*",
             "Write To Subfolder",
@@ -212,6 +296,66 @@ language_dict = {
             "*",
             "Use Nodes",
         ): "使用节点",
+        (
+            "*",
+            "Use Advanced Mode",
+        ): "使用高级模式",
+        (
+            "*",
+            "Separate Cryptomatte Output",
+        ): "单独输出Cryptomatte",
+        (
+            "*",
+            "Advanced:",
+        ): "高级:",
+        (
+            "*",
+            'Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:',
+        ): '专门的数据层(名字中包含"-_-exP_" & "_DATA")配置:',
+        (
+            "*",
+            "Use Independent DATA Layer",
+        ): "使用专门的数据层",
+        (
+            "*",
+            "Output Artistic Depth",
+        ): "输出艺用Depth",
+        (
+            "*",
+            "Output Denoised Depth Pass as a 0-1 depth channel, should be much more precise in terms of pixel filtering, also way less noise. But the depth value will not be as correct as the default depth channel",
+        ): "把降噪用Depth转换为一个0-1的深度通道，像素排列精确度将会更高，噪点会更少。但深度数值不如默认深度精确",
+        (
+            "*",
+            "Output Cryptomatte From RGBA Layers",
+        ): "从非数据层输出Cryptomatte",
+        (
+            "*",
+            "Instead of cryptomatte from DATA Layer, output it from each RGBA pass",
+        ): "从每层RGBA输出Cryptomatte，而不是从专门数据层",
+        (
+            "Operator",
+            "Make A DATA Layer",
+        ): "新建一个数据层",
+        (
+            "Operator",
+            "Convert To DATA Layer",
+        ): "将当前层转换为数据层",
+        (
+            "Operator",
+            "Override Layer Material To A Diffuse BSDF",
+        ): "给层赋予一个漫射材质覆盖",
+        (
+            "*",
+            "EXR Codec:",
+        ): "EXR编码器:",
+        (
+            "Operator",
+            "Brand New DATA Viewlayer",
+        ): "全新的数据层",
+        (
+            "Operator",
+            "New DATA Viewlayer Based On Current Viewlayer",
+        ): "继承当前视图层各项属性的视图层",
         (
             "Operator",
             "Turn On Denoise For All Layers",
@@ -326,11 +470,35 @@ language_dict = {
         ): "显示清理无用渲染输出的按钮",
         (
             "*",
-            "Auto Arrange Nodes at generating (experimental)",
-        ): "自动整理节点于生成时（实验性）",
+            "Auto Arrange Nodes at generating",
+        ): "自动整理节点于生成时",
         (
             "*",
             "Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
         ): "在生成节点树时自动排列，仅在合成器可见时有效。如果场景特别大请谨慎使用",
+        (
+            "*",
+            "Use A dedicated viewlayer only for data and cryptomatte, enable this will make plugin disable other viewlayers' data output",
+        ): "使用专门的数据层输出数据和Cryptomatte，打开此项会使插件停止输出其他视图层的数据",
+        (
+            "*",
+            "Lossless. Provides Decently high compression rate, also playbacks fast. The balanced choice",
+        ): "无损。提供了非常不错的压缩率，播放也很快。平衡的选择",
+        (
+            "*",
+            "Lossless. Compression rate is the highest for grainy images, but slower to read than other Lossless method",
+        ): "无损。面对噪点多的图像提供最高的压缩效率，但是读取起来相比其他无损压缩更慢",
+        (
+            "*",
+            "Lossless. Fastest for read & write, but significantly larger than other lossless method",
+        ): "无损。读写性能最好的压缩格式，但是体积显著大于其他压缩方式",
+        (
+            "*",
+            "Lossless. Provides identical compression rate with ZIP, but nearly 40% faster to playback in Nuke (tested by me with a decent machine). The recommended method",
+        ): "无损。提供与ZIP几乎一致的压缩率，但在nuke中回放时比ZIP快接近40%（本人使用一台好电脑亲测）。推荐的编码器",
+        (
+            "*",
+            "Lossy. Compress 32bit to 24 bit, leaving 16bit and 8bit untouched. Not suitable for Cryptomatte but may be used with other type of DATA to reduce file size",
+        ): "有损。将32位通道压缩为24位，不改变16位或8位的通道。不适用于Cryptomatte，但与其他数据通道结合使用或许可以减少文件大小",
     },
 }
