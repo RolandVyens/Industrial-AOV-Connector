@@ -133,7 +133,7 @@ bpy.types.Scene.IDS_SepCryptO = bpy.props.BoolProperty(  # 是否单独输出cry
 
 bpy.types.Scene.IDS_ArtDepth = bpy.props.BoolProperty(  # 是否输出Artistic Depth
     name="Output Artistic Depth",
-    description="Output Denoised Depth Pass as a 0-1 depth channel",
+    description="Output Denoised Depth Pass as a 0-1 depth channel, should be much more precise in terms of pixel filtering, also way less noise. But the depth value will not be as correct as the default depth channel",
     default=False,
 )
 

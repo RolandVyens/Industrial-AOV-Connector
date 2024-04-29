@@ -66,6 +66,22 @@ language_dict = {
             "Use Independent DATA Layer",
         ): "使用专门的数据层",
         (
+            "*",
+            "Output Artistic Depth",
+        ): "输出艺用Depth",
+        (
+            "*",
+            "Output Denoised Depth Pass as a 0-1 depth channel, should be much more precise in terms of pixel filtering, also way less noise. But the depth value will not be as correct as the default depth channel",
+        ): "把降噪用Depth转换为一个0-1的深度通道，像素排列精确度将会更高，噪点会更少。但深度数值不如默认深度精确",
+        (
+            "*",
+            "Output Cryptomatte From RGBA Layers",
+        ): "从非数据层输出Cryptomatte",
+        (
+            "*",
+            "Instead of cryptomatte from DATA Layer, output it from each RGBA pass",
+        ): "从每层RGBA输出Cryptomatte，而不是从专门数据层",
+        (
             "Operator",
             "Make A DATA Layer",
         ): "新建一个数据层",
@@ -300,6 +316,22 @@ language_dict = {
             "*",
             "Use Independent DATA Layer",
         ): "使用专门的数据层",
+        (
+            "*",
+            "Output Artistic Depth",
+        ): "输出艺用Depth",
+        (
+            "*",
+            "Output Denoised Depth Pass as a 0-1 depth channel, should be much more precise in terms of pixel filtering, also way less noise. But the depth value will not be as correct as the default depth channel",
+        ): "把降噪用Depth转换为一个0-1的深度通道，像素排列精确度将会更高，噪点会更少。但深度数值不如默认深度精确",
+        (
+            "*",
+            "Output Cryptomatte From RGBA Layers",
+        ): "从非数据层输出Cryptomatte",
+        (
+            "*",
+            "Instead of cryptomatte from DATA Layer, output it from each RGBA pass",
+        ): "从每层RGBA输出Cryptomatte，而不是从专门数据层",
         (
             "Operator",
             "Make A DATA Layer",
