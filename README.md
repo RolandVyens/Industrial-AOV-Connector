@@ -18,7 +18,7 @@ Buy me a coffee if you want: https://blendermarket.com/products/industrial-aov-c
 
 ======================
 
-Update Log:
+**Update Log:**
 
 2024.4.30: version 2.0.0
 
@@ -28,7 +28,9 @@ Update Log:
 2. Separate Cryptomatte toggle: Now you can output cryptomatte to its own exr.
 3. Artistic Depth: A 0-1 depth channel has been added. This channel is based on "Denoising Depth", and should be much more precise in terms of pixel, also way less noise. But the depth value will not be as correct as the default depth channel.
 4. Write To Subfolder has been improved, now the files are gathered into viewlayer folders first, then the type.
-5. Auto arrange nodes function is now stable, and by default turned on. 
+5. Auto arrange nodes function is now stable, and by default turned on.
+6. Fixed bug of nodes being arranged in the wrong order.
+7. Various bug fix and performance improvement.
 
 2024.4.15: version 1.1.1
 
@@ -44,22 +46,22 @@ Update Log:
 
 =========================
 
-![屏幕截图 2024-01-01 002028](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/ef18474b-957f-44e7-9403-d23930317e36)
-![屏幕截图 2024-01-01 142309](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/203f13c8-905d-467f-91ac-a46270f21a9d)
+![屏幕截图 2024-04-29 135020](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/cc8db663-6419-4c0d-a895-df9837f45aea)
+![屏幕截图 2024-04-29 140527](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/7ec9bedc-fe7c-422f-a4bf-2f034c56dc93)
 
-目前支持3.2 - 4.1 Supports blender 3.2 - 4.1 by now (2024.1.1)
+目前支持3.3 - 最新版 Supports blender 3.3 - newest by now (2024.4.30)
 
 支持材质通道分层与灯光组分层，也支持混合分层。从设计之初就支持多个视图层。本插件可以智能地帮你连接渲染aov与图层，智能地根据输出类型使用降噪节点，将三维数据层（position/normal）转换为nuke标准（fusion理论上也可以直接用）。
 
 Supports material based aovs and light group based aovs, also can do hybrid. Supports multiple Viewlayers from scratch. This plugin can make output nodes automatically for you, intelligently make denoise nodes based on the outputs' type, convert position/normal pass to nuke standard passes (fusion can also use in theory).
 
-![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/80cb98fa-c466-4dac-a100-aa1b1eddd724)
+![屏幕截图 2024-04-29 142447](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/510bc1b6-f692-4a91-8bb3-6bdf75a7ac29)
 
 **功能** **Features** **:**
 
-1. 现阶段仅支持exr输出。可以选择将颜色和数据分开输出成两份文件，或者合并输出。分开输出时可以使用小体积的16位exr输出颜色aov（实用主义至上，颜色aov没有用32位的必要，当然你也可以选择用32位）
+1. 现阶段仅支持exr输出。可以选择将颜色和数据分开输出成两份文件，或将Cryptomatte再分开输出成三份文件，或者合并输出。分开输出时可以使用小体积的16位exr输出颜色aov（实用主义至上，颜色aov没有用32位的必要，当然你也可以选择用32位）
    
-   Now only support exr fileoutput. The ability to seperate color and data passes into 2 seperate files, or output to 1 single file. If seperated then it's able to use 16bit exr for color （better "Pragmatism" option, color aovs use 32 bit is a waste, but you can still choose 32 bit）
+   Now only support exr fileoutput. The ability to seperate color and data passes into 2 separate files, or further split Cryptomatte into 3 separate files, or output to 1 single file. If seperated then it's able to use 16bit exr for color （better "Pragmatism" option, color aovs use 32 bit is a waste, but you can still choose 32 bit）
 
 ![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/caf3b9f9-274f-4289-a4aa-5a0762e43315)
    
@@ -71,7 +73,8 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
    Can output to renderpath or each outputs' subfolder(based on blender render path)
 
-![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/89ab46e7-2d0c-4269-9881-7be85dbcb0a2)
+![屏幕截图 2024-04-29 142814](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/f95dfd18-43f4-4ebb-8763-c221330a24d2)
+![屏幕截图 2024-04-29 142758](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/435798e6-52e0-4e6a-82d7-3063bf12960e)
 
 4. 可以选择是否使用降噪节点
 
