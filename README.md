@@ -22,27 +22,25 @@ Buy me a coffee if you want: https://blendermarket.com/products/industrial-aov-c
 
 2024.4.30: version 2.0.0
 
-1. Added Advanced Mode:
+1. 增加了高级模式：
+  * 现在您可以在生成节点时直接设置EXR编码器。
+  * 添加了独立的DATA层配置，如果您想要专用的DATA层而不是从每个图层输出DATA，那么这个功能适合您。您还可以决定Cryptomatte的输出策略。
+2. 单独的Cryptomatte输出：现在您可以将Cryptomatte输出到单独的EXR文件中。
+3. 艺术深度：添加了一个0-1的深度通道。该通道基于“Denoising Depth”，在像素排列方面应该更精确，噪点也更少。但是深度值不如默认深度通道准确。
+4. 写入子文件夹已经改进，现在文件首先按视图层文件夹进行整理，然后按类型分类。
+5. 自动排列节点功能现在稳定，并且默认启用。
+6. 修复了节点排序错乱的bug。
+7. 进行了各种错误修复和性能改进。
+
+*1. Added Advanced Mode:
    * Now you can set EXR codecs directly when generating nodes.
    * Independent DATA Layer configs now has been added, if you want dedicate DATA Layers instead of DATA from each Layer, this function is for you. Also you can decide cryptomatte's output strategy.
 2. Separate Cryptomatte toggle: Now you can output cryptomatte to its own exr.
-3. Artistic Depth: A 0-1 depth channel has been added. This channel is based on "Denoising Depth", and should be much more precise in terms of pixel, also way less noise. But the depth value will not be as correct as the default depth channel.
+3. Artistic Depth: A 0-1 depth channel has been added. This channel is based on "Denoising Depth", and should be much more precise in terms of pixel filtering, also way less noise. But the depth value will not be as correct as the default depth channel.
 4. Write To Subfolder has been improved, now the files are gathered into viewlayer folders first, then the type.
 5. Auto arrange nodes function is now stable, and by default turned on.
 6. Fixed bug of nodes being arranged in the wrong order.
 7. Various bug fix and performance improvement.
-
-2024.4.15: version 1.1.1
-
-1. changed exr codec to ZIPS for faster processing inside comp
-
-2024.2.11: version 1.1.0
-
-1. In blender conversion of motion vector pass, to use in nuke, simply shuffle vector pass to motion, then add a vector blur node and choose "Arnold" preset. 
-
-2. Make all conversion nodes collapse by default
-
-3. Removed 3.2 support because motion vector conversion needs
 
 =========================
 
@@ -96,6 +94,12 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
    In blender data conversion for nuke standard passes
 
    ![image](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/7998260a-116f-4936-8830-bf4fca9e3936)
+
+8. 输出艺用Depth通道，规格化为0-1的depth
+
+   Ability to output an artistic depth channel, depth that normalized to 0-1
+
+   ![artistic depth](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/4dfc2710-e112-4b63-8a54-0c1f57aec5e8)
 
 
 Join Discord for discussion: https://discord.com/invite/qGyYXUNTnm
