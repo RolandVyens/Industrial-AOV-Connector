@@ -3442,18 +3442,23 @@ def update_connect_adv():  # 高级模式建立连接
 
 
 def frame_DATA():
+    do = False
     for node in bpy.context.scene.node_tree.nodes:
-        if node.name == "DataFramE":
-            bpy.context.scene.node_tree.nodes.remove(node)
-    tree = bpy.context.scene.node_tree
-    FrameNode = tree.nodes.new("NodeFrame")
-    FrameNode.name = "DataFramE"
-    FrameNode.label = "Industrial AOV Connector DATA Layers-_-exP_"
-    FrameNode.use_custom_color = True
-    FrameNode.color = (0.04, 0.04, 0.227)
-    for node in bpy.context.scene.node_tree.nodes:
-        if node.name[:7] == "-_-exP_":
-            node.parent = FrameNode
+        if "-_-exP_" in node.name:
+            do = True
+    if do is True:
+        for node in bpy.context.scene.node_tree.nodes:
+            if node.name == "DataFramE":
+                bpy.context.scene.node_tree.nodes.remove(node)
+        tree = bpy.context.scene.node_tree
+        FrameNode = tree.nodes.new("NodeFrame")
+        FrameNode.name = "DataFramE"
+        FrameNode.label = "Industrial AOV Connector DATA Layers-_-exP_"
+        FrameNode.use_custom_color = True
+        FrameNode.color = (0.04, 0.04, 0.227)
+        for node in bpy.context.scene.node_tree.nodes:
+            if node.name[:7] == "-_-exP_":
+                node.parent = FrameNode
 
 
 """以下为操作符"""
