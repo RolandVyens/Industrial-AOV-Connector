@@ -20,6 +20,16 @@ Buy me a coffee if you want: https://blendermarket.com/products/industrial-aov-c
 
 Update Log:
 
+2024.4.30: version 2.0.0
+
+1. Added Advanced Mode:
+   * Now you can set EXR codecs directly when generating nodes.
+   * Independent DATA Layer configs now has been added, if you want dedicate DATA Layers instead of DATA from each Layer, this function is for you. Also you can decide cryptomatte's output strategy.
+2. Separate Cryptomatte toggle: Now you can output cryptomatte to its own exr.
+3. Artistic Depth: A 0-1 depth channel has been added. This channel is based on "Denoising Depth", and should be much more precise in terms of pixel, also way less noise. But the depth value will not be as correct as the default depth channel.
+4. Write To Subfolder has been improved, now the files are gathered into viewlayer folders first, then the type.
+5. Auto arrange nodes function is now stable, and by default turned on. 
+
 2024.4.15: version 1.1.1
 
 1. changed exr codec to ZIPS for faster processing inside comp
