@@ -2515,24 +2515,24 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             )
                             if bpy.context.scene.IDS_FileloC is True:
                                 current_render_path = file_output_to_subfolder_loc()
-                                layer_core = extract_string_between_patterns(
-                                    f"{view_layer}", "-_-exP_", "_DATA"
-                                )
+                                # layer_core = extract_string_between_patterns(
+                                #     f"{view_layer}", "-_-exP_", "_DATA"
+                                # )
                                 base_path = (
                                     current_render_path[2]
-                                    + f"{layer_core}_DATA\\"
+                                    + f"{view_layer}\\"
                                     + "Cryptomatte\\"
-                                    + f"{layer_core}_Cryptomatte_"
+                                    + f"{view_layer}_Cryptomatte_"
                                 )
                                 final_path = base_path.replace("-_-exP_", "")
                                 FO_Crypto_node.base_path = final_path
                             else:
-                                layer_core = extract_string_between_patterns(
-                                    f"{view_layer}", "-_-exP_", "_DATA"
-                                )
+                                # layer_core = extract_string_between_patterns(
+                                #     f"{view_layer}", "-_-exP_", "_DATA"
+                                # )
                                 base_path = (
                                     file_output_to_1folder_loc()
-                                    + f"{layer_core}_Cryptomatte_"
+                                    + f"{view_layer}_Cryptomatte_"
                                 )
                                 final_path = base_path.replace("-_-exP_", "")
                                 FO_Crypto_node.base_path = final_path
@@ -3047,24 +3047,24 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         )
                         if bpy.context.scene.IDS_FileloC is True:
                             current_render_path = file_output_to_subfolder_loc()
-                            layer_core = extract_string_between_patterns(
-                                f"{view_layer}", "-_-exP_", "_DATA"
-                            )
+                            # layer_core = extract_string_between_patterns(
+                            #     f"{view_layer}", "-_-exP_", "_DATA"
+                            # )
                             base_path = (
                                 current_render_path[2]
-                                + f"{layer_core}_DATA\\"
+                                + f"{view_layer}\\"
                                 + "Cryptomatte\\"
-                                + f"{layer_core}_Cryptomatte_"
+                                + f"{view_layer}_Cryptomatte_"
                             )
                             final_path = base_path.replace("-_-exP_", "")
                             FO_Crypto_node.base_path = final_path
                         else:
-                            layer_core = extract_string_between_patterns(
-                                f"{view_layer}", "-_-exP_", "_DATA"
-                            )
+                            # layer_core = extract_string_between_patterns(
+                            #     f"{view_layer}", "-_-exP_", "_DATA"
+                            # )
                             base_path = (
                                 file_output_to_1folder_loc()
-                                + f"{layer_core}_Cryptomatte_"
+                                + f"{view_layer}_Cryptomatte_"
                             )
                             final_path = base_path.replace("-_-exP_", "")
                             FO_Crypto_node.base_path = final_path
