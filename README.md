@@ -22,6 +22,10 @@ Support me on blender market: https://blendermarket.com/products/industrial-aov-
 
 2024.4.30: version 2.0.0
 
+Youtube: https://youtu.be/XTHtkaeRcQU
+
+bilibili: https://www.bilibili.com/video/BV1ab421h73M
+
 1. 增加了高级模式：
   * 现在您可以在生成节点时直接设置EXR编码器。
   * 添加了独立的DATA层配置，如果您想要专用的DATA层而不是从每个图层输出DATA，那么这个功能适合您。您还可以决定Cryptomatte的输出策略。
