@@ -59,8 +59,8 @@ language_dict = {
         ): "高级:",
         (
             "*",
-            'Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:',
-        ): '专门的数据层(名字中包含"-_-exP_" & "_DATA")配置:',
+            'Independent DATA Layer Config:',
+        ): '专门的数据层配置:',
         (
             "*",
             "Use Independent DATA Layer",
@@ -310,8 +310,8 @@ language_dict = {
         ): "高级:",
         (
             "*",
-            'Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:',
-        ): '专门的数据层(名字中包含"-_-exP_" & "_DATA")配置:',
+            'Independent DATA Layer Config:',
+        ): '专门的数据层配置:',
         (
             "*",
             "Use Independent DATA Layer",

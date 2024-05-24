@@ -332,7 +332,7 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
             material_aov.append(aov.name)
         material_aovs[layer.name] = material_aov[:]
         material_aov.clear()
-    print(material_aovs)
+    # print(material_aovs)
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.add(view_layer.name)
     for node in bpy.context.scene.node_tree.nodes:
@@ -414,6 +414,8 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
             vector_data.remove("UV")
         if "Vector" in vector_data:
             vector_data.remove("Vector")
+        if "Position_AA$$aoP" in real_data:
+            vector_data.append("Position_AA$$aoP")
         viewlayer_full[viewlayer + "Vector"] = vector_data
         real_color = []
         crypto = []
@@ -2238,6 +2240,7 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
                 slot.name = slot.name.replace("Image", "rgba")
                 slot.name = slot.name.replace("Combined", "RGBA")
                 slot.name = slot.name.replace("Denoising Depth", "Artistic_Depth")
+                slot.name = slot.name.replace("$$aoP", "")
 
 
 def auto_arr_outputnode():  # 排列输出节点
@@ -3842,7 +3845,7 @@ class IDS_OutputPanel(bpy.types.Panel):
                 box1.prop(context.scene, "IDS_CryptoCompression")
             box2 = box1.box()
             box2.label(
-                text='Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:'
+                text='Independent DATA Layer Config:'
             )
             box2.prop(context.scene, "IDS_UseDATALayer")
             if (
