@@ -3772,7 +3772,7 @@ class IDS_Override_DATAMaTadv(Operator):
 
     def execute(self, context):
         newlayer = bpy.context.view_layer
-        if bpy.types.Scene.IDS_DataMatType == "Pure Diffuse BSDF":
+        if bpy.context.scene.IDS_DataMatType == "Pure Diffuse BSDF":
             if "override--exP" in bpy.data.materials:
                 newlayer.material_override = bpy.data.materials.get("override--exP")
             else:
@@ -3794,7 +3794,11 @@ class IDS_Override_DATAMaTadv(Operator):
                     'Set override material to "override--exP" which is a diffuse BSDF'
                 ),
             )
-        elif bpy.types.Scene.IDS_DataMatType == "Accurate Depth Material":
+            for aov in bpy.context.view_layer.aovs:
+                if aov.name[-5:] == "$$aoP":
+                    bpy.context.view_layer.aovs.remove(aov)
+
+        elif bpy.context.scene.IDS_DataMatType == "Accurate Depth Material":
             if "Depth_AA--exP" in bpy.data.materials:
                 newlayer.material_override = bpy.data.materials.get("Depth_AA--exP")
             else:
@@ -3810,13 +3814,21 @@ class IDS_Override_DATAMaTadv(Operator):
                     directory=asset_path + "/Material/", filename="Depth_AA--exP"
                 )
                 newlayer.material_override = bpy.data.materials.get("Depth_AA--exP")
+            for aov in bpy.context.view_layer.aovs:
+                if aov.name[-5:] == "$$aoP":
+                    bpy.context.view_layer.aovs.remove(aov)
+            AOV = bpy.context.view_layer.aovs.add()
+            AOV.name = "Depth_AA$$aoP"
+            AOV.type = "VALUE"
+
             self.report(
                 {"INFO"},
                 bpy.app.translations.pgettext(
                     'Set override material to "Depth_AA--exP" which outputs accurate depth'
                 ),
             )
-        elif bpy.types.Scene.IDS_DataMatType == "Accurate Position Material":
+
+        elif bpy.context.scene.IDS_DataMatType == "Accurate Position Material":
             if "Position_AA--exP" in bpy.data.materials:
                 newlayer.material_override = bpy.data.materials.get("Position_AA--exP")
             else:
@@ -3838,7 +3850,14 @@ class IDS_Override_DATAMaTadv(Operator):
                     'Set override material to "Position_AA--exP" which outputs accurate world position'
                 ),
             )
-        elif bpy.types.Scene.IDS_DataMatType == "Accurate Depth & Position Material":
+            for aov in bpy.context.view_layer.aovs:
+                if aov.name[-5:] == "$$aoP":
+                    bpy.context.view_layer.aovs.remove(aov)
+            AOV = bpy.context.view_layer.aovs.add()
+            AOV.name = "Position_AA$$aoP"
+            AOV.type = "COLOR"
+
+        elif bpy.context.scene.IDS_DataMatType == "Accurate Depth & Position Material":
             if "PositionDepth_AA--exP" in bpy.data.materials:
                 newlayer.material_override = bpy.data.materials.get(
                     "PositionDepth_AA--exP"
@@ -3865,6 +3884,15 @@ class IDS_Override_DATAMaTadv(Operator):
                     'Set override material to "PositionDepth_AA--exP" which outputs accurate depth and world position'
                 ),
             )
+            for aov in bpy.context.view_layer.aovs:
+                if aov.name[-5:] == "$$aoP":
+                    bpy.context.view_layer.aovs.remove(aov)
+            AOV = bpy.context.view_layer.aovs.add()
+            AOV.name = "Depth_AA$$aoP"
+            AOV.type = "VALUE"
+            AOV1 = bpy.context.view_layer.aovs.add()
+            AOV1.name = "Position_AA$$aoP"
+            AOV1.type = "COLOR"
 
         return {"FINISHED"}
 
