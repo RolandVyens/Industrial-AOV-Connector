@@ -266,6 +266,34 @@ bpy.types.Scene.IDS_CryptoCompression = bpy.props.EnumProperty(
 )
 
 
+bpy.types.Scene.IDS_DataMatType = bpy.props.EnumProperty(  # 输出配置
+    # name="",
+    items=[
+        (
+            "Pure Diffuse BSDF",
+            "Pure Diffuse BSDF",
+            "Override Layer Material To A Diffuse BSDF",
+        ),
+        (
+            "Accurate Depth Material",
+            "Accurate Depth Material",
+            "A utility BSDF that output perfect depth/z channel",
+        ),
+        (
+            "Accurate Position Material",
+            "Accurate Position Material",
+            "A utility BSDF that output perfect world position channel",
+        ),
+        (
+            "Accurate Depth & Position Material",
+            "Accurate Depth & Position Material",
+            "A utility BSDF that output perfect depth and world position channel",
+        ),
+    ],
+    default="Accurate Depth & Position Material",
+)
+
+
 """以下为输出路径自动调整函数"""
 
 
@@ -3734,10 +3762,10 @@ class IDS_Convert_DATALayer(Operator):
         return {"FINISHED"}
 
 
-class IDS_Override_DATAMaT(Operator):
+class IDS_Override_DATAMaTadv(Operator):
     bl_idname = "viewlayer.overridedatamat"
-    bl_label = "Override Layer Material To A Diffuse BSDF"
-    bl_description = "Override Layer Material To A Diffuse BSDF"
+    bl_label = "Override And Create AOVs"
+    bl_description = "Override Layer material to selected type, then create necessary AOV for output"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -3844,9 +3872,7 @@ class IDS_OutputPanel(bpy.types.Panel):
             if bpy.context.scene.IDS_SepCryptO is True:
                 box1.prop(context.scene, "IDS_CryptoCompression")
             box2 = box1.box()
-            box2.label(
-                text='Independent DATA Layer Config:'
-            )
+            box2.label(text="Independent DATA Layer Config:")
             box2.prop(context.scene, "IDS_UseDATALayer")
             if (
                 bpy.context.scene.IDS_UseDATALayer is True
@@ -3855,7 +3881,10 @@ class IDS_OutputPanel(bpy.types.Panel):
                 box2.prop(context.scene, "IDS_UseAdvCrypto")
             box2.operator(IDS_Draw_DataMenu.bl_idname)
             box2.operator(IDS_Convert_DATALayer.bl_idname)
-            box2.operator(IDS_Override_DATAMaT.bl_idname)
+            box3 = box1.box()
+            box3.label(text="DATA Layer Material Override:")
+            box3.prop(context.scene, "IDS_DataMatType", text="Material")
+            box3.operator(IDS_Override_DATAMaTadv.bl_idname)
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
@@ -3905,7 +3934,7 @@ reg_clss = [
     IDS_Make_DatalayerMenu,
     IDS_Draw_DataMenu,
     IDS_Convert_DATALayer,
-    IDS_Override_DATAMaT,
+    IDS_Override_DATAMaTadv,
 ]
 
 
