@@ -3765,32 +3765,106 @@ class IDS_Convert_DATALayer(Operator):
 class IDS_Override_DATAMaTadv(Operator):
     bl_idname = "viewlayer.overridedatamat"
     bl_label = "Override And Create AOVs"
-    bl_description = "Override Layer material to selected type, then create necessary AOV for output"
+    bl_description = (
+        "Override Layer material to selected type, then create necessary AOV for output"
+    )
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         newlayer = bpy.context.view_layer
-        if "override--exP" in bpy.data.materials:
-            newlayer.material_override = bpy.data.materials.get("override--exP")
-        else:
-            user_path = bpy.utils.resource_path("USER")
-            asset_path = os.path.join(
-                user_path,
-                "scripts",
-                "addons",
-                "Industrial-AOV-Connector",
-                "asset.blend",
+        if bpy.types.Scene.IDS_DataMatType == "Pure Diffuse BSDF":
+            if "override--exP" in bpy.data.materials:
+                newlayer.material_override = bpy.data.materials.get("override--exP")
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/", filename="override--exP"
+                )
+                newlayer.material_override = bpy.data.materials.get("override--exP")
+            self.report(
+                {"INFO"},
+                bpy.app.translations.pgettext(
+                    'Set override material to "override--exP" which is a diffuse BSDF'
+                ),
             )
-            bpy.ops.wm.append(
-                directory=asset_path + "/Material/", filename="override--exP"
+        elif bpy.types.Scene.IDS_DataMatType == "Accurate Depth Material":
+            if "Depth_AA--exP" in bpy.data.materials:
+                newlayer.material_override = bpy.data.materials.get("Depth_AA--exP")
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/", filename="Depth_AA--exP"
+                )
+                newlayer.material_override = bpy.data.materials.get("Depth_AA--exP")
+            self.report(
+                {"INFO"},
+                bpy.app.translations.pgettext(
+                    'Set override material to "Depth_AA--exP" which outputs accurate depth'
+                ),
             )
-            newlayer.material_override = bpy.data.materials.get("override--exP")
-        self.report(
-            {"INFO"},
-            bpy.app.translations.pgettext(
-                'Set override material to "override--exP" which is a diffuse BSDF'
-            ),
-        )
+        elif bpy.types.Scene.IDS_DataMatType == "Accurate Position Material":
+            if "Position_AA--exP" in bpy.data.materials:
+                newlayer.material_override = bpy.data.materials.get("Position_AA--exP")
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/", filename="Position_AA--exP"
+                )
+                newlayer.material_override = bpy.data.materials.get("Position_AA--exP")
+            self.report(
+                {"INFO"},
+                bpy.app.translations.pgettext(
+                    'Set override material to "Position_AA--exP" which outputs accurate world position'
+                ),
+            )
+        elif bpy.types.Scene.IDS_DataMatType == "Accurate Depth & Position Material":
+            if "PositionDepth_AA--exP" in bpy.data.materials:
+                newlayer.material_override = bpy.data.materials.get(
+                    "PositionDepth_AA--exP"
+                )
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/",
+                    filename="PositionDepth_AA--exP",
+                )
+                newlayer.material_override = bpy.data.materials.get(
+                    "PositionDepth_AA--exP"
+                )
+            self.report(
+                {"INFO"},
+                bpy.app.translations.pgettext(
+                    'Set override material to "PositionDepth_AA--exP" which outputs accurate depth and world position'
+                ),
+            )
 
         return {"FINISHED"}
 
