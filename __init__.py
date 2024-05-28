@@ -266,7 +266,7 @@ bpy.types.Scene.IDS_CryptoCompression = bpy.props.EnumProperty(
 )
 
 
-bpy.types.Scene.IDS_DataMatType = bpy.props.EnumProperty(  # 输出配置
+bpy.types.Scene.IDS_DataMatType = bpy.props.EnumProperty(  # 层材质覆盖
     # name="",
     items=[
         (
@@ -291,6 +291,13 @@ bpy.types.Scene.IDS_DataMatType = bpy.props.EnumProperty(  # 输出配置
         ),
     ],
     default="Accurate Depth & Position Material",
+)
+
+
+bpy.types.Scene.IDS_fakeDeep = bpy.props.BoolProperty(  # 是否输出fakedeep
+    name="Deep From Image Z",
+    description="Output a 1/z channel for deep from image node",
+    default=False,
 )
 
 
@@ -437,6 +444,12 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
                 if aov in colors:
                     colors.remove(aov)
                     real_data.append(aov)
+        if (
+            bpy.context.scene.IDS_fakeDeep == True
+            and bpy.context.scene.IDS_DataMatType
+            in {"Accurate Depth Material", "Accurate Depth & Position Material"}
+        ):
+            real_data.append("Deep_From_Image_z")
         viewlayer_full[viewlayer + "Data"] = real_data
         if "UV" in vector_data:
             vector_data.remove("UV")
@@ -2265,7 +2278,8 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
         #     for node1 in bpy.context.scene.node_tree.nodes:
         if node.type == "OUTPUT_FILE":
             for slot in node.layer_slots:
-                slot.name = slot.name.replace("Image", "rgba")
+                if slot.name != "Deep_From_Image_z":
+                    slot.name = slot.name.replace("Image", "rgba")
                 slot.name = slot.name.replace("Combined", "RGBA")
                 slot.name = slot.name.replace("Denoising Depth", "Artistic_Depth")
                 slot.name = slot.name.replace("$$aoP", "")
@@ -2387,6 +2401,16 @@ def auto_arr_mathnode():  # 排列数学运算节点
     for view_layer in viewlayers:
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
+                for node6 in reversed(bpy.context.scene.node_tree.nodes):
+                    if node6.name == f"{view_layer}--Depth_AA_Re":
+                        node6.location = 660, (
+                            node.location.y
+                            - node.dimensions.y
+                            + node6.dimensions.y
+                            + MA_dimension_y
+                        )
+                        MA_location_y += node6.location.y
+                        MA_dimension_y += node6.dimensions.y + 20
                 for node3 in reversed(bpy.context.scene.node_tree.nodes):
                     if (
                         node3.name[: node3.name.rfind("--")] == node.layer
@@ -2649,6 +2673,22 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             Normalize_node.hide = True
                             Normalize_node.location = 660, 0
 
+                        if (
+                            bpy.context.scene.IDS_fakeDeep == True
+                            and bpy.context.scene.IDS_DataMatType
+                            in {
+                                "Accurate Depth Material",
+                                "Accurate Depth & Position Material",
+                            }
+                        ):
+                            FakeDeep_node = tree.nodes.new("CompositorNodeMath")
+                            FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
+                            FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
+                            FakeDeep_node.operation = "DIVIDE"
+                            FakeDeep_node.inputs[0].default_value = 0.01
+                            FakeDeep_node.hide = True
+                            FakeDeep_node.location = 660, 0
+
                         if "Vector" in viewlayer_full.get(f"{view_layer}Data"):
                             Vector_Con_node = tree.nodes.new(
                                 "CompositorNodeSeparateColor"
@@ -2853,7 +2893,11 @@ def auto_connect_adv():  # 高级模式建立连接
                 for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                     viewlayer_full[f"{view_layer}Vector"]
                 ):
-                    if node != "Vector" and node != "Denoising Depth":
+                    if (
+                        node != "Vector"
+                        and node != "Denoising Depth"
+                        and node != "Deep_From_Image_z"
+                    ):
                         scene.node_tree.links.new(
                             scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                             scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
@@ -2907,7 +2951,7 @@ def auto_connect_adv():  # 高级模式建立连接
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Green"],
                         ),
-                    elif node == "Denoising Depth":
+                    elif node == "Denoising Depth" and node != "Deep_From_Image_z":
                         scene.node_tree.links.new(
                             scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                             scene.node_tree.nodes[
@@ -2920,6 +2964,23 @@ def auto_connect_adv():  # 高级模式建立连接
                             ].outputs["Value"],
                             scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
+                            ],
+                        ),
+                    elif node == "Deep_From_Image_z":
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}"].outputs[
+                                "Depth_AA$$aoP"
+                            ],
+                            scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].inputs[
+                                1
+                            ],
+                        ),
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].outputs[
+                                "Value"
+                            ],
+                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                                "Deep_From_Image_z"
                             ],
                         ),
             if viewlayer_full[f"{view_layer}Vector"]:
@@ -3177,6 +3238,22 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         Normalize_node.hide = True
                         Normalize_node.location = 660, 0
 
+                    if (
+                        bpy.context.scene.IDS_fakeDeep == True
+                        and bpy.context.scene.IDS_DataMatType
+                        in {
+                            "Accurate Depth Material",
+                            "Accurate Depth & Position Material",
+                        }
+                    ):
+                        FakeDeep_node = tree.nodes.new("CompositorNodeMath")
+                        FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
+                        FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
+                        FakeDeep_node.operation = "DIVIDE"
+                        FakeDeep_node.inputs[0].default_value = 0.01
+                        FakeDeep_node.hide = True
+                        FakeDeep_node.location = 660, 0
+
                     if "Vector" in viewlayer_full.get(f"{view_layer}Data"):
                         Vector_Con_node = tree.nodes.new("CompositorNodeSeparateColor")
                         Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
@@ -3359,12 +3436,20 @@ def update_connect_adv():  # 高级模式建立连接
             for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                 viewlayer_full[f"{view_layer}Vector"]
             ):
-                if node != "Vector" and node != "Denoising Depth":
+                if (
+                    node != "Vector"
+                    and node != "Denoising Depth"
+                    and node != "Deep_From_Image_z"
+                ):
                     scene.node_tree.links.new(
                         scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     ),
-                elif node == "Vector" and node != "Denoising Depth":
+                elif (
+                    node == "Vector"
+                    and node != "Denoising Depth"
+                    and node != "Deep_From_Image_z"
+                ):
                     scene.node_tree.links.new(
                         scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].inputs[
@@ -3409,7 +3494,7 @@ def update_connect_adv():  # 高级模式建立连接
                             "Green"
                         ],
                     ),
-                elif node == "Denoising Depth":
+                elif node == "Denoising Depth" and node != "Deep_From_Image_z":
                     scene.node_tree.links.new(
                         scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         scene.node_tree.nodes[
@@ -3421,6 +3506,19 @@ def update_connect_adv():  # 高级模式建立连接
                             f"{view_layer}--Denoising Depth_Normalize"
                         ].outputs["Value"],
                         scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    ),
+                elif node == "Deep_From_Image_z":
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs["Depth_AA$$aoP"],
+                        scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].inputs[1],
+                    ),
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].outputs[
+                            "Value"
+                        ],
+                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                            "Deep_From_Image_z"
+                        ],
                     ),
         if viewlayer_full[f"{view_layer}Vector"]:
             for node in viewlayer_full[f"{view_layer}Vector"]:
@@ -3986,6 +4084,11 @@ class IDS_OutputPanel(bpy.types.Panel):
             box3 = box1.box()
             box3.label(text="DATA Layer Material Override:")
             box3.prop(context.scene, "IDS_DataMatType", text="Material")
+            if bpy.context.scene.IDS_DataMatType in {
+                "Accurate Depth Material",
+                "Accurate Depth & Position Material",
+            }:
+                box3.prop(context.scene, "IDS_fakeDeep")
             box3.operator(IDS_Override_DATAMaTadv.bl_idname)
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
