@@ -20,7 +20,7 @@ website = "https://github.com/RolandVyens/Industrial-AOV-Connector"
 tags = ["Compositing", "Import-Export", "Pipeline", "Render"]
 
 
-blender_version_min = "3.3.0"
+blender_version_min = "4.2.0"
 
 
 license = [
