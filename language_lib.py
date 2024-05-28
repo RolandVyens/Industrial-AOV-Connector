@@ -59,8 +59,8 @@ language_dict = {
         ): "高级:",
         (
             "*",
-            'Independent DATA Layer Config:',
-        ): '专门的数据层配置:',
+            "Independent DATA Layer Config:",
+        ): "专门的数据层配置:",
         (
             "*",
             "Use Independent DATA Layer",
@@ -89,10 +89,6 @@ language_dict = {
             "Operator",
             "Convert To DATA Layer",
         ): "将当前层转换为数据层",
-        (
-            "Operator",
-            "Override Layer Material To A Diffuse BSDF",
-        ): "给层赋予一个漫射材质覆盖",
         (
             "*",
             "EXR Codec:",
@@ -249,6 +245,26 @@ language_dict = {
             "*",
             "Lossy. Compress 32bit to 24 bit, leaving 16bit and 8bit untouched. Not suitable for Cryptomatte but may be used with other type of DATA to reduce file size",
         ): "有损。将32位通道压缩为24位，不改变16位或8位的通道。不适用于Cryptomatte，但与其他数据通道结合使用或许可以减少文件大小",
+        (
+            "*",
+            "DATA Layer Material Override:",
+        ): "数据层材质覆盖:",
+        (
+            "Operator",
+            "Override And Create AOVs",
+        ): "创建材质覆盖并创建AOVs",
+        (
+            "*",
+            "Override Layer material to selected type, then create necessary AOV for output",
+        ): "将视图层材质覆盖设置为选定的材质，同时创建必要的AOV输出",
+        (
+            "*",
+            "Deep From Image Z",
+        ): "假DEEP输出",
+        (
+            "*",
+            "Output a modified Z channel for generating Deep data in nuke with Deep From Image node",
+        ): "输出一个魔改过的z通道，在nuke中使用Deep From Image节点一键生成DEEP通道",
     },
     "zh_HANS": {
         (
@@ -310,8 +326,8 @@ language_dict = {
         ): "高级:",
         (
             "*",
-            'Independent DATA Layer Config:',
-        ): '专门的数据层配置:',
+            "Independent DATA Layer Config:",
+        ): "专门的数据层配置:",
         (
             "*",
             "Use Independent DATA Layer",
@@ -340,10 +356,6 @@ language_dict = {
             "Operator",
             "Convert To DATA Layer",
         ): "将当前层转换为数据层",
-        (
-            "Operator",
-            "Override Layer Material To A Diffuse BSDF",
-        ): "给层赋予一个漫射材质覆盖",
         (
             "*",
             "EXR Codec:",
@@ -500,5 +512,25 @@ language_dict = {
             "*",
             "Lossy. Compress 32bit to 24 bit, leaving 16bit and 8bit untouched. Not suitable for Cryptomatte but may be used with other type of DATA to reduce file size",
         ): "有损。将32位通道压缩为24位，不改变16位或8位的通道。不适用于Cryptomatte，但与其他数据通道结合使用或许可以减少文件大小",
+        (
+            "*",
+            "DATA Layer Material Override:",
+        ): "数据层材质覆盖:",
+        (
+            "Operator",
+            "Override And Create AOVs",
+        ): "创建材质覆盖并创建AOVs",
+        (
+            "*",
+            "Override Layer material to selected type, then create necessary AOV for output",
+        ): "将视图层材质覆盖设置为选定的材质，同时创建必要的AOV输出",
+        (
+            "*",
+            "Deep From Image Z",
+        ): "假DEEP输出",
+        (
+            "*",
+            "Output a modified Z channel for generating Deep data in nuke with Deep From Image node",
+        ): "输出一个魔改过的z通道，在nuke中使用Deep From Image节点一键生成DEEP通道",
     },
 }
