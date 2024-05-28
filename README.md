@@ -20,6 +20,22 @@ Support me on blender market: https://blendermarket.com/products/industrial-aov-
 
 **Update Log:**
 
+2024.5.30: version 2.1.0
+
+1. 基于视图层材质覆写的精确Depth和Position通道，与RGBA逐像素对应
+
+2. 假DEEP支持，可输出在nuke中使用Deep From Image节点一键生成DEEP通道的魔改z通道
+
+3. 支持blender extensions
+
+*1. Accurate Depth and Position pass based on viewlayer material override, align with RGBA pixels
+
+2. Fake DEEP support, this will output a modified Z channel for generating Deep data in nuke with Deep From Image node
+
+3. Support blender extensions
+
+===
+
 2024.4.30: version 2.0.0
 
 Youtube: https://youtu.be/XTHtkaeRcQU
@@ -105,5 +121,12 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
    ![artistic depth](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/4dfc2710-e112-4b63-8a54-0c1f57aec5e8)
 
+9. 基于视图层材质覆写的精确Depth和Position通道，与RGBA逐像素对应
+
+    Accurate Depth and Position pass based on viewlayer material override, align with RGBA pixels
+
+10. 假DEEP支持，可输出在nuke中使用Deep From Image节点一键生成DEEP通道的魔改z通道
+
+    Fake DEEP support, this will output a modified Z channel for generating Deep data in nuke with Deep From Image node
 
 Join Discord for discussion: https://discord.com/invite/qGyYXUNTnm

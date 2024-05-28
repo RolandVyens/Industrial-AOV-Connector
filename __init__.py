@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 0, 1),  # bump doc_url as well!
+    "version": (2, 1, 0),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -266,6 +266,41 @@ bpy.types.Scene.IDS_CryptoCompression = bpy.props.EnumProperty(
 )
 
 
+bpy.types.Scene.IDS_DataMatType = bpy.props.EnumProperty(  # 层材质覆盖
+    # name="",
+    items=[
+        (
+            "Pure Diffuse BSDF",
+            "Pure Diffuse BSDF",
+            "Override Layer Material To A Diffuse BSDF",
+        ),
+        (
+            "Accurate Depth Material",
+            "Accurate Depth Material",
+            "A utility BSDF that output perfect depth/z channel",
+        ),
+        (
+            "Accurate Position Material",
+            "Accurate Position Material",
+            "A utility BSDF that output perfect world position channel",
+        ),
+        (
+            "Accurate Depth & Position Material",
+            "Accurate Depth & Position Material",
+            "A utility BSDF that output perfect depth and world position channel",
+        ),
+    ],
+    default="Accurate Depth & Position Material",
+)
+
+
+bpy.types.Scene.IDS_fakeDeep = bpy.props.BoolProperty(  # 是否输出fakedeep
+    name="Deep From Image Z",
+    description="Output a modified Z channel for generating Deep data in nuke with Deep From Image node",
+    default=False,
+)
+
+
 """以下为输出路径自动调整函数"""
 
 
@@ -325,6 +360,14 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
     already_present_viewlayers = set()
     viewlayers_presented = []
     unexposed_viewlayers = []
+    material_aov = []
+    material_aovs = {}
+    for layer in bpy.context.scene.view_layers:
+        for aov in layer.aovs:
+            material_aov.append(aov.name)
+        material_aovs[layer.name] = material_aov[:]
+        material_aov.clear()
+    # print(material_aovs)
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.add(view_layer.name)
     for node in bpy.context.scene.node_tree.nodes:
@@ -393,21 +436,42 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
             else:
                 if "Alpha" not in i and "Denoising" not in i:
                     real_data.append(i)
+        if (
+            bpy.context.scene.IDS_AdvMode is True
+            and bpy.context.scene.IDS_UseDATALayer is True
+        ):
+            for aov in material_aovs[viewlayer]:
+                if aov in colors:
+                    colors.remove(aov)
+                    real_data.append(aov)
+        if (
+            bpy.context.scene.IDS_fakeDeep == True
+            and bpy.context.scene.IDS_DataMatType
+            in {"Accurate Depth Material", "Accurate Depth & Position Material"}
+        ):
+            real_data.append("Deep_From_Image_z")
         viewlayer_full[viewlayer + "Data"] = real_data
         if "UV" in vector_data:
             vector_data.remove("UV")
         if "Vector" in vector_data:
             vector_data.remove("Vector")
+        if "Position_AA$$aoP" in real_data:
+            vector_data.append("Position_AA$$aoP")
         viewlayer_full[viewlayer + "Vector"] = vector_data
         real_color = []
-        rgba = []
-        aov = []
         crypto = []
         for i in colors:
             if "Crypto" not in i and "Noisy" not in i and "Denoising Albedo" not in i:
                 real_color.append(i)
             if "Crypto" in i:
                 crypto.append(i)
+        if (
+            bpy.context.scene.IDS_AdvMode is True
+            and bpy.context.scene.IDS_UseDATALayer is True
+        ):
+            for aov in material_aovs[viewlayer]:
+                if aov not in real_color:
+                    real_color.append(aov)
         viewlayer_full[viewlayer + "Color"] = real_color
         viewlayer_full[viewlayer + "Crypto"] = crypto
         # print(real_data)
@@ -2214,9 +2278,11 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
         #     for node1 in bpy.context.scene.node_tree.nodes:
         if node.type == "OUTPUT_FILE":
             for slot in node.layer_slots:
-                slot.name = slot.name.replace("Image", "rgba")
+                if slot.name != "Deep_From_Image_z":
+                    slot.name = slot.name.replace("Image", "rgba")
                 slot.name = slot.name.replace("Combined", "RGBA")
                 slot.name = slot.name.replace("Denoising Depth", "Artistic_Depth")
+                slot.name = slot.name.replace("$$aoP", "")
 
 
 def auto_arr_outputnode():  # 排列输出节点
@@ -2335,6 +2401,16 @@ def auto_arr_mathnode():  # 排列数学运算节点
     for view_layer in viewlayers:
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
+                for node6 in reversed(bpy.context.scene.node_tree.nodes):
+                    if node6.name == f"{view_layer}--Depth_AA_Re":
+                        node6.location = 660, (
+                            node.location.y
+                            - node.dimensions.y
+                            + node6.dimensions.y
+                            + MA_dimension_y
+                        )
+                        MA_location_y += node6.location.y
+                        MA_dimension_y += node6.dimensions.y + 20
                 for node3 in reversed(bpy.context.scene.node_tree.nodes):
                     if (
                         node3.name[: node3.name.rfind("--")] == node.layer
@@ -2597,6 +2673,22 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             Normalize_node.hide = True
                             Normalize_node.location = 660, 0
 
+                        if (
+                            bpy.context.scene.IDS_fakeDeep == True
+                            and bpy.context.scene.IDS_DataMatType
+                            in {
+                                "Accurate Depth Material",
+                                "Accurate Depth & Position Material",
+                            }
+                        ):
+                            FakeDeep_node = tree.nodes.new("CompositorNodeMath")
+                            FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
+                            FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
+                            FakeDeep_node.operation = "DIVIDE"
+                            FakeDeep_node.inputs[0].default_value = 0.01
+                            FakeDeep_node.hide = True
+                            FakeDeep_node.location = 660, 0
+
                         if "Vector" in viewlayer_full.get(f"{view_layer}Data"):
                             Vector_Con_node = tree.nodes.new(
                                 "CompositorNodeSeparateColor"
@@ -2801,7 +2893,11 @@ def auto_connect_adv():  # 高级模式建立连接
                 for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                     viewlayer_full[f"{view_layer}Vector"]
                 ):
-                    if node != "Vector" and node != "Denoising Depth":
+                    if (
+                        node != "Vector"
+                        and node != "Denoising Depth"
+                        and node != "Deep_From_Image_z"
+                    ):
                         scene.node_tree.links.new(
                             scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                             scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
@@ -2855,7 +2951,7 @@ def auto_connect_adv():  # 高级模式建立连接
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Green"],
                         ),
-                    elif node == "Denoising Depth":
+                    elif node == "Denoising Depth" and node != "Deep_From_Image_z":
                         scene.node_tree.links.new(
                             scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                             scene.node_tree.nodes[
@@ -2868,6 +2964,23 @@ def auto_connect_adv():  # 高级模式建立连接
                             ].outputs["Value"],
                             scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
+                            ],
+                        ),
+                    elif node == "Deep_From_Image_z":
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}"].outputs[
+                                "Depth_AA$$aoP"
+                            ],
+                            scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].inputs[
+                                1
+                            ],
+                        ),
+                        scene.node_tree.links.new(
+                            scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].outputs[
+                                "Value"
+                            ],
+                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                                "Deep_From_Image_z"
                             ],
                         ),
             if viewlayer_full[f"{view_layer}Vector"]:
@@ -3125,6 +3238,22 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         Normalize_node.hide = True
                         Normalize_node.location = 660, 0
 
+                    if (
+                        bpy.context.scene.IDS_fakeDeep == True
+                        and bpy.context.scene.IDS_DataMatType
+                        in {
+                            "Accurate Depth Material",
+                            "Accurate Depth & Position Material",
+                        }
+                    ):
+                        FakeDeep_node = tree.nodes.new("CompositorNodeMath")
+                        FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
+                        FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
+                        FakeDeep_node.operation = "DIVIDE"
+                        FakeDeep_node.inputs[0].default_value = 0.01
+                        FakeDeep_node.hide = True
+                        FakeDeep_node.location = 660, 0
+
                     if "Vector" in viewlayer_full.get(f"{view_layer}Data"):
                         Vector_Con_node = tree.nodes.new("CompositorNodeSeparateColor")
                         Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
@@ -3307,12 +3436,20 @@ def update_connect_adv():  # 高级模式建立连接
             for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                 viewlayer_full[f"{view_layer}Vector"]
             ):
-                if node != "Vector" and node != "Denoising Depth":
+                if (
+                    node != "Vector"
+                    and node != "Denoising Depth"
+                    and node != "Deep_From_Image_z"
+                ):
                     scene.node_tree.links.new(
                         scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     ),
-                elif node == "Vector" and node != "Denoising Depth":
+                elif (
+                    node == "Vector"
+                    and node != "Denoising Depth"
+                    and node != "Deep_From_Image_z"
+                ):
                     scene.node_tree.links.new(
                         scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].inputs[
@@ -3357,7 +3494,7 @@ def update_connect_adv():  # 高级模式建立连接
                             "Green"
                         ],
                     ),
-                elif node == "Denoising Depth":
+                elif node == "Denoising Depth" and node != "Deep_From_Image_z":
                     scene.node_tree.links.new(
                         scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         scene.node_tree.nodes[
@@ -3369,6 +3506,19 @@ def update_connect_adv():  # 高级模式建立连接
                             f"{view_layer}--Denoising Depth_Normalize"
                         ].outputs["Value"],
                         scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    ),
+                elif node == "Deep_From_Image_z":
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}"].outputs["Depth_AA$$aoP"],
+                        scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].inputs[1],
+                    ),
+                    scene.node_tree.links.new(
+                        scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].outputs[
+                            "Value"
+                        ],
+                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                            "Deep_From_Image_z"
+                        ],
                     ),
         if viewlayer_full[f"{view_layer}Vector"]:
             for node in viewlayer_full[f"{view_layer}Vector"]:
@@ -3710,35 +3860,137 @@ class IDS_Convert_DATALayer(Operator):
         return {"FINISHED"}
 
 
-class IDS_Override_DATAMaT(Operator):
+class IDS_Override_DATAMaTadv(Operator):
     bl_idname = "viewlayer.overridedatamat"
-    bl_label = "Override Layer Material To A Diffuse BSDF"
-    bl_description = "Override Layer Material To A Diffuse BSDF"
+    bl_label = "Override And Create AOVs"
+    bl_description = (
+        "Override Layer material to selected type, then create necessary AOV for output"
+    )
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         newlayer = bpy.context.view_layer
-        if "override--exP" in bpy.data.materials:
-            newlayer.material_override = bpy.data.materials.get("override--exP")
-        else:
-            user_path = bpy.utils.resource_path("USER")
-            asset_path = os.path.join(
-                user_path,
-                "scripts",
-                "addons",
-                "Industrial-AOV-Connector",
-                "asset.blend",
+        if bpy.context.scene.IDS_DataMatType == "Pure Diffuse BSDF":
+            if "override--exP" in bpy.data.materials:
+                newlayer.material_override = bpy.data.materials.get("override--exP")
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/", filename="override--exP"
+                )
+                newlayer.material_override = bpy.data.materials.get("override--exP")
+            self.report(
+                {"INFO"},
+                bpy.app.translations.pgettext(
+                    'Set override material to "override--exP" which is a diffuse BSDF'
+                ),
             )
-            bpy.ops.wm.append(
-                directory=asset_path + "/Material/", filename="override--exP"
+            for aov in bpy.context.view_layer.aovs:
+                if aov.name[-5:] == "$$aoP":
+                    bpy.context.view_layer.aovs.remove(aov)
+
+        elif bpy.context.scene.IDS_DataMatType == "Accurate Depth Material":
+            if "Depth_AA--exP" in bpy.data.materials:
+                newlayer.material_override = bpy.data.materials.get("Depth_AA--exP")
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/", filename="Depth_AA--exP"
+                )
+                newlayer.material_override = bpy.data.materials.get("Depth_AA--exP")
+            for aov in bpy.context.view_layer.aovs:
+                if aov.name[-5:] == "$$aoP":
+                    bpy.context.view_layer.aovs.remove(aov)
+            AOV = bpy.context.view_layer.aovs.add()
+            AOV.name = "Depth_AA$$aoP"
+            AOV.type = "VALUE"
+
+            self.report(
+                {"INFO"},
+                bpy.app.translations.pgettext(
+                    'Set override material to "Depth_AA--exP" which outputs accurate depth'
+                ),
             )
-            newlayer.material_override = bpy.data.materials.get("override--exP")
-        self.report(
-            {"INFO"},
-            bpy.app.translations.pgettext(
-                'Set override material to "override--exP" which is a diffuse BSDF'
-            ),
-        )
+
+        elif bpy.context.scene.IDS_DataMatType == "Accurate Position Material":
+            if "Position_AA--exP" in bpy.data.materials:
+                newlayer.material_override = bpy.data.materials.get("Position_AA--exP")
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/", filename="Position_AA--exP"
+                )
+                newlayer.material_override = bpy.data.materials.get("Position_AA--exP")
+            self.report(
+                {"INFO"},
+                bpy.app.translations.pgettext(
+                    'Set override material to "Position_AA--exP" which outputs accurate world position'
+                ),
+            )
+            for aov in bpy.context.view_layer.aovs:
+                if aov.name[-5:] == "$$aoP":
+                    bpy.context.view_layer.aovs.remove(aov)
+            AOV = bpy.context.view_layer.aovs.add()
+            AOV.name = "Position_AA$$aoP"
+            AOV.type = "COLOR"
+
+        elif bpy.context.scene.IDS_DataMatType == "Accurate Depth & Position Material":
+            if "PositionDepth_AA--exP" in bpy.data.materials:
+                newlayer.material_override = bpy.data.materials.get(
+                    "PositionDepth_AA--exP"
+                )
+            else:
+                user_path = bpy.utils.resource_path("USER")
+                asset_path = os.path.join(
+                    user_path,
+                    "scripts",
+                    "addons",
+                    "Industrial-AOV-Connector",
+                    "asset.blend",
+                )
+                bpy.ops.wm.append(
+                    directory=asset_path + "/Material/",
+                    filename="PositionDepth_AA--exP",
+                )
+                newlayer.material_override = bpy.data.materials.get(
+                    "PositionDepth_AA--exP"
+                )
+            self.report(
+                {"INFO"},
+                bpy.app.translations.pgettext(
+                    'Set override material to "PositionDepth_AA--exP" which outputs accurate depth and world position'
+                ),
+            )
+            for aov in bpy.context.view_layer.aovs:
+                if aov.name[-5:] == "$$aoP":
+                    bpy.context.view_layer.aovs.remove(aov)
+            AOV = bpy.context.view_layer.aovs.add()
+            AOV.name = "Depth_AA$$aoP"
+            AOV.type = "VALUE"
+            AOV1 = bpy.context.view_layer.aovs.add()
+            AOV1.name = "Position_AA$$aoP"
+            AOV1.type = "COLOR"
 
         return {"FINISHED"}
 
@@ -3820,9 +4072,7 @@ class IDS_OutputPanel(bpy.types.Panel):
             if bpy.context.scene.IDS_SepCryptO is True:
                 box1.prop(context.scene, "IDS_CryptoCompression")
             box2 = box1.box()
-            box2.label(
-                text='Independent DATA Layer (with "-_-exP_" & "_DATA" in layer name) Config:'
-            )
+            box2.label(text="Independent DATA Layer Config:")
             box2.prop(context.scene, "IDS_UseDATALayer")
             if (
                 bpy.context.scene.IDS_UseDATALayer is True
@@ -3831,7 +4081,18 @@ class IDS_OutputPanel(bpy.types.Panel):
                 box2.prop(context.scene, "IDS_UseAdvCrypto")
             box2.operator(IDS_Draw_DataMenu.bl_idname)
             box2.operator(IDS_Convert_DATALayer.bl_idname)
-            box2.operator(IDS_Override_DATAMaT.bl_idname)
+            box3 = box1.box()
+            box3.label(text="DATA Layer Material Override:")
+            box3.prop(context.scene, "IDS_DataMatType", text="Material")
+            box3.operator(IDS_Override_DATAMaTadv.bl_idname)
+
+            if bpy.context.scene.IDS_DataMatType in {
+                "Accurate Depth Material",
+                "Accurate Depth & Position Material",
+            }:
+                box4 = box1.box()
+                box4.label(text="Accurate Depth Addition:")
+                box4.prop(context.scene, "IDS_fakeDeep")
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
@@ -3881,7 +4142,7 @@ reg_clss = [
     IDS_Make_DatalayerMenu,
     IDS_Draw_DataMenu,
     IDS_Convert_DATALayer,
-    IDS_Override_DATAMaT,
+    IDS_Override_DATAMaTadv,
 ]
 
 
