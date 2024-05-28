@@ -296,7 +296,7 @@ bpy.types.Scene.IDS_DataMatType = bpy.props.EnumProperty(  # 层材质覆盖
 
 bpy.types.Scene.IDS_fakeDeep = bpy.props.BoolProperty(  # 是否输出fakedeep
     name="Deep From Image Z",
-    description="Output a 1/z channel for deep from image node",
+    description="Output a modified Z channel for generating Deep data in nuke with Deep From Image node",
     default=False,
 )
 
@@ -4084,12 +4084,15 @@ class IDS_OutputPanel(bpy.types.Panel):
             box3 = box1.box()
             box3.label(text="DATA Layer Material Override:")
             box3.prop(context.scene, "IDS_DataMatType", text="Material")
+            box3.operator(IDS_Override_DATAMaTadv.bl_idname)
+
             if bpy.context.scene.IDS_DataMatType in {
                 "Accurate Depth Material",
                 "Accurate Depth & Position Material",
             }:
-                box3.prop(context.scene, "IDS_fakeDeep")
-            box3.operator(IDS_Override_DATAMaTadv.bl_idname)
+                box4 = box1.box()
+                box4.label(text="Accurate Depth Addition:")
+                box4.prop(context.scene, "IDS_fakeDeep")
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
