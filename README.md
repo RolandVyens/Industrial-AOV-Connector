@@ -34,34 +34,6 @@ Support me on blender market: https://blendermarket.com/products/industrial-aov-
 
 3. Support blender extensions
 
-===
-
-2024.4.30: version 2.0.0
-
-Youtube: https://youtu.be/XTHtkaeRcQU
-
-bilibili: https://www.bilibili.com/video/BV1ab421h73M
-
-1. 增加了高级模式：
-  * 现在您可以在生成节点时直接设置EXR编码器。
-  * 添加了独立的DATA层配置，如果您想要专用的DATA层而不是从每个图层输出DATA，那么这个功能适合您。您还可以决定Cryptomatte的输出策略。
-2. 单独的Cryptomatte输出：现在您可以将Cryptomatte输出到单独的EXR文件中。
-3. 艺术深度：添加了一个0-1的深度通道。该通道基于“Denoising Depth”，在像素排列方面应该更精确，噪点也更少。但是深度值不如默认深度通道准确。
-4. 写入子文件夹已经改进，现在文件首先按视图层文件夹进行整理，然后按类型分类。
-5. 自动排列节点功能现在稳定，并且默认启用。
-6. 修复了节点排序错乱的bug。
-7. 进行了各种错误修复和性能改进。
-
-*1. Added Advanced Mode:
-   * Now you can set EXR codecs directly when generating nodes.
-   * Independent DATA Layer configs now has been added, if you want dedicate DATA Layers instead of DATA from each Layer, this function is for you. Also you can decide cryptomatte's output strategy.
-2. Separate Cryptomatte toggle: Now you can output cryptomatte to its own exr.
-3. Artistic Depth: A 0-1 depth channel has been added. This channel is based on "Denoising Depth", and should be much more precise in terms of pixel filtering, also way less noise. But the depth value will not be as correct as the default depth channel.
-4. Write To Subfolder has been improved, now the files are gathered into viewlayer folders first, then the type.
-5. Auto arrange nodes function is now stable, and by default turned on.
-6. Fixed bug of nodes being arranged in the wrong order.
-7. Various bug fix and performance improvement.
-
 =========================
 
 ![屏幕截图 2024-04-29 135020](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/cc8db663-6419-4c0d-a895-df9837f45aea)
@@ -69,7 +41,7 @@ bilibili: https://www.bilibili.com/video/BV1ab421h73M
 
 目前支持3.3 - 最新版 Supports blender 3.3 - newest by now (2024.4.30)
 
-支持材质通道分层与灯光组分层，也支持混合分层。从设计之初就支持多个视图层。本插件可以智能地帮你连接渲染aov与图层，智能地根据输出类型使用降噪节点，将三维数据层（position/normal）转换为nuke标准（fusion和ae理论上也可以直接用）。2.1以后还支持高精度无锯齿z和p层，以及假deep通道
+支持材质通道分层与灯光组分层，也支持混合分层。从设计之初就支持多个视图层。本插件可以智能地帮你连接渲染aov与图层，智能地根据输出类型使用降噪节点，将三维数据层（position/normal）转换为nuke标准（fusion和ae理论上也可以直接用）。2.1以后还支持高精度无锯齿z和p层，以及假deep通道。
 
 Supports material based aovs and light group based aovs, also can do hybrid. Supports multiple Viewlayers from scratch. This plugin can make output nodes automatically for you, intelligently make denoise nodes based on the outputs' type, convert position/normal pass to nuke standard passes (fusion and ae can also use in theory). After version 2.1, the plugin can output hi-res anti-aliased z and p channel, and a fake deep channel.
 
