@@ -2685,7 +2685,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
                             FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
                             FakeDeep_node.operation = "DIVIDE"
-                            FakeDeep_node.inputs[0].default_value = 0.01
+                            FakeDeep_node.inputs[0].default_value = 1
                             FakeDeep_node.hide = True
                             FakeDeep_node.location = 660, 0
 
@@ -3250,7 +3250,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
                         FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
                         FakeDeep_node.operation = "DIVIDE"
-                        FakeDeep_node.inputs[0].default_value = 0.01
+                        FakeDeep_node.inputs[0].default_value = 1
                         FakeDeep_node.hide = True
                         FakeDeep_node.location = 660, 0
 
