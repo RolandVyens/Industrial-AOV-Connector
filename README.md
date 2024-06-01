@@ -18,8 +18,7 @@ Support me on blender market: https://blendermarket.com/products/industrial-aov-
 
 ======================
 
-![屏幕截图 2024-04-29 135020](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/cc8db663-6419-4c0d-a895-df9837f45aea)
-![屏幕截图 2024-04-29 140527](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/7ec9bedc-fe7c-422f-a4bf-2f034c56dc93)
+![2 1界面](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/31a3178e-453a-434d-bed8-344488237a0f)
 
 目前支持3.3 - 最新版 Supports blender 3.3 - newest by now (2024.4.30)
 
