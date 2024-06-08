@@ -11,9 +11,6 @@ maintainer = "Roland Vyens"
 type = "add-on"
 
 
-permissions = ["files"]
-
-
 website = "https://github.com/RolandVyens/Industrial-AOV-Connector"
 
 
