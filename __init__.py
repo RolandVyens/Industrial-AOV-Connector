@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 1, 1),  # bump doc_url as well!
+    "version": (2, 2, 0),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -727,161 +727,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
                                 FO_DATA_node.file_slots.new(f"{input}")
                         # FO_Crypto_node.hide = True
-    elif bpy.context.scene.IDS_ConfIg == "OPTION3":  # config 3 ---2.0后隐藏，不再使用
-        for view_layer in viewlayers:
-            for node in bpy.context.scene.node_tree.nodes:
-                if node.type == "R_LAYERS" and node.layer == view_layer:
-                    FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
-                    FO_RGB_node.name = f"{view_layer}--RgBA"
-                    FO_RGB_node.label = f"{view_layer}_RGBA"
-                    FO_RGB_node.location = 1200, 0  # initial location
-                    FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
-                    FO_RGB_node.format.color_depth = "32"
-                    FO_RGB_node.format.exr_codec = "ZIPS"
-                    if bpy.context.scene.IDS_FileloC is True:
-                        current_render_path = file_output_to_subfolder_loc()
-                        FO_RGB_node.base_path = (
-                            current_render_path[0]
-                            + f"{view_layer}\\"
-                            + f"{view_layer}_RGBA_"
-                        )
-                    else:
-                        FO_RGB_node.base_path = (
-                            file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
-                        )
-                    # FO_RGB_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_RGBA_"
-                    # )
-                    FO_RGB_node.inputs.clear()
-                    for input in viewlayer_full[f"{view_layer}Color"]:
-                        FO_RGB_node.file_slots.new(f"{input}")
-                    # FO_RGB_node.hide = True
 
-                    if bpy.context.scene.IDS_UsedN is True:
-                        if addon_prefs.Denoise_Col is True:
-                            if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
-                                for socket in viewlayer_full.get(f"{view_layer}Color"):
-                                    if (
-                                        socket != "Image"
-                                        # and socket != "Emit"
-                                        and socket != "Shadow Catcher"
-                                        and socket not in material_aovs
-                                    ):
-                                        DN_node = tree.nodes.new(
-                                            "CompositorNodeDenoise"
-                                        )
-                                        DN_node.name = f"{view_layer}--{socket}_Dn"
-                                        DN_node.label = f"{view_layer}_{socket}_DN"
-                                        DN_node.location = 600, 0
-                                        DN_node.hide = True
-                        else:
-                            if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
-                                for socket in viewlayer_full.get(f"{view_layer}Color"):
-                                    if (
-                                        socket != "Image"
-                                        # and socket != "Emit"
-                                        and socket != "Shadow Catcher"
-                                        and socket != "DiffCol"
-                                        and socket != "GlossCol"
-                                        and socket != "TransCol"
-                                        and socket not in material_aovs
-                                    ):
-                                        DN_node = tree.nodes.new(
-                                            "CompositorNodeDenoise"
-                                        )
-                                        DN_node.name = f"{view_layer}--{socket}_Dn"
-                                        DN_node.label = f"{view_layer}_{socket}_DN"
-                                        DN_node.location = 600, 0
-                                        DN_node.hide = True
-
-                    if viewlayer_full.get(f"{view_layer}Data") or viewlayer_full.get(
-                        f"{view_layer}Crypto"
-                    ):
-                        FO_DATA_node = tree.nodes.new("CompositorNodeOutputFile")
-                        FO_DATA_node.name = f"{view_layer}--DaTA"
-                        FO_DATA_node.label = f"{view_layer}_DATA"
-                        FO_DATA_node.location = 1200, 0
-                        FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
-                        FO_DATA_node.format.color_depth = "32"
-                        FO_DATA_node.format.exr_codec = "ZIPS"
-                        if bpy.context.scene.IDS_FileloC is True:
-                            current_render_path = file_output_to_subfolder_loc()
-                            FO_DATA_node.base_path = (
-                                current_render_path[1]
-                                + f"{view_layer}\\"
-                                + f"{view_layer}_RGBA_"
-                            )
-                        else:
-                            FO_DATA_node.base_path = (
-                                file_output_to_1folder_loc() + f"{view_layer}_DATA_"
-                            )
-                        # FO_DATA_node.base_path = (
-                        #     current_render_path + f"\\{view_layer}_DATA_"
-                        # )
-                        FO_DATA_node.inputs.clear()
-                        FO_DATA_node.file_slots.new("Image")
-                        for input in viewlayer_full[f"{view_layer}Data"]:
-                            FO_DATA_node.file_slots.new(f"{input}")
-                        # FO_DATA_node.hide = True
-
-                        if "Vector" in viewlayer_full.get(f"{view_layer}Data"):
-                            Vector_Con_node = tree.nodes.new(
-                                "CompositorNodeSeparateColor"
-                            )
-                            Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
-                            Vector_Con_node.label = f"{view_layer}_Vector_VECTORIN"
-                            Vector_Con_node.hide = True
-                            Vector_Con_node.location = 550, 0
-                            Vector_Con_node = tree.nodes.new(
-                                "CompositorNodeCombineColor"
-                            )
-                            Vector_Con_node.name = f"{view_layer}--Vector_VectorOut"
-                            Vector_Con_node.label = f"{view_layer}_Vector_VECTOROUT"
-                            Vector_Con_node.hide = True
-                            Vector_Con_node.location = 780, 0
-
-                    if viewlayer_full.get(f"{view_layer}Vector"):
-                        if "Denoising Normal" in viewlayer_full.get(
-                            f"{view_layer}Vector"
-                        ):
-                            viewlayer_full.get(f"{view_layer}Vector").remove(
-                                "Denoising Normal"
-                            )
-                        for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeSeparateXYZ")
-                            Convert_node.name = f"{view_layer}--{socket}_Break"
-                            Convert_node.label = f"{view_layer}_{socket}_BREAK"
-                            Convert_node.hide = True
-                            Convert_node.location = 500, 0
-                        for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeCombineXYZ")
-                            Convert_node.name = f"{view_layer}--{socket}_Combine"
-                            Convert_node.label = f"{view_layer}_{socket}_COMBINE"
-                            Convert_node.hide = True
-                            Convert_node.location = 820, 0
-                        for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeMath")
-                            Convert_node.name = f"{view_layer}--{socket}_Inv"
-                            Convert_node.label = f"{view_layer}_{socket}_INVERT"
-                            Convert_node.operation = "MULTIPLY"
-                            Convert_node.inputs[1].default_value = -1
-                            Convert_node.hide = True
-                            Convert_node.location = 660, 0
-
-                    if viewlayer_full.get(f"{view_layer}Crypto"):
-                        # FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
-                        # FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
-                        # FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
-                        # FO_Crypto_node.location = 1200, 0
-                        # FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
-                        # FO_Crypto_node.format.color_depth = "32"
-                        # FO_Crypto_node.base_path = (
-                        #     current_render_path + f"\\{view_layer}_CryptoMatte_.exr"
-                        # )
-                        # FO_Crypto_node.file_slots.new("Image")
-                        for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_DATA_node.file_slots.new(f"{input}")
-                        # FO_Crypto_node.hide = True
     elif bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2
         for view_layer in viewlayers:
             for node in bpy.context.scene.node_tree.nodes:
@@ -1637,150 +1483,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
                             FO_DATA_node.file_slots.new(f"{input}")
                     # FO_Crypto_node.hide = True
-    elif bpy.context.scene.IDS_ConfIg == "OPTION3":  # config 3 ---2.0后不再使用
-        for node in bpy.context.scene.node_tree.nodes:
-            if node.type == "R_LAYERS" and node.layer == view_layer:
-                FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
-                FO_RGB_node.name = f"{view_layer}--RgBA"
-                FO_RGB_node.label = f"{view_layer}_RGBA"
-                FO_RGB_node.location = 1200, 0  # initial location
-                FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
-                FO_RGB_node.format.color_depth = "32"
-                FO_RGB_node.format.exr_codec = "ZIPS"
-                if bpy.context.scene.IDS_FileloC is True:
-                    current_render_path = file_output_to_subfolder_loc()
-                    FO_RGB_node.base_path = (
-                        current_render_path[0]
-                        + f"{view_layer}\\"
-                        + f"{view_layer}_RGBA_"
-                    )
-                else:
-                    FO_RGB_node.base_path = (
-                        file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
-                    )
-                # FO_RGB_node.base_path = (
-                #     current_render_path + f"\\{view_layer}_RGBA_"
-                # )
-                FO_RGB_node.inputs.clear()
-                for input in viewlayer_full[f"{view_layer}Color"]:
-                    FO_RGB_node.file_slots.new(f"{input}")
-                # FO_RGB_node.hide = True
 
-                if bpy.context.scene.IDS_UsedN is True:
-                    if addon_prefs.Denoise_Col is True:
-                        if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
-                            for socket in viewlayer_full.get(f"{view_layer}Color"):
-                                if (
-                                    socket != "Image"
-                                    # and socket != "Emit"
-                                    and socket != "Shadow Catcher"
-                                    and socket not in material_aovs
-                                ):
-                                    DN_node = tree.nodes.new("CompositorNodeDenoise")
-                                    DN_node.name = f"{view_layer}--{socket}_Dn"
-                                    DN_node.label = f"{view_layer}_{socket}_DN"
-                                    DN_node.location = 600, 0
-                                    DN_node.hide = True
-                    else:
-                        if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
-                            for socket in viewlayer_full.get(f"{view_layer}Color"):
-                                if (
-                                    socket != "Image"
-                                    # and socket != "Emit"
-                                    and socket != "Shadow Catcher"
-                                    and socket != "DiffCol"
-                                    and socket != "GlossCol"
-                                    and socket != "TransCol"
-                                    and socket not in material_aovs
-                                ):
-                                    DN_node = tree.nodes.new("CompositorNodeDenoise")
-                                    DN_node.name = f"{view_layer}--{socket}_Dn"
-                                    DN_node.label = f"{view_layer}_{socket}_DN"
-                                    DN_node.location = 600, 0
-                                    DN_node.hide = True
-
-                if viewlayer_full.get(f"{view_layer}Data") or viewlayer_full.get(
-                    f"{view_layer}Crypto"
-                ):
-                    FO_DATA_node = tree.nodes.new("CompositorNodeOutputFile")
-                    FO_DATA_node.name = f"{view_layer}--DaTA"
-                    FO_DATA_node.label = f"{view_layer}_DATA"
-                    FO_DATA_node.location = 1200, 0
-                    FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
-                    FO_DATA_node.format.color_depth = "32"
-                    FO_DATA_node.format.exr_codec = "ZIPS"
-                    if bpy.context.scene.IDS_FileloC is True:
-                        current_render_path = file_output_to_subfolder_loc()
-                        FO_DATA_node.base_path = (
-                            current_render_path[1]
-                            + f"{view_layer}\\"
-                            + f"{view_layer}_RGBA_"
-                        )
-                    else:
-                        FO_DATA_node.base_path = (
-                            file_output_to_1folder_loc() + f"{view_layer}_DATA_"
-                        )
-                    # FO_DATA_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_DATA_"
-                    # )
-                    FO_DATA_node.inputs.clear()
-                    FO_DATA_node.file_slots.new("Image")
-                    for input in viewlayer_full[f"{view_layer}Data"]:
-                        FO_DATA_node.file_slots.new(f"{input}")
-                    # FO_DATA_node.hide = True
-
-                    if "Vector" in viewlayer_full.get(f"{view_layer}Data"):
-                        Vector_Con_node = tree.nodes.new("CompositorNodeSeparateColor")
-                        Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
-                        Vector_Con_node.label = f"{view_layer}_Vector_VECTORIN"
-                        Vector_Con_node.hide = True
-                        Vector_Con_node.location = 550, 0
-                        Vector_Con_node = tree.nodes.new("CompositorNodeCombineColor")
-                        Vector_Con_node.name = f"{view_layer}--Vector_VectorOut"
-                        Vector_Con_node.label = f"{view_layer}_Vector_VECTOROUT"
-                        Vector_Con_node.hide = True
-                        Vector_Con_node.location = 780, 0
-
-                if viewlayer_full.get(f"{view_layer}Vector"):
-                    if "Denoising Normal" in viewlayer_full.get(f"{view_layer}Vector"):
-                        viewlayer_full.get(f"{view_layer}Vector").remove(
-                            "Denoising Normal"
-                        )
-                    for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeSeparateXYZ")
-                        Convert_node.name = f"{view_layer}--{socket}_Break"
-                        Convert_node.label = f"{view_layer}_{socket}_BREAK"
-                        Convert_node.hide = True
-                        Convert_node.location = 500, 0
-                    for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeCombineXYZ")
-                        Convert_node.name = f"{view_layer}--{socket}_Combine"
-                        Convert_node.label = f"{view_layer}_{socket}_COMBINE"
-                        Convert_node.hide = True
-                        Convert_node.location = 820, 0
-                    for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeMath")
-                        Convert_node.name = f"{view_layer}--{socket}_Inv"
-                        Convert_node.label = f"{view_layer}_{socket}_INVERT"
-                        Convert_node.operation = "MULTIPLY"
-                        Convert_node.inputs[1].default_value = -1
-                        Convert_node.hide = True
-                        Convert_node.location = 660, 0
-
-                if viewlayer_full.get(f"{view_layer}Crypto"):
-                    # FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
-                    # FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
-                    # FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
-                    # FO_Crypto_node.location = 1200, 0
-                    # FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
-                    # FO_Crypto_node.format.color_depth = "32"
-                    # FO_Crypto_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_CryptoMatte_.exr"
-                    # )
-                    # FO_Crypto_node.file_slots.new("Image")
-                    for input in viewlayer_full[f"{view_layer}Crypto"]:
-                        FO_DATA_node.file_slots.new(f"{input}")
-                    # FO_Crypto_node.hide = True
     elif bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
@@ -3625,7 +3328,7 @@ class Compositor_OT_enable_use_nodes(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class IDS_Turn_Denoise(bpy.types.Operator):
+class IDS_OT_Turn_Denoise(bpy.types.Operator):
     bl_idname = "rendering.use_denoise_passes"
     bl_label = "Turn On Denoise For All Layers"
     bl_description = "Turn on denoise for all viewlayers"
@@ -3639,7 +3342,7 @@ class IDS_Turn_Denoise(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class IDS_Make_Tree(bpy.types.Operator):
+class IDS_OT_Make_Tree(bpy.types.Operator):
     bl_idname = "compositor.make_tree"
     bl_label = "Cook Nodetree"
     bl_description = "make connector nodes in compositor"
@@ -3672,7 +3375,7 @@ class IDS_Make_Tree(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class IDS_Update_Tree(bpy.types.Operator):
+class IDS_OT_Update_Tree(bpy.types.Operator):
     bl_idname = "compositor.update_tree"
     bl_label = "Update Current Viewlayer"
     bl_description = "only update current viewlayer's connector nodes"
@@ -3708,7 +3411,7 @@ class IDS_Update_Tree(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class IDS_Arr_Tree(bpy.types.Operator):
+class IDS_OT_Arr_Tree(bpy.types.Operator):
     bl_idname = "compositor.arr_tree"
     bl_label = "Arrange Connector Nodes"
     bl_description = "arrange nodes generated by this plugin"
@@ -3727,7 +3430,7 @@ class IDS_Arr_Tree(bpy.types.Operator):
 """以下为删除垃圾输出的按钮"""
 
 
-class IDS_Delete_Trash(bpy.types.Operator):
+class IDS_OT_Delete_Trash(bpy.types.Operator):
     bl_idname = "render.delete_trashoutput"
     bl_label = "Delete Useless Default Renders"
     bl_description = "Delete the folder called 'trash_output' which contains the default render of blender, safe to perform because valid output paths generated by the addon will always locate out of the 'trash_output' folder"
@@ -3770,7 +3473,7 @@ class IDS_Delete_Trash(bpy.types.Operator):
 """以下为高级模式使用的操作符"""
 
 
-class IDS_Make_DatalayerNew(Operator):
+class IDS_OT_Make_DatalayerNew(Operator):
     bl_idname = "viewlayer.makedatalayernew"
     bl_label = "Brand New DATA Viewlayer"
     bl_description = "make a data exclusive viewlayer with all collections turned on, without any data passes"
@@ -3790,7 +3493,7 @@ class IDS_Make_DatalayerNew(Operator):
         return {"FINISHED"}
 
 
-class IDS_Make_DatalayerCopy(Operator):
+class IDS_OT_Make_DatalayerCopy(Operator):
     bl_idname = "viewlayer.makedatalayercopy"
     bl_label = "New DATA Viewlayer Based On Current Viewlayer"
     bl_description = "make a data exclusive viewlayer that copys current viewlayer settings and passes"
@@ -3835,7 +3538,7 @@ class IDS_Make_DatalayerCopy(Operator):
         return {"FINISHED"}
 
 
-class IDS_Convert_DATALayer(Operator):
+class IDS_OT_Convert_DATALayer(Operator):
     bl_idname = "viewlayer.convertdatalayer"
     bl_label = "Convert To DATA Layer"
     bl_description = "Convert current layer to DATA layer"
@@ -3860,7 +3563,7 @@ class IDS_Convert_DATALayer(Operator):
         return {"FINISHED"}
 
 
-class IDS_Override_DATAMaTadv(Operator):
+class IDS_OT_Override_DATAMaTadv(Operator):
     bl_idname = "viewlayer.overridedatamat"
     bl_label = "Override And Create AOVs"
     bl_description = (
@@ -3995,28 +3698,28 @@ class IDS_Override_DATAMaTadv(Operator):
         return {"FINISHED"}
 
 
-class IDS_Make_DatalayerMenu(bpy.types.Menu):
+class IDS_MT_Make_DatalayerMenu(bpy.types.Menu):
     bl_label = "Make DATA Exclusive Viewlayer"
-    bl_idname = "viewlayer.makedatalayer"
+    bl_idname = "viewlayer_MT_makedatalayer"
 
     def draw(self, context):
         layout = self.layout
         layout.operator(
-            IDS_Make_DatalayerCopy.bl_idname, text=IDS_Make_DatalayerCopy.bl_label
+            IDS_OT_Make_DatalayerCopy.bl_idname, text=IDS_OT_Make_DatalayerCopy.bl_label
         )
         layout.operator(
-            IDS_Make_DatalayerNew.bl_idname, text=IDS_Make_DatalayerNew.bl_label
+            IDS_OT_Make_DatalayerNew.bl_idname, text=IDS_OT_Make_DatalayerNew.bl_label
         )
 
 
-class IDS_Draw_DataMenu(Operator):
+class IDS_OT_Draw_DataMenu(Operator):
     bl_idname = "wm.drawdatalayermenu"
     bl_label = "Make A DATA Layer"
     bl_description = "make a data exclusive viewlayer that copys current viewlayer settings and passes"
     bl_options = {"REGISTER"}
 
     def execute(self, context):
-        bpy.ops.wm.call_menu(name=IDS_Make_DatalayerMenu.bl_idname)
+        bpy.ops.wm.call_menu(name=IDS_MT_Make_DatalayerMenu.bl_idname)
 
         return {"FINISHED"}
 
@@ -4024,7 +3727,7 @@ class IDS_Draw_DataMenu(Operator):
 """以下为控制面板"""
 
 
-class IDS_OutputPanel(bpy.types.Panel):
+class IDS_PT_OutputPanel(bpy.types.Panel):
     bl_label = "Industrial AOV Connector"
     bl_idname = "RENDER_PT_industrialoutput"
     bl_space_type = "PROPERTIES"
@@ -4049,7 +3752,7 @@ class IDS_OutputPanel(bpy.types.Panel):
             if passes_denoised == False:
                 box = layout.box()
                 box.label(text="↓↓↓Turn on Denoise Passes.↓↓↓", icon="ERROR")
-                box.operator(IDS_Turn_Denoise.bl_idname)
+                box.operator(IDS_OT_Turn_Denoise.bl_idname)
         else:
             box = layout.box()
             box.label(text="Not using Cycles, no need to denoise")
@@ -4079,12 +3782,12 @@ class IDS_OutputPanel(bpy.types.Panel):
                 and bpy.context.scene.IDS_SepCryptO is True
             ):
                 box2.prop(context.scene, "IDS_UseAdvCrypto")
-            box2.operator(IDS_Draw_DataMenu.bl_idname)
-            box2.operator(IDS_Convert_DATALayer.bl_idname)
+            box2.operator(IDS_OT_Draw_DataMenu.bl_idname)
+            box2.operator(IDS_OT_Convert_DATALayer.bl_idname)
             box3 = box1.box()
             box3.label(text="DATA Layer Material Override:")
             box3.prop(context.scene, "IDS_DataMatType", text="Material")
-            box3.operator(IDS_Override_DATAMaTadv.bl_idname)
+            box3.operator(IDS_OT_Override_DATAMaTadv.bl_idname)
 
             if bpy.context.scene.IDS_DataMatType in {
                 "Accurate Depth Material",
@@ -4096,15 +3799,15 @@ class IDS_OutputPanel(bpy.types.Panel):
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
-        col.operator(IDS_Make_Tree.bl_idname, icon="NODETREE")
-        col.operator(IDS_Update_Tree.bl_idname, icon="NODE_INSERT_OFF")
+        col.operator(IDS_OT_Make_Tree.bl_idname, icon="NODETREE")
+        col.operator(IDS_OT_Update_Tree.bl_idname, icon="NODE_INSERT_OFF")
         col1 = layout.column()
-        col1.operator(IDS_Arr_Tree.bl_idname, icon="MOD_ARRAY")
+        col1.operator(IDS_OT_Arr_Tree.bl_idname, icon="MOD_ARRAY")
         # box1 = layout.box()
         layout.label(text="Output Tools:")
         col2 = layout.column()
         if addon_prefs.Show_QuickDel is True:
-            col2.operator(IDS_Delete_Trash.bl_idname, icon="TRASH")
+            col2.operator(IDS_OT_Delete_Trash.bl_idname, icon="TRASH")
 
 
 # class IDS_OutputPanel_Output(bpy.types.Panel):
@@ -4128,21 +3831,21 @@ class IDS_OutputPanel(bpy.types.Panel):
 """以下为注册函数"""
 reg_clss = [
     IDS_AddonPrefs,
-    IDS_OutputPanel,
-    IDS_Turn_Denoise,
+    IDS_PT_OutputPanel,
+    IDS_OT_Turn_Denoise,
     # IDS_OutputPanel_Output,
     Compositor_OT_enable_use_nodes,
-    IDS_Make_Tree,
-    IDS_Arr_Tree,
+    IDS_OT_Make_Tree,
+    IDS_OT_Arr_Tree,
     # IDS_file_loc,
-    IDS_Update_Tree,
-    IDS_Delete_Trash,
-    IDS_Make_DatalayerNew,
-    IDS_Make_DatalayerCopy,
-    IDS_Make_DatalayerMenu,
-    IDS_Draw_DataMenu,
-    IDS_Convert_DATALayer,
-    IDS_Override_DATAMaTadv,
+    IDS_OT_Update_Tree,
+    IDS_OT_Delete_Trash,
+    IDS_OT_Make_DatalayerNew,
+    IDS_OT_Make_DatalayerCopy,
+    IDS_MT_Make_DatalayerMenu,
+    IDS_OT_Draw_DataMenu,
+    IDS_OT_Convert_DATALayer,
+    IDS_OT_Override_DATAMaTadv,
 ]
 
 

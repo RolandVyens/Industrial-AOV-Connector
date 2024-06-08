@@ -2,7 +2,7 @@ schema_version = "1.0.0"
 
 
 id = "Industrial_AOV_Connector"
-version = "2.1.1"
+version = "2.2.0"
 name = "Industrial AOV Connector"
 tagline = "Auto generate outputs for advanced compositing"
 maintainer = "Roland Vyens"
