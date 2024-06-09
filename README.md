@@ -16,6 +16,10 @@ Support me on blender market: https://blendermarket.com/products/industrial-aov-
 
 **This plug-in supports retaining existing nodes and non-destructively editing. Just press "Update Current ViewLayer"**
 
+**插件面板位置：属性面板→视图层**
+
+**Plugin panel location: Properties Panel→View Layer**
+
 ======================
 
 ![2 1界面](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/31a3178e-453a-434d-bed8-344488237a0f)
