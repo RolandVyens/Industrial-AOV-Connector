@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 2, 0),  # bump doc_url as well!
+    "version": (2, 2, 1),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -3804,10 +3804,12 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
         col1 = layout.column()
         col1.operator(IDS_OT_Arr_Tree.bl_idname, icon="MOD_ARRAY")
         # box1 = layout.box()
-        layout.label(text="Output Tools:")
         col2 = layout.column()
         if addon_prefs.Show_QuickDel is True:
+            col2.label(text="Output Tools:")
             col2.operator(IDS_OT_Delete_Trash.bl_idname, icon="TRASH")
+        else:
+            col2.label(text="Enable hidden features in addon setting")
 
 
 # class IDS_OutputPanel_Output(bpy.types.Panel):
