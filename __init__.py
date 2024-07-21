@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 2, 1),  # bump doc_url as well!
+    "version": (2, 3, 0),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -445,9 +445,12 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
                     colors.remove(aov)
                     real_data.append(aov)
         if (
-            bpy.context.scene.IDS_fakeDeep == True
+            bpy.context.scene.IDS_AdvMode is True
+            and bpy.context.scene.IDS_UseDATALayer is True
+            and bpy.context.scene.IDS_fakeDeep == True
             and bpy.context.scene.IDS_DataMatType
             in {"Accurate Depth Material", "Accurate Depth & Position Material"}
+            and "Depth_AA$$aoP" in material_aovs[viewlayer]
         ):
             real_data.append("Deep_From_Image_z")
         viewlayer_full[viewlayer + "Data"] = real_data
@@ -2383,6 +2386,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                 "Accurate Depth Material",
                                 "Accurate Depth & Position Material",
                             }
+                            and "Depth_AA$$aoP" in viewlayer_full[f"{view_layer}Data"]
                         ):
                             FakeDeep_node = tree.nodes.new("CompositorNodeMath")
                             FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
@@ -2948,6 +2952,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                             "Accurate Depth Material",
                             "Accurate Depth & Position Material",
                         }
+                        and "Depth_AA$$aoP" in viewlayer_full[f"{view_layer}Data"]
                     ):
                         FakeDeep_node = tree.nodes.new("CompositorNodeMath")
                         FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
@@ -3576,9 +3581,10 @@ class IDS_OT_Override_DATAMaTadv(Operator):
         bl_version = bpy.app.version
         addon_file = os.path.realpath(__file__)
         addon_directory = os.path.dirname(addon_file)
-        if int(
-            f"{bl_version[0]}{bl_version[1]}"
-        ) < 42 and "extensions" not in addon_directory:
+        if (
+            int(f"{bl_version[0]}{bl_version[1]}") < 42
+            and "extensions" not in addon_directory
+        ):
             user_path = bpy.utils.resource_path("USER")
             asset_path = os.path.join(
                 user_path,
@@ -3588,9 +3594,7 @@ class IDS_OT_Override_DATAMaTadv(Operator):
                 "asset.blend",
             )
         else:
-            asset_path = os.path.join(
-                addon_directory, "asset.blend"
-            )
+            asset_path = os.path.join(addon_directory, "asset.blend")
         if bpy.context.scene.IDS_DataMatType == "Pure Diffuse BSDF":
             if "override--exP" in bpy.data.materials:
                 newlayer.material_override = bpy.data.materials.get("override--exP")
@@ -3763,25 +3767,26 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
             box2 = box1.box()
             box2.label(text="Independent DATA Layer Config:")
             box2.prop(context.scene, "IDS_UseDATALayer")
-            if (
-                bpy.context.scene.IDS_UseDATALayer is True
-                and bpy.context.scene.IDS_SepCryptO is True
-            ):
-                box2.prop(context.scene, "IDS_UseAdvCrypto")
-            box2.operator(IDS_OT_Draw_DataMenu.bl_idname)
-            box2.operator(IDS_OT_Convert_DATALayer.bl_idname)
-            box3 = box1.box()
-            box3.label(text="DATA Layer Material Override:")
-            box3.prop(context.scene, "IDS_DataMatType", text="Material")
-            box3.operator(IDS_OT_Override_DATAMaTadv.bl_idname)
+            if bpy.context.scene.IDS_UseDATALayer is True:
+                if (
+                    bpy.context.scene.IDS_UseDATALayer is True
+                    and bpy.context.scene.IDS_SepCryptO is True
+                ):
+                    box2.prop(context.scene, "IDS_UseAdvCrypto")
+                box2.operator(IDS_OT_Draw_DataMenu.bl_idname)
+                box2.operator(IDS_OT_Convert_DATALayer.bl_idname)
+                box3 = box1.box()
+                box3.label(text="DATA Layer Material Override:")
+                box3.prop(context.scene, "IDS_DataMatType", text="Material")
+                box3.operator(IDS_OT_Override_DATAMaTadv.bl_idname)
 
-            if bpy.context.scene.IDS_DataMatType in {
-                "Accurate Depth Material",
-                "Accurate Depth & Position Material",
-            }:
-                box4 = box1.box()
-                box4.label(text="Accurate Depth Addition:")
-                box4.prop(context.scene, "IDS_fakeDeep")
+                if bpy.context.scene.IDS_DataMatType in {
+                    "Accurate Depth Material",
+                    "Accurate Depth & Position Material",
+                }:
+                    box4 = box1.box()
+                    box4.label(text="Accurate Depth Addition:")
+                    box4.prop(context.scene, "IDS_fakeDeep")
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
