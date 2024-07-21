@@ -3700,7 +3700,7 @@ class IDS_OT_Override_DATAMaTadv(Operator):
 
 class IDS_MT_Make_DatalayerMenu(bpy.types.Menu):
     bl_label = "Make DATA Exclusive Viewlayer"
-    bl_idname = "viewlayer_MT_makedatalayer"
+    bl_idname = "VIEWLAYER_MT_Makedatalayer"
 
     def draw(self, context):
         layout = self.layout
