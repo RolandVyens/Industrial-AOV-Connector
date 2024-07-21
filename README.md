@@ -32,6 +32,12 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
 **Update Log:**
 
+2024.7.21: version 2.3.0
+
+修复了一些bug，调整用户界面以加强引导，完全支持blender 4.2
+
+Some bugs fixed, improved user interface, fully support for blender 4.2
+
 2024.5.30: version 2.1.0
 
 1. 基于视图层材质覆写的精确Depth和Position通道，与RGBA逐像素对应
