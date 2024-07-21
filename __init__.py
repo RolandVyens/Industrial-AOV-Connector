@@ -3603,18 +3603,30 @@ class IDS_OT_Override_DATAMaTadv(Operator):
             if "Depth_AA--exP" in bpy.data.materials:
                 newlayer.material_override = bpy.data.materials.get("Depth_AA--exP")
             else:
-                user_path = bpy.utils.resource_path("USER")
-                asset_path = os.path.join(
-                    user_path,
-                    "scripts",
-                    "addons",
-                    "Industrial-AOV-Connector",
-                    "asset.blend",
-                )
-                bpy.ops.wm.append(
-                    directory=asset_path + "/Material/", filename="Depth_AA--exP"
-                )
-                newlayer.material_override = bpy.data.materials.get("Depth_AA--exP")
+                bl_version = bpy.app.version
+                if int(
+                    f"{bl_version[0]}{bl_version[1]}"
+                ) < 42 and "extensions" not in os.path.dirname(language_dict.__file__):
+                    user_path = bpy.utils.resource_path("USER")
+                    asset_path = os.path.join(
+                        user_path,
+                        "scripts",
+                        "addons",
+                        "Industrial-AOV-Connector",
+                        "asset.blend",
+                    )
+                    bpy.ops.wm.append(
+                        directory=asset_path + "/Material/", filename="Depth_AA--exP"
+                    )
+                    newlayer.material_override = bpy.data.materials.get("Depth_AA--exP")
+                else:
+                    asset_path = os.path.join(
+                        os.path.dirname(language_dict.__file__), "asset.blend"
+                    )
+                    bpy.ops.wm.append(
+                        directory=asset_path + "/Material/", filename="Depth_AA--exP"
+                    )
+                    newlayer.material_override = bpy.data.materials.get("Depth_AA--exP")
             for aov in bpy.context.view_layer.aovs:
                 if aov.name[-5:] == "$$aoP":
                     bpy.context.view_layer.aovs.remove(aov)
