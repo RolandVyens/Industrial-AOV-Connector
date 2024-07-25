@@ -8,6 +8,8 @@
 
 Support me on blender market: https://blendermarket.com/products/industrial-aov-connector
 
+Install on blender extensions: https://extensions.blender.org/add-ons/industrial-aov-connector/
+
 ======================
 
 **Tips:**
