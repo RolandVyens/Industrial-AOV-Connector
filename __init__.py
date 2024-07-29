@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 3, 0),  # bump doc_url as well!
+    "version": (2, 3, 1),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -59,7 +59,7 @@ def arrange_list(strings):
 class IDS_AddonPrefs(AddonPreferences):
     # this must match the add-on name, use '__package__'
     # when defining this in a submodule of a python package.
-    bl_idname = __name__
+    bl_idname = __package__
 
     Denoise_Col: BoolProperty(
         name="Denoise DiffCol / GlossCol / TransCol",
@@ -340,7 +340,7 @@ def file_output_to_subfolder_loc():  # 按文件夹分类
 def origin_render_path_change_loc():  # 将blender默认输出存到垃圾输出内，应在最后调用
     current_render_path = bpy.context.scene.render.filepath
     preferences = bpy.context.preferences
-    addon_prefs = preferences.addons[__name__].preferences
+    addon_prefs = preferences.addons[__package__].preferences
     if addon_prefs.Put_Default_To_trash_output:
         if current_render_path[-1:] != "\\":
             # print(current_render_path)
@@ -506,7 +506,7 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
 
 def make_tree_denoise():  # 主要功能函数之建立节点
     preferences = bpy.context.preferences
-    addon_prefs = preferences.addons[__name__].preferences
+    addon_prefs = preferences.addons[__package__].preferences
     viewlayers = []
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.append(view_layer.name)
@@ -1282,7 +1282,7 @@ def auto_connect():  # 主要功能函数之建立连接
 
 def update_tree_denoise():  # 新建当前视图层的节点
     preferences = bpy.context.preferences
-    addon_prefs = preferences.addons[__name__].preferences
+    addon_prefs = preferences.addons[__package__].preferences
     current_render_path = bpy.context.scene.render.filepath
     viewlayer_full = sort_passes()
     # print(viewlayer_full)
@@ -2192,7 +2192,7 @@ def auto_arr_mathnode():  # 排列数学运算节点
 
 def make_tree_denoise_adv():  # 高级模式节点创建
     preferences = bpy.context.preferences
-    addon_prefs = preferences.addons[__name__].preferences
+    addon_prefs = preferences.addons[__package__].preferences
     viewlayers = []
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.append(view_layer.name)
@@ -2771,7 +2771,7 @@ def auto_connect_adv():  # 高级模式建立连接
 
 def update_tree_denoise_adv():  # 高级模式节点创建
     preferences = bpy.context.preferences
-    addon_prefs = preferences.addons[__name__].preferences
+    addon_prefs = preferences.addons[__package__].preferences
     current_render_path = bpy.context.scene.render.filepath
     viewlayer_full = sort_passes()
     # print(viewlayer_full)
@@ -3444,7 +3444,7 @@ class IDS_OT_Delete_Trash(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         preferences = bpy.context.preferences
-        addon_prefs = preferences.addons[__name__].preferences
+        addon_prefs = preferences.addons[__package__].preferences
 
         return addon_prefs.Show_QuickDel
 
@@ -3727,7 +3727,7 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
 
     def draw(self, context):
         preferences = bpy.context.preferences
-        addon_prefs = preferences.addons[__name__].preferences
+        addon_prefs = preferences.addons[__package__].preferences
 
         layout = self.layout
         if bpy.context.scene.use_nodes is False:
@@ -3845,14 +3845,14 @@ reg_clss = [
 def register():
     for i in reg_clss:
         bpy.utils.register_class(i)
-    bpy.app.translations.register(__name__, language_dict)
+    bpy.app.translations.register(__package__, language_dict)
 
 
 def unregister():
     for i in reg_clss:
         bpy.utils.unregister_class(i)
-    bpy.app.translations.unregister(__name__)
+    bpy.app.translations.unregister(__package__)
 
 
-if __name__ == "__main__":
+if __package__ == "__main__":
     register()
