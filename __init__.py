@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 3, 1),  # bump doc_url as well!
+    "version": (2, 3, 2),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -3854,5 +3854,5 @@ def unregister():
     bpy.app.translations.unregister(__package__)
 
 
-if __package__ == "__main__":
+if __name__ == "__main__":
     register()
