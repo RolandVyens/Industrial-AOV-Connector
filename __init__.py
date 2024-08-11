@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 3, 2),  # bump doc_url as well!
+    "version": (2, 4, 0),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -76,10 +76,16 @@ class IDS_AddonPrefs(AddonPreferences):
         description='Show "Delete Useless Default Renders" button in Output Tools, for quickly delete "trash_output"',
         default=False,
     )  # type: ignore
+    Only_Create_Enabled_Viewlayer: BoolProperty(
+        name="Only Create Nodes For Enabled Viewlayers",
+        description='Do not create nodes for viewlayers which their "Use For Rendering" checkbox is off',
+        default=True,
+    )  # type: ignore
 
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "Denoise_Col")
+        layout.prop(self, "Only_Create_Enabled_Viewlayer")
         layout.prop(self, "Put_Default_To_trash_output")
         layout.prop(self, "Show_QuickDel")
 
@@ -411,6 +417,12 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
     # print(all_passes)
     # print("sorted")
     # print("ViewLayer" in all_passes)
+    addon_prefs = bpy.context.preferences.addons[__package__].preferences
+    if addon_prefs.Only_Create_Enabled_Viewlayer is True:
+        viewlayersenable = list(viewlayers)
+        for viewlayer in viewlayersenable:
+            if bpy.context.scene.view_layers[f"{viewlayer}"].use is False:
+                viewlayers.remove(f"{viewlayer}")
     viewlayer_full = {}
     for viewlayer in viewlayers:
         viewlayer_passes = all_passes[viewlayer]
