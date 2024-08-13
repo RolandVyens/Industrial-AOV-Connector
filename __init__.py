@@ -3592,24 +3592,6 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
             col2.label(text="Enable hidden features in addon setting")
 
 
-# class IDS_OutputPanel_Output(bpy.types.Panel):
-#     bl_label = "Output Setup"
-#     bl_idname = "Render_PT_outputpanel"
-#     bl_space_type = "PROPERTIES"
-#     bl_region_type = "WINDOW"
-#     bl_context = "view_layer"
-#     bl_parent_id = "RENDER_PT_industrialoutput"
-#     bl_order = 1
-
-#     def draw(self, context):
-#         layout = self.layout
-#         col = layout.column()
-#         row = layout.row()
-#         box = layout.box()
-#         col.label(text="needs filling")
-#         row.operator()
-
-
 """以下为注册函数"""
 reg_clss = [
     IDS_AddonPrefs,
