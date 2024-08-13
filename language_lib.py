@@ -265,6 +265,10 @@ language_dict = {
             "*",
             "Output a modified Z channel for generating Deep data in nuke with Deep From Image node",
         ): "输出一个魔改过的z通道，在nuke中使用Deep From Image节点一键生成DEEP通道",
+        (
+            "*",
+            "Only Create Nodes For Enabled Viewlayers",
+        ): "只为启用渲染的视图层创建节点",
     },
     "zh_HANS": {
         (
@@ -532,5 +536,9 @@ language_dict = {
             "*",
             "Output a modified Z channel for generating Deep data in nuke with Deep From Image node",
         ): "输出一个魔改过的z通道，在nuke中使用Deep From Image节点一键生成DEEP通道",
+        (
+            "*",
+            "Only Create Nodes For Enabled Viewlayers",
+        ): "只为启用渲染的视图层创建节点",
     },
 }
