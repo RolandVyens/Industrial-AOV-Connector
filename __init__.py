@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 3, 2),  # bump doc_url as well!
+    "version": (2, 4, 0),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -13,44 +13,29 @@ bl_info = {
 from typing import Set
 import bpy
 from .language_lib import language_dict  # translations
+from .sort_passes import sort_passes
+from .handy_functions import (
+    extract_string_between_patterns,
+    has_subfolder,
+    arrange_list,
+)
+from .path_modify import (
+    file_output_to_1folder_loc,
+    file_output_to_subfolder_loc,
+    origin_render_path_change_loc,
+)
 import os
 import shutil
-from collections import Counter
-import re
 from bpy.types import Operator, AddonPreferences
 from bpy.props import StringProperty, IntProperty, BoolProperty
-from bpy.types import Context
 
 
-def extract_string_between_patterns(
-    input_string, start_pattern, end_pattern
-):  # 提取位于两个字符串中间的特定字符
-    pattern = re.compile(f"{re.escape(start_pattern)}(.*?){re.escape(end_pattern)}")
-    match = pattern.search(input_string)
-    if match:
-        return match.group(1)
-    else:
-        return None
-
-
-def has_subfolder(folder):  # 判断文件夹内是否存在子文件夹
-    names = os.listdir(folder)
-    for name in names:
-        path = os.path.join(folder, name)
-        if os.path.isdir(path):
-            return True
-    return False
-
-
-def arrange_list(strings):
-    # Filter strings that start with "-_-exP_"
-    matching_strings = [s for s in strings if s[:7] == "-_-exP_"]
-
-    # Combine the sorted matching strings with the remaining strings
-    remaining_strings = [s for s in strings if s not in matching_strings]
-    arranged_list = remaining_strings + matching_strings
-
-    return arranged_list
+"""
+ReadMe：本插件的核心函数是sort_passes，该函数根据合成面板内的viewlayer节点，
+智能编写一个包含所有有用输出的字典，该字典会在每次运行生成节点功能时打印出来；其他生成
+节点类的功能均依赖于sort_passes字典。同时，插件使用的viewlayers列表同样由sort_passes
+输出。
+"""
 
 
 """以下为全局配置"""
@@ -76,10 +61,16 @@ class IDS_AddonPrefs(AddonPreferences):
         description='Show "Delete Useless Default Renders" button in Output Tools, for quickly delete "trash_output"',
         default=False,
     )  # type: ignore
+    Only_Create_Enabled_Viewlayer: BoolProperty(
+        name="Only Create Nodes For Enabled Viewlayers",
+        description='Do not create nodes for viewlayers which their "Use For Rendering" checkbox is off',
+        default=True,
+    )  # type: ignore
 
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "Denoise_Col")
+        layout.prop(self, "Only_Create_Enabled_Viewlayer")
         layout.prop(self, "Put_Default_To_trash_output")
         layout.prop(self, "Show_QuickDel")
 
@@ -301,189 +292,6 @@ bpy.types.Scene.IDS_fakeDeep = bpy.props.BoolProperty(  # 是否输出fakedeep
 )
 
 
-"""以下为输出路径自动调整函数"""
-
-
-def file_output_to_1folder_loc():  # 直接存到一个文件夹里
-    current_render_path = bpy.context.scene.render.filepath
-    if current_render_path[-1:] != "\\":
-        current_render_path += "\\"
-    if "trash_output" in current_render_path:
-        current_render_path = current_render_path.replace("trash_output\\", "")
-    if "trash_output" not in current_render_path:
-        rgb_output_path = current_render_path
-        # data_output_path = current_render_path
-        # crypto_output_path = current_render_path
-    render_path = rgb_output_path
-    return render_path
-
-
-def file_output_to_subfolder_loc():  # 按文件夹分类
-    current_render_path = bpy.context.scene.render.filepath
-    if current_render_path[-1:] != "\\":
-        current_render_path += "\\"
-    if "trash_output" in current_render_path:
-        current_render_path = current_render_path.replace("trash_output\\", "")
-    if "trash_output" not in current_render_path:
-        # if bpy.context.scene.IDS_ConfIg != "OPTION2":
-        #     rgb_output_path = current_render_path + "RGBAs\\"
-        #     data_output_path = current_render_path + "DATAs\\"
-        #     crypto_output_path = current_render_path + "Cryptomatte\\"
-        # else:
-        rgb_output_path = current_render_path
-        data_output_path = current_render_path
-        crypto_output_path = current_render_path
-    render_path = [rgb_output_path, data_output_path, crypto_output_path]
-    return render_path
-
-
-def origin_render_path_change_loc():  # 将blender默认输出存到垃圾输出内，应在最后调用
-    current_render_path = bpy.context.scene.render.filepath
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons[__package__].preferences
-    if addon_prefs.Put_Default_To_trash_output:
-        if current_render_path[-1:] != "\\":
-            # print(current_render_path)
-            current_render_path += "\\"
-        if "trash_output" in current_render_path:
-            current_render_path = current_render_path.replace("trash_output\\", "")
-        if "trash_output" not in current_render_path:
-            new_render_path = current_render_path + "trash_output\\"
-            bpy.context.scene.render.filepath = new_render_path
-
-
-"""以下为pass类型获取+自动创建没有的可视层的函数"""
-
-
-def sort_passes():  # 获取所有可视层输出并返回整理好的字典，以备建立节点调用
-    viewlayers = set()
-    already_present_viewlayers = set()
-    viewlayers_presented = []
-    unexposed_viewlayers = []
-    material_aov = []
-    material_aovs = {}
-    for layer in bpy.context.scene.view_layers:
-        for aov in layer.aovs:
-            material_aov.append(aov.name)
-        material_aovs[layer.name] = material_aov[:]
-        material_aov.clear()
-    # print(material_aovs)
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
-    for node in bpy.context.scene.node_tree.nodes:
-        if node.type == "R_LAYERS":
-            already_present_viewlayers.add(node.layer)
-            viewlayers_presented.append(node.layer)
-            node.name = node.layer
-            node.label = node.layer
-    for element in viewlayers - already_present_viewlayers:
-        unexposed_viewlayers.append(element)
-    if unexposed_viewlayers:
-        for i in unexposed_viewlayers:
-            render_layers_node = bpy.context.scene.node_tree.nodes.new(
-                "CompositorNodeRLayers"
-            )
-            render_layers_node.layer = i
-            render_layers_node.name = i
-            render_layers_node.label = i
-        print("creating missing viewlayers")
-        unexposed_viewlayers.clear()
-    else:
-        print("all viewlayers presented")
-    element_counts = Counter(viewlayers_presented)
-    duplicates = [element for element, count in element_counts.items() if count > 1]
-    for node in bpy.context.scene.node_tree.nodes:
-        if node.type == "R_LAYERS" and node.layer in duplicates:
-            duplicates.remove(node.layer)
-            bpy.context.scene.node_tree.nodes.remove(node)
-    enabled_passes = []
-    all_passes = {}
-    for node in bpy.context.scene.node_tree.nodes:
-        if node.type == "R_LAYERS":
-            node.select = True
-            for output in node.outputs:
-                if output.enabled:
-                    enabled_passes.append({output.bl_idname: output.name})
-                    # print(output.bl_idname,output.name)
-            else:
-                all_passes[node.layer] = enabled_passes[:]
-                enabled_passes.clear()
-    # print(all_passes)
-    # print("sorted")
-    # print("ViewLayer" in all_passes)
-    viewlayer_full = {}
-    for viewlayer in viewlayers:
-        viewlayer_passes = all_passes[viewlayer]
-        # print(viewlayer_passes)
-        colors = [
-            d["NodeSocketColor"] for d in viewlayer_passes if "NodeSocketColor" in d
-        ]
-        float_data = [
-            d["NodeSocketFloat"] for d in viewlayer_passes if "NodeSocketFloat" in d
-        ]
-        vector_data = [
-            d["NodeSocketVector"] for d in viewlayer_passes if "NodeSocketVector" in d
-        ]
-        real_data = []
-        for i in float_data + vector_data:
-            if bpy.context.scene.IDS_ArtDepth is True:
-                if (
-                    "Alpha" not in i
-                    and "Denoising Normal" not in i
-                    and "Denoising Albedo" not in i
-                ):
-                    real_data.append(i)
-            else:
-                if "Alpha" not in i and "Denoising" not in i:
-                    real_data.append(i)
-        if (
-            bpy.context.scene.IDS_AdvMode is True
-            and bpy.context.scene.IDS_UseDATALayer is True
-        ):
-            for aov in material_aovs[viewlayer]:
-                if aov in colors:
-                    colors.remove(aov)
-                    real_data.append(aov)
-        if (
-            bpy.context.scene.IDS_AdvMode is True
-            and bpy.context.scene.IDS_UseDATALayer is True
-            and bpy.context.scene.IDS_fakeDeep == True
-            and bpy.context.scene.IDS_DataMatType
-            in {"Accurate Depth Material", "Accurate Depth & Position Material"}
-            and "Depth_AA$$aoP" in material_aovs[viewlayer]
-        ):
-            real_data.append("Deep_From_Image_z")
-        viewlayer_full[viewlayer + "Data"] = real_data
-        if "UV" in vector_data:
-            vector_data.remove("UV")
-        if "Vector" in vector_data:
-            vector_data.remove("Vector")
-        if "Position_AA$$aoP" in real_data:
-            vector_data.append("Position_AA$$aoP")
-        viewlayer_full[viewlayer + "Vector"] = vector_data
-        real_color = []
-        crypto = []
-        for i in colors:
-            if "Crypto" not in i and "Noisy" not in i and "Denoising Albedo" not in i:
-                real_color.append(i)
-            if "Crypto" in i:
-                crypto.append(i)
-        if (
-            bpy.context.scene.IDS_AdvMode is True
-            and bpy.context.scene.IDS_UseDATALayer is True
-        ):
-            for aov in material_aovs[viewlayer]:
-                if aov not in real_color:
-                    real_color.append(aov)
-        viewlayer_full[viewlayer + "Color"] = real_color
-        viewlayer_full[viewlayer + "Crypto"] = crypto
-        # print(real_data)
-        # print(real_color)
-        # print(crypto)
-    print(viewlayer_full)
-    return viewlayer_full
-
-
 """以下为自动创建节点树的函数"""
 
 
@@ -507,11 +315,8 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
 def make_tree_denoise():  # 主要功能函数之建立节点
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons[__package__].preferences
-    viewlayers = []
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full = sort_passes()
+    viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
     tree = bpy.context.scene.node_tree
 
@@ -881,17 +686,14 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
                             FO_RGB_node.file_slots.new(f"{input}")
                         # FO_Crypto_node.hide = True
-    return viewlayer_full
+    return viewlayer_full, viewlayers
 
 
 def auto_connect():  # 主要功能函数之建立连接
-    viewlayers = []
     denoise_nodes_all = []
     denoise_nodes = {}
     denoise_nodes_temp = []
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
-    viewlayer_full = make_tree_denoise()
+    viewlayer_full, viewlayers = make_tree_denoise()
     material_aovs = set()
     for scene in bpy.data.scenes:
         for layer in bpy.data.scenes[str(scene.name)].view_layers:
@@ -1284,7 +1086,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons[__package__].preferences
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full = sort_passes()
+    viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
     tree = bpy.context.scene.node_tree
     view_layer = bpy.context.view_layer.name
@@ -1622,7 +1424,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     for input in viewlayer_full[f"{view_layer}Crypto"]:
                         FO_RGB_node.file_slots.new(f"{input}")
                     # FO_Crypto_node.hide = True
-    return viewlayer_full
+    return viewlayer_full, viewlayers
 
 
 def update_connect():  # 新建当前视图层的连接
@@ -1630,7 +1432,7 @@ def update_connect():  # 新建当前视图层的连接
     denoise_nodes = {}
     denoise_nodes_temp = []
     view_layer = bpy.context.view_layer.name
-    viewlayer_full = update_tree_denoise()
+    viewlayer_full, viewlayers = update_tree_denoise()
     material_aovs = set()
     for scene in bpy.data.scenes:
         for layer in bpy.data.scenes[str(scene.name)].view_layers:
@@ -2193,11 +1995,8 @@ def auto_arr_mathnode():  # 排列数学运算节点
 def make_tree_denoise_adv():  # 高级模式节点创建
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons[__package__].preferences
-    viewlayers = []
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full = sort_passes()
+    viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
     tree = bpy.context.scene.node_tree
 
@@ -2485,7 +2284,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
                                 FO_DATA_node.file_slots.new(f"{input}")
                         # FO_Crypto_node.hide = True
-    return viewlayer_full
+    return viewlayer_full, viewlayers
 
 
 def auto_connect_adv():  # 高级模式建立连接
@@ -2493,9 +2292,7 @@ def auto_connect_adv():  # 高级模式建立连接
     denoise_nodes_all = []
     denoise_nodes = {}
     denoise_nodes_temp = []
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
-    viewlayer_full = make_tree_denoise_adv()
+    viewlayer_full, viewlayers = make_tree_denoise_adv()
     material_aovs = set()
     for scene in bpy.data.scenes:
         for layer in bpy.data.scenes[str(scene.name)].view_layers:
@@ -2773,7 +2570,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons[__package__].preferences
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full = sort_passes()
+    viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
     tree = bpy.context.scene.node_tree
     view_layer = bpy.context.view_layer.name
@@ -3044,7 +2841,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
                             FO_DATA_node.file_slots.new(f"{input}")
                     # FO_Crypto_node.hide = True
-    return viewlayer_full
+    return viewlayer_full, viewlayers
 
 
 def update_connect_adv():  # 高级模式建立连接
@@ -3052,7 +2849,7 @@ def update_connect_adv():  # 高级模式建立连接
     denoise_nodes = {}
     denoise_nodes_temp = []
     view_layer = bpy.context.view_layer.name
-    viewlayer_full = update_tree_denoise_adv()
+    viewlayer_full, viewlayers = update_tree_denoise_adv()
     material_aovs = set()
     for scene in bpy.data.scenes:
         for layer in bpy.data.scenes[str(scene.name)].view_layers:
@@ -3801,24 +3598,6 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
             col2.operator(IDS_OT_Delete_Trash.bl_idname, icon="TRASH")
         else:
             col2.label(text="Enable hidden features in addon setting")
-
-
-# class IDS_OutputPanel_Output(bpy.types.Panel):
-#     bl_label = "Output Setup"
-#     bl_idname = "Render_PT_outputpanel"
-#     bl_space_type = "PROPERTIES"
-#     bl_region_type = "WINDOW"
-#     bl_context = "view_layer"
-#     bl_parent_id = "RENDER_PT_industrialoutput"
-#     bl_order = 1
-
-#     def draw(self, context):
-#         layout = self.layout
-#         col = layout.column()
-#         row = layout.row()
-#         box = layout.box()
-#         col.label(text="needs filling")
-#         row.operator()
 
 
 """以下为注册函数"""
