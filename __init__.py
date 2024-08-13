@@ -417,12 +417,6 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
     # print(all_passes)
     # print("sorted")
     # print("ViewLayer" in all_passes)
-    addon_prefs = bpy.context.preferences.addons[__package__].preferences
-    if addon_prefs.Only_Create_Enabled_Viewlayer is True:
-        viewlayersenable = viewlayers
-        for viewlayer in viewlayersenable:
-            if bpy.context.scene.view_layers[f"{viewlayer}"].use is False:
-                viewlayers.remove(f"{viewlayer}")
     viewlayer_full = {}
     for viewlayer in viewlayers:
         viewlayer_passes = all_passes[viewlayer]
@@ -493,6 +487,12 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
         # print(real_color)
         # print(crypto)
     print(viewlayer_full)
+    addon_prefs = bpy.context.preferences.addons[__package__].preferences
+    if addon_prefs.Only_Create_Enabled_Viewlayer is True:
+        viewlayersenable = viewlayers
+        for viewlayer in viewlayersenable:
+            if bpy.context.scene.view_layers[f"{viewlayer}"].use is False:
+                viewlayers.remove(f"{viewlayer}")
     return viewlayer_full, viewlayers
 
 
@@ -519,11 +519,8 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
 def make_tree_denoise():  # 主要功能函数之建立节点
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons[__package__].preferences
-    viewlayers = []
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full = sort_passes()
+    viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
     tree = bpy.context.scene.node_tree
 
@@ -893,17 +890,14 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
                             FO_RGB_node.file_slots.new(f"{input}")
                         # FO_Crypto_node.hide = True
-    return viewlayer_full
+    return viewlayer_full, viewlayers
 
 
 def auto_connect():  # 主要功能函数之建立连接
-    viewlayers = []
     denoise_nodes_all = []
     denoise_nodes = {}
     denoise_nodes_temp = []
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
-    viewlayer_full = make_tree_denoise()
+    viewlayer_full, viewlayers = make_tree_denoise()
     material_aovs = set()
     for scene in bpy.data.scenes:
         for layer in bpy.data.scenes[str(scene.name)].view_layers:
@@ -1296,7 +1290,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons[__package__].preferences
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full = sort_passes()
+    viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
     tree = bpy.context.scene.node_tree
     view_layer = bpy.context.view_layer.name
@@ -1634,7 +1628,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     for input in viewlayer_full[f"{view_layer}Crypto"]:
                         FO_RGB_node.file_slots.new(f"{input}")
                     # FO_Crypto_node.hide = True
-    return viewlayer_full
+    return viewlayer_full, viewlayers
 
 
 def update_connect():  # 新建当前视图层的连接
@@ -1642,7 +1636,7 @@ def update_connect():  # 新建当前视图层的连接
     denoise_nodes = {}
     denoise_nodes_temp = []
     view_layer = bpy.context.view_layer.name
-    viewlayer_full = update_tree_denoise()
+    viewlayer_full, viewlayers = update_tree_denoise()
     material_aovs = set()
     for scene in bpy.data.scenes:
         for layer in bpy.data.scenes[str(scene.name)].view_layers:
@@ -2205,11 +2199,8 @@ def auto_arr_mathnode():  # 排列数学运算节点
 def make_tree_denoise_adv():  # 高级模式节点创建
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons[__package__].preferences
-    viewlayers = []
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full = sort_passes()
+    viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
     tree = bpy.context.scene.node_tree
 
@@ -2497,7 +2488,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
                                 FO_DATA_node.file_slots.new(f"{input}")
                         # FO_Crypto_node.hide = True
-    return viewlayer_full
+    return viewlayer_full, viewlayers
 
 
 def auto_connect_adv():  # 高级模式建立连接
@@ -2505,9 +2496,7 @@ def auto_connect_adv():  # 高级模式建立连接
     denoise_nodes_all = []
     denoise_nodes = {}
     denoise_nodes_temp = []
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
-    viewlayer_full = make_tree_denoise_adv()
+    viewlayer_full, viewlayers = make_tree_denoise_adv()
     material_aovs = set()
     for scene in bpy.data.scenes:
         for layer in bpy.data.scenes[str(scene.name)].view_layers:
@@ -2785,7 +2774,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons[__package__].preferences
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full = sort_passes()
+    viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
     tree = bpy.context.scene.node_tree
     view_layer = bpy.context.view_layer.name
@@ -3056,7 +3045,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
                             FO_DATA_node.file_slots.new(f"{input}")
                     # FO_Crypto_node.hide = True
-    return viewlayer_full
+    return viewlayer_full, viewlayers
 
 
 def update_connect_adv():  # 高级模式建立连接
@@ -3064,7 +3053,7 @@ def update_connect_adv():  # 高级模式建立连接
     denoise_nodes = {}
     denoise_nodes_temp = []
     view_layer = bpy.context.view_layer.name
-    viewlayer_full = update_tree_denoise_adv()
+    viewlayer_full, viewlayers = update_tree_denoise_adv()
     material_aovs = set()
     for scene in bpy.data.scenes:
         for layer in bpy.data.scenes[str(scene.name)].view_layers:
