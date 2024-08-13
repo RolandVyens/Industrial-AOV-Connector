@@ -34,6 +34,14 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
 **Update Log:**
 
+2024.8.13: version 2.4.0
+
+1. 插件设置中的新开关允许你不生成停用渲染的viewlayer的节点（默认开启）
+2. 插件python语法优化，将不常修改的函数独立为库
+
+1. The new switch in the plugin settings allows you not to generate nodes for view layers that are disabled from rendering (enabled by default)
+2. Optimize the plugin's Python syntax by separating infrequently modified functions into libraries
+
 2024.7.21: version 2.3.0
 
 修复了一些bug，调整用户界面以加强引导，完全支持blender 4.2
