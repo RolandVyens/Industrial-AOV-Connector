@@ -14,44 +14,20 @@ from typing import Set
 import bpy
 from .language_lib import language_dict  # translations
 from .sort_passes import sort_passes
+from .handy_functions import (
+    extract_string_between_patterns,
+    has_subfolder,
+    arrange_list,
+)
+from .path_modify import (
+    file_output_to_1folder_loc,
+    file_output_to_subfolder_loc,
+    origin_render_path_change_loc,
+)
 import os
 import shutil
-from collections import Counter
-import re
 from bpy.types import Operator, AddonPreferences
 from bpy.props import StringProperty, IntProperty, BoolProperty
-from bpy.types import Context
-
-
-def extract_string_between_patterns(
-    input_string, start_pattern, end_pattern
-):  # 提取位于两个字符串中间的特定字符
-    pattern = re.compile(f"{re.escape(start_pattern)}(.*?){re.escape(end_pattern)}")
-    match = pattern.search(input_string)
-    if match:
-        return match.group(1)
-    else:
-        return None
-
-
-def has_subfolder(folder):  # 判断文件夹内是否存在子文件夹
-    names = os.listdir(folder)
-    for name in names:
-        path = os.path.join(folder, name)
-        if os.path.isdir(path):
-            return True
-    return False
-
-
-def arrange_list(strings):
-    # Filter strings that start with "-_-exP_"
-    matching_strings = [s for s in strings if s[:7] == "-_-exP_"]
-
-    # Combine the sorted matching strings with the remaining strings
-    remaining_strings = [s for s in strings if s not in matching_strings]
-    arranged_list = remaining_strings + matching_strings
-
-    return arranged_list
 
 
 """以下为全局配置"""
@@ -306,57 +282,6 @@ bpy.types.Scene.IDS_fakeDeep = bpy.props.BoolProperty(  # 是否输出fakedeep
     description="Output a modified Z channel for generating Deep data in nuke with Deep From Image node",
     default=False,
 )
-
-
-"""以下为输出路径自动调整函数"""
-
-
-def file_output_to_1folder_loc():  # 直接存到一个文件夹里
-    current_render_path = bpy.context.scene.render.filepath
-    if current_render_path[-1:] != "\\":
-        current_render_path += "\\"
-    if "trash_output" in current_render_path:
-        current_render_path = current_render_path.replace("trash_output\\", "")
-    if "trash_output" not in current_render_path:
-        rgb_output_path = current_render_path
-        # data_output_path = current_render_path
-        # crypto_output_path = current_render_path
-    render_path = rgb_output_path
-    return render_path
-
-
-def file_output_to_subfolder_loc():  # 按文件夹分类
-    current_render_path = bpy.context.scene.render.filepath
-    if current_render_path[-1:] != "\\":
-        current_render_path += "\\"
-    if "trash_output" in current_render_path:
-        current_render_path = current_render_path.replace("trash_output\\", "")
-    if "trash_output" not in current_render_path:
-        # if bpy.context.scene.IDS_ConfIg != "OPTION2":
-        #     rgb_output_path = current_render_path + "RGBAs\\"
-        #     data_output_path = current_render_path + "DATAs\\"
-        #     crypto_output_path = current_render_path + "Cryptomatte\\"
-        # else:
-        rgb_output_path = current_render_path
-        data_output_path = current_render_path
-        crypto_output_path = current_render_path
-    render_path = [rgb_output_path, data_output_path, crypto_output_path]
-    return render_path
-
-
-def origin_render_path_change_loc():  # 将blender默认输出存到垃圾输出内，应在最后调用
-    current_render_path = bpy.context.scene.render.filepath
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons[__package__].preferences
-    if addon_prefs.Put_Default_To_trash_output:
-        if current_render_path[-1:] != "\\":
-            # print(current_render_path)
-            current_render_path += "\\"
-        if "trash_output" in current_render_path:
-            current_render_path = current_render_path.replace("trash_output\\", "")
-        if "trash_output" not in current_render_path:
-            new_render_path = current_render_path + "trash_output\\"
-            bpy.context.scene.render.filepath = new_render_path
 
 
 """以下为自动创建节点树的函数"""
