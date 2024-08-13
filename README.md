@@ -36,11 +36,11 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
 2024.8.13: version 2.4.0
 
-1. 插件设置中的新开关允许你不生成停用渲染的viewlayer的节点（默认开启）
-2. 插件python语法优化，将不常修改的函数独立为库
+- 插件设置中的新开关允许你不生成停用渲染的viewlayer的节点（默认开启）
+- 插件python语法优化，将不常修改的函数独立为库
 
-1. The new switch in the plugin settings allows you not to generate nodes for view layers that are disabled from rendering (enabled by default)
-2. Optimize the plugin's Python syntax by separating infrequently modified functions into libraries
+- The new switch in the plugin settings allows you not to generate nodes for view layers that are disabled from rendering (enabled by default)
+- Optimize the plugin's Python syntax by separating infrequently modified functions into libraries
 
 2024.7.21: version 2.3.0
 
