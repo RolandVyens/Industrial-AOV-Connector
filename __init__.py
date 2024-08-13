@@ -362,7 +362,7 @@ def origin_render_path_change_loc():  # 将blender默认输出存到垃圾输出
 
 
 def sort_passes():  # 获取所有可视层输出并返回整理好的字典，以备建立节点调用
-    viewlayers = set()
+    viewlayers = []
     already_present_viewlayers = set()
     viewlayers_presented = []
     unexposed_viewlayers = []
@@ -375,14 +375,14 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
         material_aov.clear()
     # print(material_aovs)
     for view_layer in bpy.context.scene.view_layers:
-        viewlayers.add(view_layer.name)
+        viewlayers.append(view_layer.name)
     for node in bpy.context.scene.node_tree.nodes:
         if node.type == "R_LAYERS":
             already_present_viewlayers.add(node.layer)
             viewlayers_presented.append(node.layer)
             node.name = node.layer
             node.label = node.layer
-    for element in viewlayers - already_present_viewlayers:
+    for element in set(viewlayers) - already_present_viewlayers:
         unexposed_viewlayers.append(element)
     if unexposed_viewlayers:
         for i in unexposed_viewlayers:
@@ -419,7 +419,7 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
     # print("ViewLayer" in all_passes)
     addon_prefs = bpy.context.preferences.addons[__package__].preferences
     if addon_prefs.Only_Create_Enabled_Viewlayer is True:
-        viewlayersenable = list(viewlayers)
+        viewlayersenable = viewlayers
         for viewlayer in viewlayersenable:
             if bpy.context.scene.view_layers[f"{viewlayer}"].use is False:
                 viewlayers.remove(f"{viewlayer}")
@@ -493,7 +493,7 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
         # print(real_color)
         # print(crypto)
     print(viewlayer_full)
-    return viewlayer_full
+    return viewlayer_full, viewlayers
 
 
 """以下为自动创建节点树的函数"""
