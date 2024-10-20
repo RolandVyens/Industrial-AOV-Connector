@@ -48,10 +48,10 @@ class IDS_OT_Open_Preference(bpy.types.Operator):
         bpy.ops.screen.userpref_show()
         bpy.context.preferences.active_section = "ADDONS"
         if category is None:
-            bpy.context.window_manager.addon_search = bl_info.get("name")
+            bpy.context.window_manager.addon_search = "Industrial AOV Connector"
         else:
             bpy.context.window_manager.addon_filter = category
-            bpy.context.window_manager.addon_search = bl_info.get("name")
+            bpy.context.window_manager.addon_search = "Industrial AOV Connector"
         try:
             addon_utils.modules(refresh=False)[0].__name__
             package = __package__.split(".")[0]
@@ -71,6 +71,6 @@ class IDS_OT_Open_Preference(bpy.types.Operator):
                 if mod.bl_info["show_expanded"]:
                     continue
                 bpy.ops.preferences.addon_expand(module=package)
-                bpy.context.window_manager.addon_search = bl_info.get("name")
+                bpy.context.window_manager.addon_search = "Industrial AOV Connector"
 
         return {"FINISHED"}
