@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 4, 0),  # bump doc_url as well!
+    "version": (2, 4, 1),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -18,6 +18,7 @@ from .handy_functions import (
     extract_string_between_patterns,
     has_subfolder,
     arrange_list,
+    IDS_OT_Open_Preference
 )
 from .path_modify import (
     file_output_to_1folder_loc,
@@ -3522,6 +3523,13 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
     bl_context = "view_layer"
     bl_order = 0
 
+    def draw_header(self, context):
+        layout = self.layout
+        layout.alert = True
+        layout.operator(
+            IDS_OT_Open_Preference.bl_idname, text="", icon="SYSTEM"
+        )
+
     def draw(self, context):
         preferences = bpy.context.preferences
         addon_prefs = preferences.addons[__package__].preferences
@@ -3618,6 +3626,7 @@ reg_clss = [
     IDS_OT_Draw_DataMenu,
     IDS_OT_Convert_DATALayer,
     IDS_OT_Override_DATAMaTadv,
+    IDS_OT_Open_Preference
 ]
 
 

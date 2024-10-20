@@ -1,5 +1,6 @@
 import re
 import os
+import bpy
 
 
 def extract_string_between_patterns(
@@ -31,3 +32,44 @@ def arrange_list(strings):
     arranged_list = remaining_strings + matching_strings
 
     return arranged_list
+
+
+class IDS_OT_Open_Preference(bpy.types.Operator):
+    bl_idname = "viewlayer.idspreference"
+    bl_label = "Open Preference"
+    bl_options = {"REGISTER"}
+
+    def execute(self, context):
+        from . import bl_info
+        category = bl_info.get("category")
+
+        import addon_utils
+
+        bpy.ops.screen.userpref_show()
+        bpy.context.preferences.active_section = "ADDONS"
+        if category is None:
+            bpy.context.window_manager.addon_search = bl_info.get("name")
+        else:
+            bpy.context.window_manager.addon_filter = category
+        try:
+            addon_utils.modules(refresh=False)[0].__name__
+            package = __package__.split(".")[0]
+            for mod in addon_utils.modules(refresh=False):
+                if mod.__name__ != package:
+                    continue
+                if mod.bl_info["show_expanded"]:
+                    continue
+                bpy.ops.preferences.addon_expand(module=package)
+        except TypeError:
+            package = __package__.split(".")[0]
+            modules = addon_utils.modules(refresh=False).mapping
+            for mod_key in modules:
+                mod = modules[mod_key]
+                if mod_key != package:
+                    continue
+                if mod.bl_info["show_expanded"]:
+                    continue
+                bpy.ops.preferences.addon_expand(module=package)
+                bpy.context.window_manager.addon_search = bl_info.get("name")
+
+        return {"FINISHED"}
