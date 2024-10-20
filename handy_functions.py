@@ -51,6 +51,7 @@ class IDS_OT_Open_Preference(bpy.types.Operator):
             bpy.context.window_manager.addon_search = bl_info.get("name")
         else:
             bpy.context.window_manager.addon_filter = category
+            bpy.context.window_manager.addon_search = bl_info.get("name")
         try:
             addon_utils.modules(refresh=False)[0].__name__
             package = __package__.split(".")[0]
