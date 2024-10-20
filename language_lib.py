@@ -269,6 +269,22 @@ language_dict = {
             "*",
             "Only Create Nodes For Enabled Viewlayers",
         ): "只为启用渲染的视图层创建节点",
+        (
+            "*",
+            "Use Icon-Only Preference Button",
+        ): "使设置按钮变为纯图标",
+        (
+            "Operator",
+            "Preference",
+        ): "设置",
+        (
+            "*",
+            "Core Function Settings:",
+        ): "核心功能设置:",
+        (
+            "*",
+            "Appearance Settings:",
+        ): "外观设置:",
     },
     "zh_HANS": {
         (
@@ -540,5 +556,21 @@ language_dict = {
             "*",
             "Only Create Nodes For Enabled Viewlayers",
         ): "只为启用渲染的视图层创建节点",
+        (
+            "*",
+            "Use Icon-Only Preference Button",
+        ): "使设置按钮变为纯图标",
+        (
+            "Operator",
+            "Preference",
+        ): "设置",
+        (
+            "*",
+            "Core Function Settings:",
+        ): "核心功能设置:",
+        (
+            "*",
+            "Appearance Settings:",
+        ): "外观设置:",
     },
 }

@@ -67,13 +67,21 @@ class IDS_AddonPrefs(AddonPreferences):
         description='Do not create nodes for viewlayers which their "Use For Rendering" checkbox is off',
         default=True,
     )  # type: ignore
+    Use_Icon_Only_Preference_Button: BoolProperty(
+        name="Use Icon-Only Preference Button",
+        description='Use Icon-Only Style Preference Button',
+        default=False,
+    )  # type: ignore
 
     def draw(self, context):
         layout = self.layout
+        layout.label(text="Core Function Settings:")
         layout.prop(self, "Denoise_Col")
         layout.prop(self, "Only_Create_Enabled_Viewlayer")
         layout.prop(self, "Put_Default_To_trash_output")
         layout.prop(self, "Show_QuickDel")
+        layout.label(text="Appearance Settings:")
+        layout.prop(self, "Use_Icon_Only_Preference_Button")
 
 
 bpy.types.Scene.IDS_ConfIg = bpy.props.EnumProperty(  # 输出配置
@@ -3524,11 +3532,18 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
     bl_order = 0
 
     def draw_header(self, context):
+        preferences = bpy.context.preferences
+        addon_prefs = preferences.addons[__package__].preferences
         layout = self.layout
         layout.alert = True
-        layout.operator(
-            IDS_OT_Open_Preference.bl_idname, text="", icon="SYSTEM"
-        )
+        if addon_prefs.Use_Icon_Only_Preference_Button is True:
+            layout.operator(
+                IDS_OT_Open_Preference.bl_idname, text="", icon="SYSTEM"
+            )
+        else:
+            layout.operator(
+                IDS_OT_Open_Preference.bl_idname, text="Preference", icon="SYSTEM"
+            )
 
     def draw(self, context):
         preferences = bpy.context.preferences
