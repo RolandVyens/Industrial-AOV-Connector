@@ -40,8 +40,7 @@ class IDS_OT_Open_Preference(bpy.types.Operator):
     bl_options = {"REGISTER"}
 
     def execute(self, context):
-        from . import bl_info
-        category = bl_info.get("category")
+        category = "Render"
 
         import addon_utils
 
