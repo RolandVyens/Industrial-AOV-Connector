@@ -51,9 +51,22 @@ class IDS_OT_Open_Preference(bpy.types.Operator):
         else:
             bpy.context.window_manager.addon_filter = category
             bpy.context.window_manager.addon_search = "Industrial AOV Connector"
+        # print(bpy.utils.extension_path_user(__package__, path="", create=False))
+        print(__package__)
+        print(__package__.split(".")[0])
+        bl_version = bpy.app.version
+        addon_file = os.path.realpath(__file__)
+        addon_directory = os.path.dirname(addon_file)
+
         try:
             addon_utils.modules(refresh=False)[0].__name__
-            package = __package__.split(".")[0]
+            if (
+                int(f"{bl_version[0]}{bl_version[1]}") < 42
+                or "extensions" not in addon_directory
+            ):
+                package = __package__.split(".")[0]
+            else:
+                package = __package__
             for mod in addon_utils.modules(refresh=False):
                 if mod.__name__ != package:
                     continue
@@ -61,7 +74,13 @@ class IDS_OT_Open_Preference(bpy.types.Operator):
                     continue
                 bpy.ops.preferences.addon_expand(module=package)
         except TypeError:
-            package = __package__.split(".")[0]
+            if (
+                int(f"{bl_version[0]}{bl_version[1]}") < 42
+                or "extensions" not in addon_directory
+            ):
+                package = __package__.split(".")[0]
+            else:
+                package = __package__
             modules = addon_utils.modules(refresh=False).mapping
             for mod_key in modules:
                 mod = modules[mod_key]

@@ -3381,7 +3381,7 @@ class IDS_OT_Override_DATAMaTadv(Operator):
         addon_directory = os.path.dirname(addon_file)
         if (
             int(f"{bl_version[0]}{bl_version[1]}") < 42
-            and "extensions" not in addon_directory
+            or "extensions" not in addon_directory
         ):
             user_path = bpy.utils.resource_path("USER")
             asset_path = os.path.join(
