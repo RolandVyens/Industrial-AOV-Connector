@@ -72,6 +72,11 @@ class IDS_AddonPrefs(AddonPreferences):
         description='Use Icon-Only Style Preference Button',
         default=False,
     )  # type: ignore
+    Preference_Button_On_The_Right: BoolProperty(
+        name="Put Preference Button On The Right Of The Top Bar",
+        description='Put Preference Button On The Right Of The Top Bar',
+        default=False,
+    )  # type: ignore
 
     def draw(self, context):
         layout = self.layout
@@ -82,6 +87,7 @@ class IDS_AddonPrefs(AddonPreferences):
         layout.prop(self, "Show_QuickDel")
         layout.label(text="Appearance Settings:")
         layout.prop(self, "Use_Icon_Only_Preference_Button")
+        layout.prop(self, "Preference_Button_On_The_Right")
 
 
 bpy.types.Scene.IDS_ConfIg = bpy.props.EnumProperty(  # 输出配置
@@ -3536,14 +3542,30 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
         addon_prefs = preferences.addons[__package__].preferences
         layout = self.layout
         layout.alert = True
-        if addon_prefs.Use_Icon_Only_Preference_Button is True:
-            layout.operator(
-                IDS_OT_Open_Preference.bl_idname, text="", icon="SYSTEM"
-            )
-        else:
-            layout.operator(
-                IDS_OT_Open_Preference.bl_idname, text="Preference", icon="SYSTEM"
-            )
+        if addon_prefs.Preference_Button_On_The_Right is False:
+            if addon_prefs.Use_Icon_Only_Preference_Button is True:
+                layout.operator(
+                    IDS_OT_Open_Preference.bl_idname, text="", icon="SYSTEM"
+                )
+            else:
+                layout.operator(
+                    IDS_OT_Open_Preference.bl_idname, text="Preference", icon="SYSTEM"
+                )
+
+    def draw_header_preset(self, context):
+        preferences = bpy.context.preferences
+        addon_prefs = preferences.addons[__package__].preferences
+        layout = self.layout
+        layout.alert = True
+        if addon_prefs.Preference_Button_On_The_Right is True:
+            if addon_prefs.Use_Icon_Only_Preference_Button is True:
+                layout.operator(
+                    IDS_OT_Open_Preference.bl_idname, text="", icon="SYSTEM"
+                )
+            else:
+                layout.operator(
+                    IDS_OT_Open_Preference.bl_idname, text="Preference", icon="SYSTEM"
+                )
 
     def draw(self, context):
         preferences = bpy.context.preferences

@@ -285,6 +285,10 @@ language_dict = {
             "*",
             "Appearance Settings:",
         ): "外观设置:",
+        (
+            "*",
+            "Put Preference Button On The Right Of The Top Bar",
+        ): "将设置按钮放到顶栏右侧",
     },
     "zh_HANS": {
         (
@@ -572,5 +576,9 @@ language_dict = {
             "*",
             "Appearance Settings:",
         ): "外观设置:",
+        (
+            "*",
+            "Put Preference Button On The Right Of The Top Bar",
+        ): "将设置按钮放到顶栏右侧",
     },
 }
