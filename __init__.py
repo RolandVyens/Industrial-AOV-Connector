@@ -370,8 +370,8 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         current_render_path = file_output_to_subfolder_loc()
                         FO_RGB_node.base_path = (
                             current_render_path[0]
-                            + f"{view_layer}\\"
-                            + "RGBA\\"
+                            + f"{view_layer}/"
+                            + "RGBA/"
                             + f"{view_layer}_RGBA_"
                         )
                     else:
@@ -379,7 +379,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                             file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
                         )
                     # FO_RGB_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_RGBA_"
+                    #     current_render_path + f"/{view_layer}_RGBA_"
                     # )
                     FO_RGB_node.inputs.clear()
                     for input in viewlayer_full[f"{view_layer}Color"]:
@@ -443,8 +443,8 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                             current_render_path = file_output_to_subfolder_loc()
                             FO_DATA_node.base_path = (
                                 current_render_path[1]
-                                + f"{view_layer}\\"
-                                + "DATA\\"
+                                + f"{view_layer}/"
+                                + "DATA/"
                                 + f"{view_layer}_DATA_"
                             )
                         else:
@@ -452,7 +452,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 file_output_to_1folder_loc() + f"{view_layer}_DATA_"
                             )
                         # FO_DATA_node.base_path = (
-                        #     current_render_path + f"\\{view_layer}_DATA_"
+                        #     current_render_path + f"/{view_layer}_DATA_"
                         # )
                         FO_DATA_node.inputs.clear()
                         FO_DATA_node.file_slots.new("Image")
@@ -533,8 +533,8 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 current_render_path = file_output_to_subfolder_loc()
                                 FO_Crypto_node.base_path = (
                                     current_render_path[2]
-                                    + f"{view_layer}\\"
-                                    + "Cryptomatte\\"
+                                    + f"{view_layer}/"
+                                    + "Cryptomatte/"
                                     + f"{view_layer}_Cryptomatte_"
                                 )
                             else:
@@ -566,14 +566,14 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         current_render_path = file_output_to_subfolder_loc()
                         FO_RGB_node.base_path = (
                             current_render_path[0]
-                            + f"{view_layer}\\"
+                            + f"{view_layer}/"
                             + f"{view_layer}_All_"
                         )
                     else:
                         FO_RGB_node.base_path = (
                             file_output_to_1folder_loc() + f"{view_layer}_All_"
                         )
-                    # FO_RGB_node.base_path = current_render_path + f"\\{view_layer}_All_"
+                    # FO_RGB_node.base_path = current_render_path + f"/{view_layer}_All_"
                     FO_RGB_node.inputs.clear()
                     for input in viewlayer_full[f"{view_layer}Color"]:
                         FO_RGB_node.file_slots.new(f"{input}")
@@ -624,7 +624,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         # FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
                         # FO_DATA_node.format.color_depth = "32"
                         # FO_DATA_node.base_path = (
-                        #     current_render_path + f"\\{view_layer}_DATA_"
+                        #     current_render_path + f"/{view_layer}_DATA_"
                         # )
                         # FO_DATA_node.inputs.clear()
                         # FO_DATA_node.file_slots.new("Image")
@@ -695,7 +695,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         # FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
                         # FO_Crypto_node.format.color_depth = "32"
                         # FO_Crypto_node.base_path = (
-                        #     current_render_path + f"\\{view_layer}_CryptoMatte_.exr"
+                        #     current_render_path + f"/{view_layer}_CryptoMatte_.exr"
                         # )
                         # FO_Crypto_node.file_slots.new("Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
@@ -1137,8 +1137,8 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     current_render_path = file_output_to_subfolder_loc()
                     FO_RGB_node.base_path = (
                         current_render_path[0]
-                        + f"{view_layer}\\"
-                        + "RGBA\\"
+                        + f"{view_layer}/"
+                        + "RGBA/"
                         + f"{view_layer}_RGBA_"
                     )
                 else:
@@ -1146,7 +1146,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                         file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
                     )
                 # FO_RGB_node.base_path = (
-                #     current_render_path + f"\\{view_layer}_RGBA_"
+                #     current_render_path + f"/{view_layer}_RGBA_"
                 # )
                 FO_RGB_node.inputs.clear()
                 for input in viewlayer_full[f"{view_layer}Color"]:
@@ -1206,8 +1206,8 @@ def update_tree_denoise():  # 新建当前视图层的节点
                         current_render_path = file_output_to_subfolder_loc()
                         FO_DATA_node.base_path = (
                             current_render_path[1]
-                            + f"{view_layer}\\"
-                            + "DATA\\"
+                            + f"{view_layer}/"
+                            + "DATA/"
                             + f"{view_layer}_DATA_"
                         )
                     else:
@@ -1215,7 +1215,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             file_output_to_1folder_loc() + f"{view_layer}_DATA_"
                         )
                     # FO_DATA_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_DATA_"
+                    #     current_render_path + f"/{view_layer}_DATA_"
                     # )
                     FO_DATA_node.inputs.clear()
                     FO_DATA_node.file_slots.new("Image")
@@ -1286,8 +1286,8 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             current_render_path = file_output_to_subfolder_loc()
                             FO_Crypto_node.base_path = (
                                 current_render_path[2]
-                                + f"{view_layer}\\"
-                                + "Cryptomatte\\"
+                                + f"{view_layer}/"
+                                + "Cryptomatte/"
                                 + f"{view_layer}_Cryptomatte_"
                             )
                         else:
@@ -1318,14 +1318,14 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     current_render_path = file_output_to_subfolder_loc()
                     FO_RGB_node.base_path = (
                         current_render_path[0]
-                        + f"{view_layer}\\"
+                        + f"{view_layer}/"
                         + f"{view_layer}_All_"
                     )
                 else:
                     FO_RGB_node.base_path = (
                         file_output_to_1folder_loc() + f"{view_layer}_All_"
                     )
-                # FO_RGB_node.base_path = current_render_path + f"\\{view_layer}_All_"
+                # FO_RGB_node.base_path = current_render_path + f"/{view_layer}_All_"
                 FO_RGB_node.inputs.clear()
                 for input in viewlayer_full[f"{view_layer}Color"]:
                     FO_RGB_node.file_slots.new(f"{input}")
@@ -1372,7 +1372,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     # FO_DATA_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     # FO_DATA_node.format.color_depth = "32"
                     # FO_DATA_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_DATA_"
+                    #     current_render_path + f"/{view_layer}_DATA_"
                     # )
                     # FO_DATA_node.inputs.clear()
                     # FO_DATA_node.file_slots.new("Image")
@@ -1433,7 +1433,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     # FO_Crypto_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     # FO_Crypto_node.format.color_depth = "32"
                     # FO_Crypto_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_CryptoMatte_.exr"
+                    #     current_render_path + f"/{view_layer}_CryptoMatte_.exr"
                     # )
                     # FO_Crypto_node.file_slots.new("Image")
                     for input in viewlayer_full[f"{view_layer}Crypto"]:
@@ -2042,8 +2042,8 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                         current_render_path = file_output_to_subfolder_loc()
                         FO_RGB_node.base_path = (
                             current_render_path[0]
-                            + f"{view_layer}\\"
-                            + "RGBA\\"
+                            + f"{view_layer}/"
+                            + "RGBA/"
                             + f"{view_layer}_RGBA_"
                         )
                     else:
@@ -2051,7 +2051,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
                         )
                     # FO_RGB_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_RGBA_"
+                    #     current_render_path + f"/{view_layer}_RGBA_"
                     # )
                     FO_RGB_node.inputs.clear()
                     for input in viewlayer_full[f"{view_layer}Color"]:
@@ -2116,8 +2116,8 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                 # )
                                 base_path = (
                                     current_render_path[2]
-                                    + f"{view_layer}\\"
-                                    + "Cryptomatte\\"
+                                    + f"{view_layer}/"
+                                    + "Cryptomatte/"
                                     + f"{view_layer}_Cryptomatte_"
                                 )
                                 final_path = base_path.replace("-_-exP_", "")
@@ -2162,8 +2162,8 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             )
                             FO_DATA_node.base_path = (
                                 current_render_path[1]
-                                + f"{layer_core}_DATA\\"
-                                + "DATA\\"
+                                + f"{layer_core}_DATA/"
+                                + "DATA/"
                                 + f"{layer_core}_DATA_"
                             )
                         else:
@@ -2174,7 +2174,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                 file_output_to_1folder_loc() + f"{layer_core}_DATA_"
                             )
                         # FO_DATA_node.base_path = (
-                        #     current_render_path + f"\\{view_layer}_DATA_"
+                        #     current_render_path + f"/{view_layer}_DATA_"
                         # )
                         FO_DATA_node.inputs.clear()
                         FO_DATA_node.file_slots.new("Image")
@@ -2275,8 +2275,8 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                 )
                                 base_path = (
                                     current_render_path[2]
-                                    + f"{layer_core}_DATA\\"
-                                    + "Cryptomatte\\"
+                                    + f"{layer_core}_DATA/"
+                                    + "Cryptomatte/"
                                     + f"{layer_core}_Cryptomatte_"
                                 )
                                 final_path = base_path.replace("-_-exP_", "")
@@ -2615,8 +2615,8 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                     current_render_path = file_output_to_subfolder_loc()
                     FO_RGB_node.base_path = (
                         current_render_path[0]
-                        + f"{view_layer}\\"
-                        + "RGBA\\"
+                        + f"{view_layer}/"
+                        + "RGBA/"
                         + f"{view_layer}_RGBA_"
                     )
                 else:
@@ -2624,7 +2624,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
                     )
                 # FO_RGB_node.base_path = (
-                #     current_render_path + f"\\{view_layer}_RGBA_"
+                #     current_render_path + f"/{view_layer}_RGBA_"
                 # )
                 FO_RGB_node.inputs.clear()
                 for input in viewlayer_full[f"{view_layer}Color"]:
@@ -2684,8 +2684,8 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                             # )
                             base_path = (
                                 current_render_path[2]
-                                + f"{view_layer}\\"
-                                + "Cryptomatte\\"
+                                + f"{view_layer}/"
+                                + "Cryptomatte/"
                                 + f"{view_layer}_Cryptomatte_"
                             )
                             final_path = base_path.replace("-_-exP_", "")
@@ -2730,8 +2730,8 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         )
                         FO_DATA_node.base_path = (
                             current_render_path[1]
-                            + f"{layer_core}_DATA\\"
-                            + "DATA\\"
+                            + f"{layer_core}_DATA/"
+                            + "DATA/"
                             + f"{layer_core}_DATA_"
                         )
                     else:
@@ -2742,7 +2742,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                             file_output_to_1folder_loc() + f"{layer_core}_DATA_"
                         )
                     # FO_DATA_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_DATA_"
+                    #     current_render_path + f"/{view_layer}_DATA_"
                     # )
                     FO_DATA_node.inputs.clear()
                     FO_DATA_node.file_slots.new("Image")
@@ -2832,8 +2832,8 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                             )
                             base_path = (
                                 current_render_path[2]
-                                + f"{layer_core}_DATA\\"
-                                + "Cryptomatte\\"
+                                + f"{layer_core}_DATA/"
+                                + "Cryptomatte/"
                                 + f"{layer_core}_Cryptomatte_"
                             )
                             final_path = base_path.replace("-_-exP_", "")
@@ -3263,14 +3263,14 @@ class IDS_OT_Delete_Trash(bpy.types.Operator):
     def execute(self, context):
         current_render_path = bpy.context.scene.render.filepath
         if (
-            "trash_output\\" in current_render_path
+            "trash_output/" in current_render_path
             and os.path.exists(current_render_path)
             and has_subfolder(current_render_path) is False
         ):
             shutil.rmtree(current_render_path)
             self.report({"INFO"}, bpy.app.translations.pgettext("Deleted"))
         elif (
-            "trash_output\\" in current_render_path
+            "trash_output/" in current_render_path
             and os.path.exists(current_render_path)
             and has_subfolder(current_render_path) is True
         ):
