@@ -134,7 +134,7 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
     print(viewlayer_full)
     addon_prefs = bpy.context.preferences.addons[__package__].preferences
     if addon_prefs.Only_Create_Enabled_Viewlayer is True:
-        viewlayersenable = viewlayers
+        viewlayersenable = viewlayers[:]
         for viewlayer in viewlayersenable:
             if bpy.context.scene.view_layers[f"{viewlayer}"].use is False:
                 viewlayers.remove(f"{viewlayer}")
