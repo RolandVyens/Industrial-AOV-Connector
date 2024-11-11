@@ -138,5 +138,6 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
         for viewlayer in viewlayersenable:
             if bpy.context.scene.view_layers[f"{viewlayer}"].use is False:
                 viewlayers.remove(f"{viewlayer}")
+        print(viewlayers)
 
     return viewlayer_full, viewlayers
