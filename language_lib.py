@@ -279,11 +279,11 @@ language_dict = {
         ): "设置",
         (
             "*",
-            "Core Function Settings:",
+            "Core Function:",
         ): "核心功能设置:",
         (
             "*",
-            "Appearance Settings:",
+            "Appearance:",
         ): "外观设置:",
         (
             "*",
@@ -570,11 +570,11 @@ language_dict = {
         ): "设置",
         (
             "*",
-            "Core Function Settings:",
+            "Core Function:",
         ): "核心功能设置:",
         (
             "*",
-            "Appearance Settings:",
+            "Appearance:",
         ): "外观设置:",
         (
             "*",

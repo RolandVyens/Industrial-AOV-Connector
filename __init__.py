@@ -80,12 +80,14 @@ class IDS_AddonPrefs(AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text="Core Function Settings:")
+        layout.label(text="Core Function:")
         layout.prop(self, "Denoise_Col")
+        layout.label(text="Behavior:")
         layout.prop(self, "Only_Create_Enabled_Viewlayer")
+        layout.label(text="Output Tools:")
         layout.prop(self, "Put_Default_To_trash_output")
         layout.prop(self, "Show_QuickDel")
-        layout.label(text="Appearance Settings:")
+        layout.label(text="Appearance:")
         layout.prop(self, "Use_Icon_Only_Preference_Button")
         layout.prop(self, "Preference_Button_On_The_Right")
 
