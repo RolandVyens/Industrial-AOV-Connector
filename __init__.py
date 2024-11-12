@@ -75,7 +75,12 @@ class IDS_AddonPrefs(AddonPreferences):
     Preference_Button_On_The_Right: BoolProperty(
         name="Put Preference Button On The Right Of The Top Bar",
         description="Put Preference Button On The Right Of The Top Bar",
-        default=False,
+        default=True,
+    )  # type: ignore
+    Preference_Button_Show_Alert: BoolProperty(
+        name="Display Preference Button As Alert Color",
+        description="Display Preference Button As Alert Color",
+        default=True,
     )  # type: ignore
 
     def draw(self, context):
@@ -90,6 +95,8 @@ class IDS_AddonPrefs(AddonPreferences):
         layout.label(text="Appearance:")
         layout.prop(self, "Use_Icon_Only_Preference_Button")
         layout.prop(self, "Preference_Button_On_The_Right")
+        layout.prop(self, "Preference_Button_Show_Alert")
+
 
 
 bpy.types.Scene.IDS_ConfIg = bpy.props.EnumProperty(  # 输出配置
@@ -3543,7 +3550,8 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
         preferences = bpy.context.preferences
         addon_prefs = preferences.addons[__package__].preferences
         layout = self.layout
-        layout.alert = True
+        if addon_prefs.Preference_Button_Show_Alert is True:
+            layout.alert = True
         if addon_prefs.Preference_Button_On_The_Right is False:
             if addon_prefs.Use_Icon_Only_Preference_Button is True:
                 layout.operator(
@@ -3558,7 +3566,8 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
         preferences = bpy.context.preferences
         addon_prefs = preferences.addons[__package__].preferences
         layout = self.layout
-        layout.alert = True
+        if addon_prefs.Preference_Button_Show_Alert is True:
+            layout.alert = True
         if addon_prefs.Preference_Button_On_The_Right is True:
             if addon_prefs.Use_Icon_Only_Preference_Button is True:
                 layout.operator(

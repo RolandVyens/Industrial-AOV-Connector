@@ -293,6 +293,10 @@ language_dict = {
             "*",
             "Put Preference Button On The Right Of The Top Bar",
         ): "将设置按钮放到顶栏右侧",
+        (
+            "*",
+            "Display Preference Button As Alert Color",
+        ): "将设置按钮显示为警告色",
     },
     "zh_HANS": {
         (
@@ -588,5 +592,9 @@ language_dict = {
             "*",
             "Put Preference Button On The Right Of The Top Bar",
         ): "将设置按钮放到顶栏右侧",
+        (
+            "*",
+            "Display Preference Button As Alert Color",
+        ): "将设置按钮显示为警告色",
     },
 }
