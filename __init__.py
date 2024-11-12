@@ -53,7 +53,7 @@ class IDS_AddonPrefs(AddonPreferences):
         default=True,
     )  # type: ignore
     Use_Old_Layer_Naming: BoolProperty(
-        name="Use Old EXR Layer Naming Convension",
+        name="Use Old EXR Layer Naming Convention",
         description="Use old EXR layer naming which is the same with 2.4.x below. The new layer naming is easier to read in nuke",
         default=False,
     )  # type: ignore
