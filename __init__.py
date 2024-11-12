@@ -18,7 +18,7 @@ from .handy_functions import (
     extract_string_between_patterns,
     has_subfolder,
     arrange_list,
-    IDS_OT_Open_Preference
+    IDS_OT_Open_Preference,
 )
 from .path_modify import (
     file_output_to_1folder_loc,
@@ -69,12 +69,12 @@ class IDS_AddonPrefs(AddonPreferences):
     )  # type: ignore
     Use_Icon_Only_Preference_Button: BoolProperty(
         name="Use Icon-Only Preference Button",
-        description='Use Icon-Only Style Preference Button',
+        description="Use Icon-Only Style Preference Button",
         default=False,
     )  # type: ignore
     Preference_Button_On_The_Right: BoolProperty(
         name="Put Preference Button On The Right Of The Top Bar",
-        description='Put Preference Button On The Right Of The Top Bar',
+        description="Put Preference Button On The Right Of The Top Bar",
         default=False,
     )  # type: ignore
 
@@ -82,7 +82,7 @@ class IDS_AddonPrefs(AddonPreferences):
         layout = self.layout
         layout.label(text="Core Function:")
         layout.prop(self, "Denoise_Col")
-        layout.label(text="Behavior:")
+        layout.label(text="General Behavior:")
         layout.prop(self, "Only_Create_Enabled_Viewlayer")
         layout.label(text="Output Tools:")
         layout.prop(self, "Put_Default_To_trash_output")
@@ -3665,7 +3665,7 @@ reg_clss = [
     IDS_OT_Draw_DataMenu,
     IDS_OT_Convert_DATALayer,
     IDS_OT_Override_DATAMaTadv,
-    IDS_OT_Open_Preference
+    IDS_OT_Open_Preference,
 ]
 
 

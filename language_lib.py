@@ -287,6 +287,10 @@ language_dict = {
         ): "外观设置:",
         (
             "*",
+            "General Behavior:",
+        ): "行为设置:",
+        (
+            "*",
             "Put Preference Button On The Right Of The Top Bar",
         ): "将设置按钮放到顶栏右侧",
     },
@@ -576,6 +580,10 @@ language_dict = {
             "*",
             "Appearance:",
         ): "外观设置:",
+        (
+            "*",
+            "General Behavior:",
+        ): "行为设置:",
         (
             "*",
             "Put Preference Button On The Right Of The Top Bar",
