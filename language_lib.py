@@ -297,6 +297,14 @@ language_dict = {
             "*",
             "Display Preference Button As Alert Color",
         ): "将设置按钮显示为警告色",
+        (
+            "*",
+            "Use Old EXR Layer Naming Convention",
+        ): "使用以前版本的EXR层命名规范",
+        (
+            "*",
+            "Use old EXR layer naming which is the same with 2.4.x below. The new layer naming is easier to read in nuke",
+        ): "使用2.4.x及以前版本的EXR层命名规范。新版的层命名在nuke中更易读",
     },
     "zh_HANS": {
         (
@@ -596,5 +604,13 @@ language_dict = {
             "*",
             "Display Preference Button As Alert Color",
         ): "将设置按钮显示为警告色",
+        (
+            "*",
+            "Use Old EXR Layer Naming Convention",
+        ): "使用以前版本的EXR层命名规范",
+        (
+            "*",
+            "Use old EXR layer naming which is the same with 2.4.x below. The new layer naming is easier to read in nuke",
+        ): "使用2.4.x及以前版本的EXR层命名规范。新版的层命名在nuke中更易读",
     },
 }

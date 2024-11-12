@@ -52,6 +52,11 @@ class IDS_AddonPrefs(AddonPreferences):
         description="Denoise DiffCol / GlossCol / TransCol (The flat color aovs), may increase divide precision",
         default=True,
     )  # type: ignore
+    Use_Old_Layer_Naming: BoolProperty(
+        name="Use Old EXR Layer Naming Convension",
+        description="Use old EXR layer naming which is the same with 2.4.x below. The new layer naming is easier to read in nuke",
+        default=False,
+    )  # type: ignore
     Put_Default_To_trash_output: BoolProperty(
         name="Default useless renders gather",
         description='Auto change blender default render output path to "trash_output" subfolder, for convenient dump later',
@@ -87,7 +92,7 @@ class IDS_AddonPrefs(AddonPreferences):
         layout = self.layout
         layout.label(text="Core Function:")
         layout.prop(self, "Denoise_Col")
-        layout.label(text="General Behavior:")
+        layout.prop(self, "Use_Old_Layer_Naming")
         layout.prop(self, "Only_Create_Enabled_Viewlayer")
         layout.label(text="Output Tools:")
         layout.prop(self, "Put_Default_To_trash_output")
@@ -1801,6 +1806,8 @@ def update_connect():  # 新建当前视图层的连接
 
 
 def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons[__package__].preferences
     # viewlayers = []
     # for view_layer in bpy.context.scene.view_layers:
     #     viewlayers.append(view_layer.name)
@@ -1813,8 +1820,11 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
                 if slot.name != "Deep_From_Image_z":
                     slot.name = slot.name.replace("Image", "rgba")
                 slot.name = slot.name.replace("Combined", "RGBA")
-                slot.name = slot.name.replace("Denoising Depth", "Artistic_Depth")
                 slot.name = slot.name.replace("$$aoP", "")
+                if addon_prefs.Use_Old_Layer_Naming is False:
+                    slot.name = slot.name.replace("Position", "Pworld")
+                    slot.name = slot.name.replace("Depth", "z")
+                slot.name = slot.name.replace("Denoising z", "Artistic_Depth")
 
 
 def auto_arr_outputnode():  # 排列输出节点
