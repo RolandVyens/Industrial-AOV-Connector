@@ -55,7 +55,7 @@ def sorting_data(aov_list):
             "Deep_From_Image_z",
         ]:
             aov_classes["Depth and Z Buffers"].append(aov)
-        elif aov in ["Position", "Position_AA$$aoP"]:
+        elif aov in ["Position", "Position_AA$$aoP", "Pref"]:
             aov_classes["Position and World Coordinates"].append(aov)
         elif aov in ["Normal", "Vector"]:
             aov_classes["Normal and Vector"].append(aov)
