@@ -2278,11 +2278,12 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             Convert_node.hide = True
                             Convert_node.location = 660, 0
 
-                    if (
-                        bpy.context.scene.IDS_UseAdvCrypto is False
-                        and viewlayer_full.get(f"{view_layer}Crypto")
-                    ):
-                        if bpy.context.scene.IDS_SepCryptO is True:
+                    if bpy.context.scene.IDS_SepCryptO is True:
+                        if (
+                            bpy.context.scene.IDS_UseAdvCrypto is False
+                            and viewlayer_full.get(f"{view_layer}Crypto")
+                        ):
+
                             FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
                             FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
                             FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
@@ -2319,10 +2320,10 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             FO_Crypto_node.file_slots.new("Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
                                 FO_Crypto_node.file_slots.new(f"{input}")
-                        else:
-                            for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                FO_DATA_node.file_slots.new(f"{input}")
-                        # FO_Crypto_node.hide = True
+                    else:
+                        for input in viewlayer_full[f"{view_layer}Crypto"]:
+                            FO_DATA_node.file_slots.new(f"{input}")
+
     return viewlayer_full, viewlayers
 
 
@@ -2837,10 +2838,12 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         Convert_node.hide = True
                         Convert_node.location = 660, 0
 
-                if bpy.context.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(
-                    f"{view_layer}Crypto"
-                ):
-                    if bpy.context.scene.IDS_SepCryptO is True:
+                if bpy.context.scene.IDS_SepCryptO is True:
+                    if (
+                        bpy.context.scene.IDS_UseAdvCrypto is False
+                        and viewlayer_full.get(f"{view_layer}Crypto")
+                    ):
+
                         FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
                         FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
                         FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
@@ -2877,10 +2880,10 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         FO_Crypto_node.file_slots.new("Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
                             FO_Crypto_node.file_slots.new(f"{input}")
-                    else:
-                        for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_DATA_node.file_slots.new(f"{input}")
-                    # FO_Crypto_node.hide = True
+                else:
+                    for input in viewlayer_full[f"{view_layer}Crypto"]:
+                        FO_DATA_node.file_slots.new(f"{input}")
+
     return viewlayer_full, viewlayers
 
 
