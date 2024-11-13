@@ -3523,7 +3523,9 @@ class IDS_OT_Override_DATAMaTadv(Operator):
             AOV1.type = "COLOR"
         existing_aov_names = {aov.name for aov in bpy.context.view_layer.aovs}
         if "Pref" not in existing_aov_names:
-            bpy.context.view_layer.aovs.new(name="Pref", type="COLOR")
+            AOV1 = bpy.context.view_layer.aovs.add()
+            AOV1.name = "Pref"
+            AOV1.type = "COLOR"
 
         return {"FINISHED"}
 
