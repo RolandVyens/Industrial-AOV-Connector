@@ -34,6 +34,48 @@ def arrange_list(strings):
     return arranged_list
 
 
+def sorting_data(aov_list):
+    aov_classes = {
+        "Depth and Z Buffers": [],
+        "Position and World Coordinates": [],
+        "Normal and Vector": [],
+        "UV Coordinates": [],
+        "Indexes": [],
+        "Debug and Denoising": [],
+        "others": [],
+    }
+
+    # Categorize each AOV by class
+    for aov in aov_list:
+        if aov in [
+            "Depth",
+            "Mist",
+            "Denoising Depth",
+            "Depth_AA$$aoP",
+            "Deep_From_Image_z",
+        ]:
+            aov_classes["Depth and Z Buffers"].append(aov)
+        elif aov in ["Position", "Position_AA$$aoP"]:
+            aov_classes["Position and World Coordinates"].append(aov)
+        elif aov in ["Normal", "Vector"]:
+            aov_classes["Normal and Vector"].append(aov)
+        elif aov == "UV":
+            aov_classes["UV Coordinates"].append(aov)
+        elif aov in ["IndexOB", "IndexMA"]:
+            aov_classes["Indexes"].append(aov)
+        elif aov == "Debug Sample Count":
+            aov_classes["Debug and Denoising"].append(aov)
+        else:
+            aov_classes["others"].append(aov)
+
+    # Flatten the dictionary into an ordered list
+    arranged_aov_list = []
+    for category, items in aov_classes.items():
+        arranged_aov_list.extend(items)
+
+    return arranged_aov_list
+
+
 class IDS_OT_Open_Preference(bpy.types.Operator):
     bl_idname = "viewlayer.idspreference"
     bl_label = "Open Preference"

@@ -18,6 +18,7 @@ from .handy_functions import (
     extract_string_between_patterns,
     has_subfolder,
     arrange_list,
+    sorting_data,
     IDS_OT_Open_Preference,
 )
 from .path_modify import (
@@ -101,7 +102,6 @@ class IDS_AddonPrefs(AddonPreferences):
         layout.prop(self, "Use_Icon_Only_Preference_Button")
         layout.prop(self, "Preference_Button_On_The_Right")
         layout.prop(self, "Preference_Button_Show_Alert")
-
 
 
 bpy.types.Scene.IDS_ConfIg = bpy.props.EnumProperty(  # 输出配置
@@ -470,7 +470,8 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         # )
                         FO_DATA_node.inputs.clear()
                         FO_DATA_node.file_slots.new("Image")
-                        for input in viewlayer_full[f"{view_layer}Data"]:
+                        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                        for input in datatemp:
                             FO_DATA_node.file_slots.new(f"{input}")
                         # FO_DATA_node.hide = True
 
@@ -642,7 +643,8 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         # )
                         # FO_DATA_node.inputs.clear()
                         # FO_DATA_node.file_slots.new("Image")
-                        for input in viewlayer_full[f"{view_layer}Data"]:
+                        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                        for input in datatemp:
                             FO_RGB_node.file_slots.new(f"{input}")
                         # FO_DATA_node.hide = True
 
@@ -1233,7 +1235,8 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     # )
                     FO_DATA_node.inputs.clear()
                     FO_DATA_node.file_slots.new("Image")
-                    for input in viewlayer_full[f"{view_layer}Data"]:
+                    datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                    for input in datatemp:
                         FO_DATA_node.file_slots.new(f"{input}")
                     # FO_DATA_node.hide = True
 
@@ -1390,7 +1393,8 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     # )
                     # FO_DATA_node.inputs.clear()
                     # FO_DATA_node.file_slots.new("Image")
-                    for input in viewlayer_full[f"{view_layer}Data"]:
+                    datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                    for input in datatemp:
                         FO_RGB_node.file_slots.new(f"{input}")
                     # FO_DATA_node.hide = True
 
@@ -2197,7 +2201,8 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                         # )
                         FO_DATA_node.inputs.clear()
                         FO_DATA_node.file_slots.new("Image")
-                        for input in viewlayer_full[f"{view_layer}Data"]:
+                        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                        for input in datatemp:
                             FO_DATA_node.file_slots.new(f"{input}")
                         # FO_DATA_node.hide = True
 
@@ -2765,7 +2770,8 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                     # )
                     FO_DATA_node.inputs.clear()
                     FO_DATA_node.file_slots.new("Image")
-                    for input in viewlayer_full[f"{view_layer}Data"]:
+                    datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                    for input in datatemp:
                         FO_DATA_node.file_slots.new(f"{input}")
                     # FO_DATA_node.hide = True
 
