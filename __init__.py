@@ -2574,9 +2574,7 @@ def auto_connect_adv():  # 高级模式建立连接
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["Z"],
                         )
-            if bpy.context.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(
-                f"{view_layer}Crypto"
-            ):
+            if viewlayer_full.get(f"{view_layer}Crypto"):
                 for node in viewlayer_full[f"{view_layer}Crypto"]:
                     if bpy.context.scene.IDS_SepCryptO is False:
                         scene.node_tree.links.new(
@@ -2591,7 +2589,7 @@ def auto_connect_adv():  # 高级模式建立连接
                                 f"{node}"
                             ],
                         )
-                    else:
+                    elif bpy.context.scene.IDS_UseAdvCrypto is False:
                         scene.node_tree.links.new(
                             scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
                             scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
@@ -3111,9 +3109,7 @@ def update_connect_adv():  # 高级模式建立连接
                             "Z"
                         ],
                     )
-        if bpy.context.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(
-            f"{view_layer}Crypto"
-        ):
+        if viewlayer_full.get(f"{view_layer}Crypto"):
             for node in viewlayer_full[f"{view_layer}Crypto"]:
                 if bpy.context.scene.IDS_SepCryptO is False:
                     scene.node_tree.links.new(
@@ -3124,7 +3120,7 @@ def update_connect_adv():  # 高级模式建立连接
                         scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     )
-                else:
+                elif bpy.context.scene.IDS_UseAdvCrypto is False:
                     scene.node_tree.links.new(
                         scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
                         scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
