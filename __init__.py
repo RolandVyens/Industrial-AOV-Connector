@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 4, 1),  # bump doc_url as well!
+    "version": (2, 5, 0),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -18,7 +18,8 @@ from .handy_functions import (
     extract_string_between_patterns,
     has_subfolder,
     arrange_list,
-    IDS_OT_Open_Preference
+    sorting_data,
+    IDS_OT_Open_Preference,
 )
 from .path_modify import (
     file_output_to_1folder_loc,
@@ -52,6 +53,11 @@ class IDS_AddonPrefs(AddonPreferences):
         description="Denoise DiffCol / GlossCol / TransCol (The flat color aovs), may increase divide precision",
         default=True,
     )  # type: ignore
+    Use_Old_Layer_Naming: BoolProperty(
+        name="Use Old EXR Layer Naming Convention",
+        description="Use old EXR layer naming which is the same with 2.4.x below. The new layer naming is easier to read in nuke",
+        default=False,
+    )  # type: ignore
     Put_Default_To_trash_output: BoolProperty(
         name="Default useless renders gather",
         description='Auto change blender default render output path to "trash_output" subfolder, for convenient dump later',
@@ -69,19 +75,33 @@ class IDS_AddonPrefs(AddonPreferences):
     )  # type: ignore
     Use_Icon_Only_Preference_Button: BoolProperty(
         name="Use Icon-Only Preference Button",
-        description='Use Icon-Only Style Preference Button',
+        description="Use Icon-Only Style Preference Button",
         default=False,
+    )  # type: ignore
+    Preference_Button_On_The_Right: BoolProperty(
+        name="Put Preference Button On The Right Of The Top Bar",
+        description="Put Preference Button On The Right Of The Top Bar",
+        default=True,
+    )  # type: ignore
+    Preference_Button_Show_Alert: BoolProperty(
+        name="Display Preference Button As Alert Color",
+        description="Display Preference Button As Alert Color",
+        default=True,
     )  # type: ignore
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text="Core Function Settings:")
+        layout.label(text="Core Function:")
         layout.prop(self, "Denoise_Col")
+        layout.prop(self, "Use_Old_Layer_Naming")
         layout.prop(self, "Only_Create_Enabled_Viewlayer")
+        layout.label(text="Output Tools:")
         layout.prop(self, "Put_Default_To_trash_output")
         layout.prop(self, "Show_QuickDel")
-        layout.label(text="Appearance Settings:")
+        layout.label(text="Appearance:")
         layout.prop(self, "Use_Icon_Only_Preference_Button")
+        layout.prop(self, "Preference_Button_On_The_Right")
+        layout.prop(self, "Preference_Button_Show_Alert")
 
 
 bpy.types.Scene.IDS_ConfIg = bpy.props.EnumProperty(  # 输出配置
@@ -450,7 +470,8 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         # )
                         FO_DATA_node.inputs.clear()
                         FO_DATA_node.file_slots.new("Image")
-                        for input in viewlayer_full[f"{view_layer}Data"]:
+                        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                        for input in datatemp:
                             FO_DATA_node.file_slots.new(f"{input}")
                         # FO_DATA_node.hide = True
 
@@ -622,7 +643,8 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         # )
                         # FO_DATA_node.inputs.clear()
                         # FO_DATA_node.file_slots.new("Image")
-                        for input in viewlayer_full[f"{view_layer}Data"]:
+                        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                        for input in datatemp:
                             FO_RGB_node.file_slots.new(f"{input}")
                         # FO_DATA_node.hide = True
 
@@ -1213,7 +1235,8 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     # )
                     FO_DATA_node.inputs.clear()
                     FO_DATA_node.file_slots.new("Image")
-                    for input in viewlayer_full[f"{view_layer}Data"]:
+                    datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                    for input in datatemp:
                         FO_DATA_node.file_slots.new(f"{input}")
                     # FO_DATA_node.hide = True
 
@@ -1370,7 +1393,8 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     # )
                     # FO_DATA_node.inputs.clear()
                     # FO_DATA_node.file_slots.new("Image")
-                    for input in viewlayer_full[f"{view_layer}Data"]:
+                    datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                    for input in datatemp:
                         FO_RGB_node.file_slots.new(f"{input}")
                     # FO_DATA_node.hide = True
 
@@ -1786,6 +1810,8 @@ def update_connect():  # 新建当前视图层的连接
 
 
 def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons[__package__].preferences
     # viewlayers = []
     # for view_layer in bpy.context.scene.view_layers:
     #     viewlayers.append(view_layer.name)
@@ -1798,8 +1824,11 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
                 if slot.name != "Deep_From_Image_z":
                     slot.name = slot.name.replace("Image", "rgba")
                 slot.name = slot.name.replace("Combined", "RGBA")
-                slot.name = slot.name.replace("Denoising Depth", "Artistic_Depth")
                 slot.name = slot.name.replace("$$aoP", "")
+                if addon_prefs.Use_Old_Layer_Naming is False:
+                    slot.name = slot.name.replace("Position", "Pworld")
+                    slot.name = slot.name.replace("Depth", "z")
+                slot.name = slot.name.replace("Denoising z", "Artistic_Depth")
 
 
 def auto_arr_outputnode():  # 排列输出节点
@@ -2172,7 +2201,8 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                         # )
                         FO_DATA_node.inputs.clear()
                         FO_DATA_node.file_slots.new("Image")
-                        for input in viewlayer_full[f"{view_layer}Data"]:
+                        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                        for input in datatemp:
                             FO_DATA_node.file_slots.new(f"{input}")
                         # FO_DATA_node.hide = True
 
@@ -2248,11 +2278,12 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             Convert_node.hide = True
                             Convert_node.location = 660, 0
 
-                    if (
-                        bpy.context.scene.IDS_UseAdvCrypto is False
-                        and viewlayer_full.get(f"{view_layer}Crypto")
-                    ):
-                        if bpy.context.scene.IDS_SepCryptO is True:
+                    if bpy.context.scene.IDS_SepCryptO is True:
+                        if (
+                            bpy.context.scene.IDS_UseAdvCrypto is False
+                            and viewlayer_full.get(f"{view_layer}Crypto")
+                        ):
+
                             FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
                             FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
                             FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
@@ -2289,10 +2320,10 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             FO_Crypto_node.file_slots.new("Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
                                 FO_Crypto_node.file_slots.new(f"{input}")
-                        else:
-                            for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                FO_DATA_node.file_slots.new(f"{input}")
-                        # FO_Crypto_node.hide = True
+                    else:
+                        for input in viewlayer_full[f"{view_layer}Crypto"]:
+                            FO_DATA_node.file_slots.new(f"{input}")
+
     return viewlayer_full, viewlayers
 
 
@@ -2543,9 +2574,7 @@ def auto_connect_adv():  # 高级模式建立连接
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["Z"],
                         )
-            if bpy.context.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(
-                f"{view_layer}Crypto"
-            ):
+            if viewlayer_full.get(f"{view_layer}Crypto"):
                 for node in viewlayer_full[f"{view_layer}Crypto"]:
                     if bpy.context.scene.IDS_SepCryptO is False:
                         scene.node_tree.links.new(
@@ -2560,7 +2589,7 @@ def auto_connect_adv():  # 高级模式建立连接
                                 f"{node}"
                             ],
                         )
-                    else:
+                    elif bpy.context.scene.IDS_UseAdvCrypto is False:
                         scene.node_tree.links.new(
                             scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
                             scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
@@ -2740,7 +2769,8 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                     # )
                     FO_DATA_node.inputs.clear()
                     FO_DATA_node.file_slots.new("Image")
-                    for input in viewlayer_full[f"{view_layer}Data"]:
+                    datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                    for input in datatemp:
                         FO_DATA_node.file_slots.new(f"{input}")
                     # FO_DATA_node.hide = True
 
@@ -2806,10 +2836,12 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         Convert_node.hide = True
                         Convert_node.location = 660, 0
 
-                if bpy.context.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(
-                    f"{view_layer}Crypto"
-                ):
-                    if bpy.context.scene.IDS_SepCryptO is True:
+                if bpy.context.scene.IDS_SepCryptO is True:
+                    if (
+                        bpy.context.scene.IDS_UseAdvCrypto is False
+                        and viewlayer_full.get(f"{view_layer}Crypto")
+                    ):
+
                         FO_Crypto_node = tree.nodes.new("CompositorNodeOutputFile")
                         FO_Crypto_node.name = f"{view_layer}--CryptoMaTTe"
                         FO_Crypto_node.label = f"{view_layer}_CryptoMatte"
@@ -2846,10 +2878,10 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         FO_Crypto_node.file_slots.new("Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
                             FO_Crypto_node.file_slots.new(f"{input}")
-                    else:
-                        for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_DATA_node.file_slots.new(f"{input}")
-                    # FO_Crypto_node.hide = True
+                else:
+                    for input in viewlayer_full[f"{view_layer}Crypto"]:
+                        FO_DATA_node.file_slots.new(f"{input}")
+
     return viewlayer_full, viewlayers
 
 
@@ -3077,9 +3109,7 @@ def update_connect_adv():  # 高级模式建立连接
                             "Z"
                         ],
                     )
-        if bpy.context.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(
-            f"{view_layer}Crypto"
-        ):
+        if viewlayer_full.get(f"{view_layer}Crypto"):
             for node in viewlayer_full[f"{view_layer}Crypto"]:
                 if bpy.context.scene.IDS_SepCryptO is False:
                     scene.node_tree.links.new(
@@ -3090,7 +3120,7 @@ def update_connect_adv():  # 高级模式建立连接
                         scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     )
-                else:
+                elif bpy.context.scene.IDS_UseAdvCrypto is False:
                     scene.node_tree.links.new(
                         scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
                         scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
@@ -3490,6 +3520,11 @@ class IDS_OT_Override_DATAMaTadv(Operator):
             AOV1 = bpy.context.view_layer.aovs.add()
             AOV1.name = "Position_AA$$aoP"
             AOV1.type = "COLOR"
+        existing_aov_names = {aov.name for aov in bpy.context.view_layer.aovs}
+        if "Pref" not in existing_aov_names:
+            AOV1 = bpy.context.view_layer.aovs.add()
+            AOV1.name = "Pref"
+            AOV1.type = "COLOR"
 
         return {"FINISHED"}
 
@@ -3535,15 +3570,33 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
         preferences = bpy.context.preferences
         addon_prefs = preferences.addons[__package__].preferences
         layout = self.layout
-        layout.alert = True
-        if addon_prefs.Use_Icon_Only_Preference_Button is True:
-            layout.operator(
-                IDS_OT_Open_Preference.bl_idname, text="", icon="SYSTEM"
-            )
-        else:
-            layout.operator(
-                IDS_OT_Open_Preference.bl_idname, text="Preference", icon="SYSTEM"
-            )
+        if addon_prefs.Preference_Button_Show_Alert is True:
+            layout.alert = True
+        if addon_prefs.Preference_Button_On_The_Right is False:
+            if addon_prefs.Use_Icon_Only_Preference_Button is True:
+                layout.operator(
+                    IDS_OT_Open_Preference.bl_idname, text="", icon="SYSTEM"
+                )
+            else:
+                layout.operator(
+                    IDS_OT_Open_Preference.bl_idname, text="Preference", icon="SYSTEM"
+                )
+
+    def draw_header_preset(self, context):
+        preferences = bpy.context.preferences
+        addon_prefs = preferences.addons[__package__].preferences
+        layout = self.layout
+        if addon_prefs.Preference_Button_Show_Alert is True:
+            layout.alert = True
+        if addon_prefs.Preference_Button_On_The_Right is True:
+            if addon_prefs.Use_Icon_Only_Preference_Button is True:
+                layout.operator(
+                    IDS_OT_Open_Preference.bl_idname, text="", icon="SYSTEM"
+                )
+            else:
+                layout.operator(
+                    IDS_OT_Open_Preference.bl_idname, text="Preference", icon="SYSTEM"
+                )
 
     def draw(self, context):
         preferences = bpy.context.preferences
@@ -3641,7 +3694,7 @@ reg_clss = [
     IDS_OT_Draw_DataMenu,
     IDS_OT_Convert_DATALayer,
     IDS_OT_Override_DATAMaTadv,
-    IDS_OT_Open_Preference
+    IDS_OT_Open_Preference,
 ]
 
 

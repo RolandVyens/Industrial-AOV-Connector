@@ -279,12 +279,32 @@ language_dict = {
         ): "设置",
         (
             "*",
-            "Core Function Settings:",
+            "Core Function:",
         ): "核心功能设置:",
         (
             "*",
-            "Appearance Settings:",
+            "Appearance:",
         ): "外观设置:",
+        (
+            "*",
+            "General Behavior:",
+        ): "行为设置:",
+        (
+            "*",
+            "Put Preference Button On The Right Of The Top Bar",
+        ): "将设置按钮放到顶栏右侧",
+        (
+            "*",
+            "Display Preference Button As Alert Color",
+        ): "将设置按钮显示为警告色",
+        (
+            "*",
+            "Use Old EXR Layer Naming Convention",
+        ): "使用以前版本的EXR层命名规范",
+        (
+            "*",
+            "Use old EXR layer naming which is the same with 2.4.x below. The new layer naming is easier to read in nuke",
+        ): "使用2.4.x及以前版本的EXR层命名规范。新版的层命名在nuke中更易读",
     },
     "zh_HANS": {
         (
@@ -566,11 +586,31 @@ language_dict = {
         ): "设置",
         (
             "*",
-            "Core Function Settings:",
+            "Core Function:",
         ): "核心功能设置:",
         (
             "*",
-            "Appearance Settings:",
+            "Appearance:",
         ): "外观设置:",
+        (
+            "*",
+            "General Behavior:",
+        ): "行为设置:",
+        (
+            "*",
+            "Put Preference Button On The Right Of The Top Bar",
+        ): "将设置按钮放到顶栏右侧",
+        (
+            "*",
+            "Display Preference Button As Alert Color",
+        ): "将设置按钮显示为警告色",
+        (
+            "*",
+            "Use Old EXR Layer Naming Convention",
+        ): "使用以前版本的EXR层命名规范",
+        (
+            "*",
+            "Use old EXR layer naming which is the same with 2.4.x below. The new layer naming is easier to read in nuke",
+        ): "使用2.4.x及以前版本的EXR层命名规范。新版的层命名在nuke中更易读",
     },
 }
