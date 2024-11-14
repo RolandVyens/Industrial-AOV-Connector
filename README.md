@@ -34,6 +34,18 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 
 **Update Log:**
 
+2024.11.14: version 2.5.0
+
+- 修复了一些bug
+- 继续优化UI，添加了更多自定义选项
+- 添加了reference position输出（Pref），需要在高级模式下使用独立数据层，且使用层材质覆盖
+- 新版数据通道命名，更加易懂，类型统一（设置中也提供了旧版命名可供切换）
+
+- Fixed some bugs.
+- Continued optimizing the UI and added more customization options.
+- Added reference position output (Pref), which requires using an independent data layer in advanced mode, and utilizing layer material override.
+- New data channel naming for better clarity, with unified types (the old naming convention is also available in settings for switching).
+
 2024.8.13: version 2.4.0
 
 - 插件设置中的新开关允许你不生成停用渲染的viewlayer的节点（默认开启）
