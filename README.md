@@ -26,7 +26,7 @@ Install on blender extensions: https://extensions.blender.org/add-ons/industrial
 
 ![2 1界面](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/31a3178e-453a-434d-bed8-344488237a0f)
 
-目前支持3.3 - 最新版 Supports blender 3.3 - newest by now (2024.4.30)
+目前支持3.3 - 最新版 Supports blender 3.3 - newest by now (2024.11.14)
 
 支持材质通道分层与灯光组分层，也支持混合分层。从设计之初就支持多个视图层。本插件可以智能地帮你连接渲染aov与图层，智能地根据输出类型使用降噪节点，将三维数据层（position/normal）转换为nuke标准（fusion和ae理论上也可以直接用）。2.1以后还支持高精度无锯齿z和p层，以及假deep通道。
 
