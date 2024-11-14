@@ -111,6 +111,8 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
             vector_data.remove("Vector")
         if "Position_AA$$aoP" in real_data:
             vector_data.append("Position_AA$$aoP")
+        if "Pref" in real_data:
+            vector_data.append("Pref")
         viewlayer_full[viewlayer + "Vector"] = vector_data
         real_color = []
         crypto = []
