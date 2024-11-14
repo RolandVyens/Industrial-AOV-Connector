@@ -24,7 +24,7 @@ Install on blender extensions: https://extensions.blender.org/add-ons/industrial
 
 ======================
 
-![2 1界面](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/31a3178e-453a-434d-bed8-344488237a0f)
+![2 5界面](https://github.com/user-attachments/assets/17066c43-5c92-43e1-baad-81264bc53354)
 
 目前支持3.3 - 最新版 Supports blender 3.3 - newest by now (2024.11.14)
 
