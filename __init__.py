@@ -1954,7 +1954,9 @@ def auto_arr_denoisenode():  # 排列降噪节点
                             node.location.y - DN_location_y - DN_dimension_y
                         )
                         # print(node1.dimensions.y)
-                        DN_dimension_y += node1.dimensions.y * addon_prefs.Arrange_Scale_Param
+                        DN_dimension_y += (
+                            node1.dimensions.y * addon_prefs.Arrange_Scale_Param
+                        )
                         DN_location_y += 10 * addon_prefs.Arrange_Scale_Param
                         node1.width = 260
         DN_location_y = 0
@@ -1980,8 +1982,12 @@ def auto_arr_mathnode():  # 排列数学运算节点
                             + node6.dimensions.y * addon_prefs.Arrange_Scale_Param
                             + MA_dimension_y
                         )
-                        MA_location_y += node6.location.y * addon_prefs.Arrange_Scale_Param
-                        MA_dimension_y += (node6.dimensions.y + 20) * addon_prefs.Arrange_Scale_Param
+                        MA_location_y += (
+                            node6.location.y * addon_prefs.Arrange_Scale_Param
+                        )
+                        MA_dimension_y += (
+                            node6.dimensions.y + 20
+                        ) * addon_prefs.Arrange_Scale_Param
                 for node3 in reversed(bpy.context.scene.node_tree.nodes):
                     if (
                         node3.name[: node3.name.rfind("--")] == node.layer
@@ -1999,8 +2005,12 @@ def auto_arr_mathnode():  # 排列数学运算节点
                                 and node4.type == "COMBINE_COLOR"
                             ):
                                 node4.location = 780, node3.location.y
-                        MA_location_y += node3.location.y * addon_prefs.Arrange_Scale_Param
-                        MA_dimension_y += (node3.dimensions.y + 20) * addon_prefs.Arrange_Scale_Param
+                        MA_location_y += (
+                            node3.location.y * addon_prefs.Arrange_Scale_Param
+                        )
+                        MA_dimension_y += (
+                            node3.dimensions.y + 20
+                        ) * addon_prefs.Arrange_Scale_Param
                 for node1 in reversed(bpy.context.scene.node_tree.nodes):
                     if (
                         node1.name[: node1.name.rfind("--")] == node.layer
@@ -2035,8 +2045,12 @@ def auto_arr_mathnode():  # 排列数学运算节点
                                 )
                             ):
                                 node2.location = 820, node1.location.y
-                        MA_location_y += node1.location.y * addon_prefs.Arrange_Scale_Param
-                        MA_dimension_y += (node1.dimensions.y + 20) * addon_prefs.Arrange_Scale_Param
+                        MA_location_y += (
+                            node1.location.y * addon_prefs.Arrange_Scale_Param
+                        )
+                        MA_dimension_y += (
+                            node1.dimensions.y + 20
+                        ) * addon_prefs.Arrange_Scale_Param
                 for node5 in reversed(bpy.context.scene.node_tree.nodes):
                     if (
                         node5.name[: node5.name.rfind("--")] == node.layer
