@@ -144,7 +144,7 @@ bpy.types.Scene.IDS_Autoarr = bpy.props.BoolProperty(  # 是否使用自动排�
 )
 
 
-bpy.types.Scene.IDS_DelallNodE = bpy.props.BoolProperty(  # 是否在cook nodetree时删除所有节点
+bpy.types.Scene.IDS_DelNodE = bpy.props.BoolProperty(  # 是否删除所有节点
     name='Clear Nodes When Running "Cook Nodetree"',
     description="Delete nodes that already in compositor",
     default=True,
@@ -364,9 +364,10 @@ def make_tree_denoise():  # 主要功能函数之建立节点
             ):
                 material_aovs.add(aov.name)
 
-    for node in bpy.context.scene.node_tree.nodes:
-        if node.type != "R_LAYERS":
-            bpy.context.scene.node_tree.nodes.remove(node)
+    if bpy.context.scene.IDS_DelNodE is True:
+        for node in bpy.context.scene.node_tree.nodes:
+            if node.type != "R_LAYERS":
+                bpy.context.scene.node_tree.nodes.remove(node)
 
     if (
         bpy.context.scene.IDS_ConfIg == "OPTION1"
@@ -2053,9 +2054,10 @@ def make_tree_denoise_adv():  # 高级模式节点创建
             ):
                 material_aovs.add(aov.name)
 
-    for node in bpy.context.scene.node_tree.nodes:
-        if node.type != "R_LAYERS":
-            bpy.context.scene.node_tree.nodes.remove(node)
+    if bpy.context.scene.IDS_DelNodE is True:
+        for node in bpy.context.scene.node_tree.nodes:
+            if node.type != "R_LAYERS":
+                bpy.context.scene.node_tree.nodes.remove(node)
 
     for view_layer in viewlayers:
         for node in bpy.context.scene.node_tree.nodes:
@@ -3667,6 +3669,7 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
                     box4 = box1.box()
                     box4.label(text="Accurate Depth Addition:")
                     box4.prop(context.scene, "IDS_fakeDeep")
+        layout.prop(context.scene, "IDS_DelNodE")
         layout.prop(context.scene, "IDS_Autoarr")
         col = layout.column()
         col.scale_y = 3
