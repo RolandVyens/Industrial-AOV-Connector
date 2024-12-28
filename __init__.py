@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 5, 0),  # bump doc_url as well!
+    "version": (2, 6, 0),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -140,6 +140,13 @@ bpy.types.Scene.IDS_UsedN = bpy.props.BoolProperty(  # 是否使用降噪
 bpy.types.Scene.IDS_Autoarr = bpy.props.BoolProperty(  # 是否使用自动排列节点
     name="Auto Arrange Nodes at generating",
     description="Auto arrange nodes when generating node tree, only if the compositor is visible in UI. Be careful if your scene is very heavy",
+    default=True,
+)
+
+
+bpy.types.Scene.IDS_DelallNodE = bpy.props.BoolProperty(  # 是否在cook nodetree时删除所有节点
+    name='Clear Nodes When Running "Cook Nodetree"',
+    description="Delete nodes that already in compositor",
     default=True,
 )
 
