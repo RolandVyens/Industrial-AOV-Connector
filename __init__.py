@@ -29,7 +29,7 @@ from .path_modify import (
 import os
 import shutil
 from bpy.types import Operator, AddonPreferences
-from bpy.props import StringProperty, IntProperty, BoolProperty
+from bpy.props import StringProperty, IntProperty, BoolProperty, FloatProperty
 
 
 """
@@ -88,6 +88,14 @@ class IDS_AddonPrefs(AddonPreferences):
         description="Display Preference Button As Alert Color",
         default=True,
     )  # type: ignore
+    Arrange_Scale_Param: FloatProperty(
+        name="Arrange Node Interval Scale",
+        description="Scale of node interval when arranging node",
+        default=1.0,
+        min=0.1,
+        max=10.0,
+        precision=2,
+    )  # type: ignore
 
     def draw(self, context):
         layout = self.layout
@@ -95,6 +103,7 @@ class IDS_AddonPrefs(AddonPreferences):
         layout.prop(self, "Denoise_Col")
         layout.prop(self, "Use_Old_Layer_Naming")
         layout.prop(self, "Only_Create_Enabled_Viewlayer")
+        layout.prop(self, "Arrange_Scale_Param", slider=True)
         layout.label(text="Output Tools:")
         layout.prop(self, "Put_Default_To_trash_output")
         layout.prop(self, "Show_QuickDel")
@@ -332,6 +341,8 @@ bpy.types.Scene.IDS_fakeDeep = bpy.props.BoolProperty(  # 是否输出fakedeep
 
 
 def auto_arrange_viewlayer():  # 自动排列视图层节点
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons[__package__].preferences
     viewlayers_raw = []
     # bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
     for view_layer in bpy.context.scene.view_layers:
@@ -345,7 +356,9 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
         node = bpy.context.scene.node_tree.nodes.get(f"{view_layer}")
         node.location = 0, renderlayer_node_position
         renderlayer_node_y.append(renderlayer_node_position)
-        renderlayer_node_position -= node.dimensions.y + 100
+        renderlayer_node_position -= (
+            node.dimensions.y + 100 * addon_prefs.Arrange_Scale_Param
+        )
 
 
 def make_tree_denoise():  # 主要功能函数之建立节点
@@ -1922,6 +1935,8 @@ def auto_arr_outputnode():  # 排列输出节点
 
 
 def auto_arr_denoisenode():  # 排列降噪节点
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons[__package__].preferences
     viewlayers = []
     DN_location_y = 0
     DN_dimension_y = 0
@@ -1939,8 +1954,8 @@ def auto_arr_denoisenode():  # 排列降噪节点
                             node.location.y - DN_location_y - DN_dimension_y
                         )
                         # print(node1.dimensions.y)
-                        DN_dimension_y += node1.dimensions.y
-                        DN_location_y += 10
+                        DN_dimension_y += node1.dimensions.y * addon_prefs.Arrange_Scale_Param
+                        DN_location_y += 10 * addon_prefs.Arrange_Scale_Param
                         node1.width = 260
         DN_location_y = 0
         DN_dimension_y = 0
