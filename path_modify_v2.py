@@ -96,7 +96,7 @@ def origin_render_path_change_loc():  # 将blender默认输出存到垃圾输出
         bpy.context.scene.render.filepath = new_render_path
 
 
-def create_final_path(current_render_path, view_layer, type):
+def create_final_path(current_render_path, view_layer, type):  # 确定渲染路径
     if bpy.context.scene.IDS_FileloC is True:
         current_render_path = file_output_to_1folder_loc()
         final_path = os.path.join(

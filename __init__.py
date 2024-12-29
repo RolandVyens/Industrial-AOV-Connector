@@ -2094,29 +2094,9 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             FO_Crypto_node.format.exr_codec = (
                                 bpy.context.scene.IDS_CryptoCompression
                             )
-                            if bpy.context.scene.IDS_FileloC is True:
-                                current_render_path = file_output_to_subfolder_loc()
-                                # layer_core = extract_string_between_patterns(
-                                #     f"{view_layer}", "-_-exP_", "_DATA"
-                                # )
-                                base_path = (
-                                    current_render_path[2]
-                                    + f"{view_layer}\\"
-                                    + "Cryptomatte\\"
-                                    + f"{view_layer}_Cryptomatte_"
-                                )
-                                final_path = base_path.replace("-_-exP_", "")
-                                FO_Crypto_node.base_path = final_path
-                            else:
-                                # layer_core = extract_string_between_patterns(
-                                #     f"{view_layer}", "-_-exP_", "_DATA"
-                                # )
-                                base_path = (
-                                    file_output_to_1folder_loc()
-                                    + f"{view_layer}_Cryptomatte_"
-                                )
-                                final_path = base_path.replace("-_-exP_", "")
-                                FO_Crypto_node.base_path = final_path
+                            base_path = create_final_path(current_render_path, view_layer, "Cryptomatte")
+                            final_path = base_path.replace("-_-exP_", "")
+                            FO_Crypto_node.base_path = final_path
                             FO_Crypto_node.inputs.clear()
                             FO_Crypto_node.file_slots.new("Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
@@ -2140,27 +2120,9 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                         FO_DATA_node.format.exr_codec = (
                             bpy.context.scene.IDS_DATACompression
                         )
-                        if bpy.context.scene.IDS_FileloC is True:
-                            current_render_path = file_output_to_subfolder_loc()
-                            layer_core = extract_string_between_patterns(
-                                f"{view_layer}", "-_-exP_", "_DATA"
-                            )
-                            FO_DATA_node.base_path = (
-                                current_render_path[1]
-                                + f"{layer_core}_DATA\\"
-                                + "DATA\\"
-                                + f"{layer_core}_DATA_"
-                            )
-                        else:
-                            layer_core = extract_string_between_patterns(
-                                f"{view_layer}", "-_-exP_", "_DATA"
-                            )
-                            FO_DATA_node.base_path = (
-                                file_output_to_1folder_loc() + f"{layer_core}_DATA_"
-                            )
-                        # FO_DATA_node.base_path = (
-                        #     current_render_path + f"\\{view_layer}_DATA_"
-                        # )
+                        base_path = create_final_path(current_render_path, view_layer, "DATA")
+                        final_path = base_path.replace("-_-exP_", "")
+                        FO_DATA_node.base_path = final_path
                         FO_DATA_node.inputs.clear()
                         FO_DATA_node.file_slots.new("Image")
                         datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
@@ -2255,29 +2217,9 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             FO_Crypto_node.format.exr_codec = (
                                 bpy.context.scene.IDS_CryptoCompression
                             )
-                            if bpy.context.scene.IDS_FileloC is True:
-                                current_render_path = file_output_to_subfolder_loc()
-                                layer_core = extract_string_between_patterns(
-                                    f"{view_layer}", "-_-exP_", "_DATA"
-                                )
-                                base_path = (
-                                    current_render_path[2]
-                                    + f"{layer_core}_DATA\\"
-                                    + "Cryptomatte\\"
-                                    + f"{layer_core}_Cryptomatte_"
-                                )
-                                final_path = base_path.replace("-_-exP_", "")
-                                FO_Crypto_node.base_path = final_path
-                            else:
-                                layer_core = extract_string_between_patterns(
-                                    f"{view_layer}", "-_-exP_", "_DATA"
-                                )
-                                base_path = (
-                                    file_output_to_1folder_loc()
-                                    + f"{layer_core}_Cryptomatte_"
-                                )
-                                final_path = base_path.replace("-_-exP_", "")
-                                FO_Crypto_node.base_path = final_path
+                            base_path = create_final_path(current_render_path, view_layer, "Cryptomatte")
+                            final_path = base_path.replace("-_-exP_", "")
+                            FO_Crypto_node.base_path = final_path
                             FO_Crypto_node.inputs.clear()
                             FO_Crypto_node.file_slots.new("Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
@@ -2650,29 +2592,9 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         FO_Crypto_node.format.exr_codec = (
                             bpy.context.scene.IDS_CryptoCompression
                         )
-                        if bpy.context.scene.IDS_FileloC is True:
-                            current_render_path = file_output_to_subfolder_loc()
-                            # layer_core = extract_string_between_patterns(
-                            #     f"{view_layer}", "-_-exP_", "_DATA"
-                            # )
-                            base_path = (
-                                current_render_path[2]
-                                + f"{view_layer}\\"
-                                + "Cryptomatte\\"
-                                + f"{view_layer}_Cryptomatte_"
-                            )
-                            final_path = base_path.replace("-_-exP_", "")
-                            FO_Crypto_node.base_path = final_path
-                        else:
-                            # layer_core = extract_string_between_patterns(
-                            #     f"{view_layer}", "-_-exP_", "_DATA"
-                            # )
-                            base_path = (
-                                file_output_to_1folder_loc()
-                                + f"{view_layer}_Cryptomatte_"
-                            )
-                            final_path = base_path.replace("-_-exP_", "")
-                            FO_Crypto_node.base_path = final_path
+                        base_path = create_final_path(current_render_path, view_layer, "Cryptomatte")
+                        final_path = base_path.replace("-_-exP_", "")
+                        FO_Crypto_node.base_path = final_path
                         FO_Crypto_node.inputs.clear()
                         FO_Crypto_node.file_slots.new("Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
@@ -2696,27 +2618,9 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                     FO_DATA_node.format.exr_codec = (
                         bpy.context.scene.IDS_DATACompression
                     )
-                    if bpy.context.scene.IDS_FileloC is True:
-                        current_render_path = file_output_to_subfolder_loc()
-                        layer_core = extract_string_between_patterns(
-                            f"{view_layer}", "-_-exP_", "_DATA"
-                        )
-                        FO_DATA_node.base_path = (
-                            current_render_path[1]
-                            + f"{layer_core}_DATA\\"
-                            + "DATA\\"
-                            + f"{layer_core}_DATA_"
-                        )
-                    else:
-                        layer_core = extract_string_between_patterns(
-                            f"{view_layer}", "-_-exP_", "_DATA"
-                        )
-                        FO_DATA_node.base_path = (
-                            file_output_to_1folder_loc() + f"{layer_core}_DATA_"
-                        )
-                    # FO_DATA_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_DATA_"
-                    # )
+                    base_path = create_final_path(current_render_path, view_layer, "DATA")
+                    final_path = base_path.replace("-_-exP_", "")
+                    FO_DATA_node.base_path = final_path
                     FO_DATA_node.inputs.clear()
                     FO_DATA_node.file_slots.new("Image")
                     datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
@@ -2801,29 +2705,9 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         FO_Crypto_node.format.exr_codec = (
                             bpy.context.scene.IDS_CryptoCompression
                         )
-                        if bpy.context.scene.IDS_FileloC is True:
-                            current_render_path = file_output_to_subfolder_loc()
-                            layer_core = extract_string_between_patterns(
-                                f"{view_layer}", "-_-exP_", "_DATA"
-                            )
-                            base_path = (
-                                current_render_path[2]
-                                + f"{layer_core}_DATA\\"
-                                + "Cryptomatte\\"
-                                + f"{layer_core}_Cryptomatte_"
-                            )
-                            final_path = base_path.replace("-_-exP_", "")
-                            FO_Crypto_node.base_path = final_path
-                        else:
-                            layer_core = extract_string_between_patterns(
-                                f"{view_layer}", "-_-exP_", "_DATA"
-                            )
-                            base_path = (
-                                file_output_to_1folder_loc()
-                                + f"{layer_core}_Cryptomatte_"
-                            )
-                            final_path = base_path.replace("-_-exP_", "")
-                            FO_Crypto_node.base_path = final_path
+                        base_path = create_final_path(current_render_path, view_layer, "Cryptomatte")
+                        final_path = base_path.replace("-_-exP_", "")
+                        FO_Crypto_node.base_path = final_path
                         FO_Crypto_node.inputs.clear()
                         FO_Crypto_node.file_slots.new("Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
