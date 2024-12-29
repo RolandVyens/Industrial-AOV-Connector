@@ -88,6 +88,11 @@ class IDS_AddonPrefs(AddonPreferences):
         description="Display Preference Button As Alert Color",
         default=True,
     )  # type: ignore
+    UI_Show_In_Comp: BoolProperty(
+        name="Show UI In Compositor N Panel",
+        description="If enabled, show UI in compositor N panel in addition to the property panel",
+        default=False,
+    )  # type: ignore
     Arrange_Scale_Param: FloatProperty(
         name="Arrange Node Interval Scale",
         description="Scale of node interval when arranging node",
@@ -108,6 +113,7 @@ class IDS_AddonPrefs(AddonPreferences):
         layout.prop(self, "Put_Default_To_trash_output")
         layout.prop(self, "Show_QuickDel")
         layout.label(text="Appearance:")
+        layout.prop(self, "UI_Show_In_Comp")
         layout.prop(self, "Use_Icon_Only_Preference_Button")
         layout.prop(self, "Preference_Button_On_The_Right")
         layout.prop(self, "Preference_Button_Show_Alert")
@@ -3603,13 +3609,7 @@ class IDS_OT_Draw_DataMenu(Operator):
 """以下为控制面板"""
 
 
-class IDS_PT_OutputPanel(bpy.types.Panel):
-    bl_label = "Industrial AOV Connector"
-    bl_idname = "RENDER_PT_industrialoutput"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "view_layer"
-    bl_order = 0
+class IDS_PT_OutputPanel_Base:
 
     def draw_header(self, context):
         preferences = bpy.context.preferences
@@ -3722,10 +3722,38 @@ class IDS_PT_OutputPanel(bpy.types.Panel):
             col2.label(text="Enable hidden features in addon setting")
 
 
+class IDS_PT_OutputPanel(bpy.types.Panel, IDS_PT_OutputPanel_Base):
+    bl_label = "Industrial AOV Connector"
+    bl_idname = "RENDER_PT_industrialoutput"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "view_layer"
+    bl_order = 0
+
+
+class IDS_PT_OutputPanel_N(bpy.types.Panel, IDS_PT_OutputPanel_Base):
+    bl_label = "Industrial AOV Connector"
+    bl_idname = "COMP_PT_industrialoutput"
+    bl_space_type = "NODE_EDITOR"
+    bl_region_type = "UI"
+    bl_category = "Industrial"
+
+    @classmethod
+    def poll(cls, context):
+        preferences = bpy.context.preferences
+        addon_prefs = preferences.addons[__package__].preferences
+        # Ensure the panel only shows when in the compositor editor
+        return (
+            context.space_data.tree_type == "CompositorNodeTree"
+            and addon_prefs.UI_Show_In_Comp is True
+        )
+
+
 """以下为注册函数"""
 reg_clss = [
     IDS_AddonPrefs,
     IDS_PT_OutputPanel,
+    IDS_PT_OutputPanel_N,
     IDS_OT_Turn_Denoise,
     # IDS_OutputPanel_Output,
     Compositor_OT_enable_use_nodes,
