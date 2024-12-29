@@ -30,7 +30,7 @@ from .renderpath_preset import replaceTokens, restoreTokens
 import os
 import shutil
 from bpy.types import Operator, AddonPreferences
-from bpy.props import StringProperty, IntProperty, BoolProperty, FloatProperty
+from bpy.props import StringProperty, BoolProperty, FloatProperty
 
 
 """
