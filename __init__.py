@@ -91,7 +91,7 @@ class IDS_AddonPrefs(AddonPreferences):
     Arrange_Scale_Param: FloatProperty(
         name="Arrange Node Interval Scale",
         description="Scale of node interval when arranging node",
-        default=0.67,
+        default=1.0,
         min=0.1,
         max=10.0,
         precision=2,
@@ -103,7 +103,7 @@ class IDS_AddonPrefs(AddonPreferences):
         layout.prop(self, "Denoise_Col")
         layout.prop(self, "Use_Old_Layer_Naming")
         layout.prop(self, "Only_Create_Enabled_Viewlayer")
-        layout.prop(self, "Arrange_Scale_Param", slider=True)
+        layout.prop(self, "Arrange_Scale_Param", slider=False)
         layout.label(text="Output Tools:")
         layout.prop(self, "Put_Default_To_trash_output")
         layout.prop(self, "Show_QuickDel")
