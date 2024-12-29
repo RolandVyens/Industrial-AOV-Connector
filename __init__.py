@@ -21,7 +21,7 @@ from .handy_functions import (
     sorting_data,
     IDS_OT_Open_Preference,
 )
-from .path_modify import (
+from .path_modify_v2 import (
     file_output_to_1folder_loc,
     file_output_to_subfolder_loc,
     origin_render_path_change_loc,
