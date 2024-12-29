@@ -2,6 +2,9 @@ import bpy
 import os
 from bpy.app.handlers import persistent
 
+# https://github.com/RolandVyens/Oscurart_blender_addons
+# https://github.com/RolandVyens/renderpath-prefix
+
 
 @persistent
 def replaceTokens(dummy):
