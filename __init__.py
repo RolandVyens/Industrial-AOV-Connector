@@ -3500,7 +3500,7 @@ class IDS_PT_OutputPanel_Base:
             col2.label(text="Output Tools:")
             col2.operator(IDS_OT_Delete_Trash.bl_idname, icon="TRASH")
         else:
-            col2.label(text="Enable hidden features in addon setting")
+            col2.label(text="Enable Output Tools in addon setting")
 
 
 class IDS_PT_OutputPanel(bpy.types.Panel, IDS_PT_OutputPanel_Base):
