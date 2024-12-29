@@ -1853,6 +1853,8 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
 
 
 def auto_arr_outputnode():  # 排列输出节点
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons[__package__].preferences
     viewlayers = []
     RGBA_location_y = {}
     RGBA_dimension_y = {}
@@ -1875,7 +1877,9 @@ def auto_arr_outputnode():  # 排列输出节点
                         node1.location = 1200, node.location.y
                         node1.width = 420
                         RGBA_location_y[node1.name] = node1.location.y
-                        RGBA_dimension_y[node1.name] = node1.dimensions.y
+                        RGBA_dimension_y[node1.name] = (
+                            node1.dimensions.y * addon_prefs.Arrange_Scale_Param
+                        )
                     elif (
                         node1.type == "OUTPUT_FILE"
                         and node1.name[: node1.name.rfind("--")] == node.layer
@@ -1884,7 +1888,9 @@ def auto_arr_outputnode():  # 排列输出节点
                         node1.location = 1200, node.location.y
                         node1.width = 420
                         RGBA_location_y[node1.name] = node1.location.y
-                        RGBA_dimension_y[node1.name] = node1.dimensions.y
+                        RGBA_dimension_y[node1.name] = (
+                            node1.dimensions.y * addon_prefs.Arrange_Scale_Param
+                        )
     # print(RGBA_dimension_y)
     # print(RGBA_location_y)
     # print(RGBA_location_y.get(node.name[: node.name.rfind("_")] + "_RgBA"))
@@ -1896,7 +1902,7 @@ def auto_arr_outputnode():  # 排列输出节点
                     - RGBA_dimension_y.get(
                         node.name[: node.name.rfind("--")] + "--RgBA"
                     )
-                    - 20
+                    - 20 * addon_prefs.Arrange_Scale_Param
                 )
             else:
                 node.location = 1200, VIEWLAYER_location_y.get(
@@ -1904,10 +1910,9 @@ def auto_arr_outputnode():  # 排列输出节点
                 )
             node.width = 420
             DATA_location_y[node.name] = node.location.y
-            DATA_dimension_y[node.name] = node.dimensions.y
-            node.width = 420
-            DATA_location_y[node.name] = node.location.y
-            DATA_dimension_y[node.name] = node.dimensions.y
+            DATA_dimension_y[node.name] = (
+                node.dimensions.y * addon_prefs.Arrange_Scale_Param
+            )
     for node in bpy.context.scene.node_tree.nodes:
         if node.type == "OUTPUT_FILE" and "CryptoMaTTe" in node.name:
             if node.name[: node.name.rfind("--")] + "--DaTA" in DATA_location_y:
@@ -1924,7 +1929,7 @@ def auto_arr_outputnode():  # 排列输出节点
                     - RGBA_dimension_y.get(
                         node.name[: node.name.rfind("--")] + "--RgBA"
                     )
-                    - 20
+                    - 20 * addon_prefs.Arrange_Scale_Param
                 )
             else:
                 node.location = 1200, VIEWLAYER_location_y.get(
