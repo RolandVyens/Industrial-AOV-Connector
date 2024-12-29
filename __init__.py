@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (2, 6, 0),  # bump doc_url as well!
+    "version": (3, 0, 0),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -26,6 +26,7 @@ from .path_modify import (
     file_output_to_subfolder_loc,
     origin_render_path_change_loc,
 )
+from .renderpath_prefix import replaceTokens, restoreTokens
 import os
 import shutil
 from bpy.types import Operator, AddonPreferences
@@ -100,6 +101,12 @@ class IDS_AddonPrefs(AddonPreferences):
         min=0.1,
         max=10.0,
         precision=2,
+    )  # type: ignore
+    my_string: StringProperty(
+        name="My String",
+        description="Enter some text",
+        default="Hello, Blender!",
+        maxlen=256,
     )  # type: ignore
 
     def draw(self, context):
@@ -3776,12 +3783,18 @@ def register():
     for i in reg_clss:
         bpy.utils.register_class(i)
     bpy.app.translations.register(__package__, language_dict)
+    bpy.app.handlers.render_init.append(replaceTokens)
+    bpy.app.handlers.render_cancel.append(restoreTokens)
+    bpy.app.handlers.render_complete.append(restoreTokens)
 
 
 def unregister():
     for i in reg_clss:
         bpy.utils.unregister_class(i)
     bpy.app.translations.unregister(__package__)
+    bpy.app.handlers.render_init.remove(replaceTokens)
+    bpy.app.handlers.render_cancel.remove(restoreTokens)
+    bpy.app.handlers.render_complete.remove(restoreTokens)
 
 
 if __name__ == "__main__":
