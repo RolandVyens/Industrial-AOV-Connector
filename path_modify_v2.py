@@ -97,6 +97,12 @@ def origin_render_path_change_loc():  # 将blender默认输出存到垃圾输出
 
 
 def create_final_path(current_render_path, view_layer, type):
-    os.path.join(
-        current_render_path[0] + f"{view_layer}" + f"{type}" + f"{view_layer}_{type}_"
-    )
+    if bpy.context.scene.IDS_FileloC is True:
+        current_render_path = file_output_to_1folder_loc()
+        final_path = os.path.join(
+            current_render_path, f"{view_layer}", f"{type}", f"{view_layer}_{type}_"
+        )
+    else:
+        final_path = os.path.join(file_output_to_1folder_loc(), f"{view_layer}_{type}_")
+
+    return final_path

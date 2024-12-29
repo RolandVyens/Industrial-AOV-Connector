@@ -25,6 +25,7 @@ from .path_modify_v2 import (
     file_output_to_1folder_loc,
     file_output_to_subfolder_loc,
     origin_render_path_change_loc,
+    create_final_path,
 )
 from .renderpath_preset import replaceTokens, restoreTokens
 import os
@@ -415,21 +416,9 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         FO_RGB_node.format.exr_codec = (
                             bpy.context.scene.IDS_RGBACompression
                         )
-                    if bpy.context.scene.IDS_FileloC is True:
-                        current_render_path = file_output_to_subfolder_loc()
-                        FO_RGB_node.base_path = (
-                            current_render_path[0]
-                            + f"{view_layer}\\"
-                            + "RGBA\\"
-                            + f"{view_layer}_RGBA_"
-                        )
-                    else:
-                        FO_RGB_node.base_path = (
-                            file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
-                        )
-                    # FO_RGB_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_RGBA_"
-                    # )
+                    FO_RGB_node.base_path = create_final_path(
+                        current_render_path, view_layer, "RGBA"
+                    )
                     FO_RGB_node.inputs.clear()
                     for input in viewlayer_full[f"{view_layer}Color"]:
                         FO_RGB_node.file_slots.new(f"{input}")
@@ -488,21 +477,9 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                             FO_DATA_node.format.exr_codec = (
                                 bpy.context.scene.IDS_DATACompression
                             )
-                        if bpy.context.scene.IDS_FileloC is True:
-                            current_render_path = file_output_to_subfolder_loc()
-                            FO_DATA_node.base_path = (
-                                current_render_path[1]
-                                + f"{view_layer}\\"
-                                + "DATA\\"
-                                + f"{view_layer}_DATA_"
-                            )
-                        else:
-                            FO_DATA_node.base_path = (
-                                file_output_to_1folder_loc() + f"{view_layer}_DATA_"
-                            )
-                        # FO_DATA_node.base_path = (
-                        #     current_render_path + f"\\{view_layer}_DATA_"
-                        # )
+                        FO_DATA_node.base_path = create_final_path(
+                            current_render_path, view_layer, "DATA"
+                        )
                         FO_DATA_node.inputs.clear()
                         FO_DATA_node.file_slots.new("Image")
                         datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
@@ -579,19 +556,9 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 FO_Crypto_node.format.exr_codec = (
                                     bpy.context.scene.IDS_CryptoCompression
                                 )
-                            if bpy.context.scene.IDS_FileloC is True:
-                                current_render_path = file_output_to_subfolder_loc()
-                                FO_Crypto_node.base_path = (
-                                    current_render_path[2]
-                                    + f"{view_layer}\\"
-                                    + "Cryptomatte\\"
-                                    + f"{view_layer}_Cryptomatte_"
-                                )
-                            else:
-                                FO_Crypto_node.base_path = (
-                                    file_output_to_1folder_loc()
-                                    + f"{view_layer}_Cryptomatte_"
-                                )
+                            FO_Crypto_node.base_path = create_final_path(
+                                current_render_path, view_layer, "Cryptomatte"
+                            )
                             FO_Crypto_node.inputs.clear()
                             FO_Crypto_node.file_slots.new("Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
@@ -1184,21 +1151,9 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     FO_RGB_node.format.exr_codec = "ZIPS"
                 else:
                     FO_RGB_node.format.exr_codec = bpy.context.scene.IDS_RGBACompression
-                if bpy.context.scene.IDS_FileloC is True:
-                    current_render_path = file_output_to_subfolder_loc()
-                    FO_RGB_node.base_path = (
-                        current_render_path[0]
-                        + f"{view_layer}\\"
-                        + "RGBA\\"
-                        + f"{view_layer}_RGBA_"
-                    )
-                else:
-                    FO_RGB_node.base_path = (
-                        file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
-                    )
-                # FO_RGB_node.base_path = (
-                #     current_render_path + f"\\{view_layer}_RGBA_"
-                # )
+                FO_RGB_node.base_path = create_final_path(
+                    current_render_path, view_layer, "RGBA"
+                )
                 FO_RGB_node.inputs.clear()
                 for input in viewlayer_full[f"{view_layer}Color"]:
                     FO_RGB_node.file_slots.new(f"{input}")
@@ -1253,21 +1208,9 @@ def update_tree_denoise():  # 新建当前视图层的节点
                         FO_DATA_node.format.exr_codec = (
                             bpy.context.scene.IDS_DATACompression
                         )
-                    if bpy.context.scene.IDS_FileloC is True:
-                        current_render_path = file_output_to_subfolder_loc()
-                        FO_DATA_node.base_path = (
-                            current_render_path[1]
-                            + f"{view_layer}\\"
-                            + "DATA\\"
-                            + f"{view_layer}_DATA_"
-                        )
-                    else:
-                        FO_DATA_node.base_path = (
-                            file_output_to_1folder_loc() + f"{view_layer}_DATA_"
-                        )
-                    # FO_DATA_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_DATA_"
-                    # )
+                    FO_DATA_node.base_path = create_final_path(
+                        current_render_path, view_layer, "DATA"
+                    )
                     FO_DATA_node.inputs.clear()
                     FO_DATA_node.file_slots.new("Image")
                     datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
@@ -1334,19 +1277,9 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             FO_Crypto_node.format.exr_codec = (
                                 bpy.context.scene.IDS_CryptoCompression
                             )
-                        if bpy.context.scene.IDS_FileloC is True:
-                            current_render_path = file_output_to_subfolder_loc()
-                            FO_Crypto_node.base_path = (
-                                current_render_path[2]
-                                + f"{view_layer}\\"
-                                + "Cryptomatte\\"
-                                + f"{view_layer}_Cryptomatte_"
-                            )
-                        else:
-                            FO_Crypto_node.base_path = (
-                                file_output_to_1folder_loc()
-                                + f"{view_layer}_Cryptomatte_"
-                            )
+                        FO_Crypto_node.base_path = create_final_path(
+                            current_render_path, view_layer, "Cryptomatte"
+                        )
                         FO_Crypto_node.inputs.clear()
                         FO_Crypto_node.file_slots.new("Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
@@ -2120,21 +2053,9 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                     FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_RGB_node.format.color_depth = "16"
                     FO_RGB_node.format.exr_codec = bpy.context.scene.IDS_RGBACompression
-                    if bpy.context.scene.IDS_FileloC is True:
-                        current_render_path = file_output_to_subfolder_loc()
-                        FO_RGB_node.base_path = (
-                            current_render_path[0]
-                            + f"{view_layer}\\"
-                            + "RGBA\\"
-                            + f"{view_layer}_RGBA_"
-                        )
-                    else:
-                        FO_RGB_node.base_path = (
-                            file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
-                        )
-                    # FO_RGB_node.base_path = (
-                    #     current_render_path + f"\\{view_layer}_RGBA_"
-                    # )
+                    FO_RGB_node.base_path = create_final_path(
+                        current_render_path, view_layer, "RGBA"
+                    )
                     FO_RGB_node.inputs.clear()
                     for input in viewlayer_full[f"{view_layer}Color"]:
                         FO_RGB_node.file_slots.new(f"{input}")
@@ -2693,21 +2614,9 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                 FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                 FO_RGB_node.format.color_depth = "16"
                 FO_RGB_node.format.exr_codec = bpy.context.scene.IDS_RGBACompression
-                if bpy.context.scene.IDS_FileloC is True:
-                    current_render_path = file_output_to_subfolder_loc()
-                    FO_RGB_node.base_path = (
-                        current_render_path[0]
-                        + f"{view_layer}\\"
-                        + "RGBA\\"
-                        + f"{view_layer}_RGBA_"
-                    )
-                else:
-                    FO_RGB_node.base_path = (
-                        file_output_to_1folder_loc() + f"{view_layer}_RGBA_"
-                    )
-                # FO_RGB_node.base_path = (
-                #     current_render_path + f"\\{view_layer}_RGBA_"
-                # )
+                FO_RGB_node.base_path = create_final_path(
+                    current_render_path, view_layer, "RGBA"
+                )
                 FO_RGB_node.inputs.clear()
                 for input in viewlayer_full[f"{view_layer}Color"]:
                     FO_RGB_node.file_slots.new(f"{input}")
