@@ -579,18 +579,9 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                     FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_RGB_node.format.color_depth = "32"
                     FO_RGB_node.format.exr_codec = "ZIPS"
-                    if bpy.context.scene.IDS_FileloC is True:
-                        current_render_path = file_output_to_subfolder_loc()
-                        FO_RGB_node.base_path = (
-                            current_render_path[0]
-                            + f"{view_layer}\\"
-                            + f"{view_layer}_All_"
-                        )
-                    else:
-                        FO_RGB_node.base_path = (
-                            file_output_to_1folder_loc() + f"{view_layer}_All_"
-                        )
-                    # FO_RGB_node.base_path = current_render_path + f"\\{view_layer}_All_"
+                    FO_RGB_node.base_path = create_final_path(
+                        current_render_path, view_layer, "All"
+                    )
                     FO_RGB_node.inputs.clear()
                     for input in viewlayer_full[f"{view_layer}Color"]:
                         FO_RGB_node.file_slots.new(f"{input}")
@@ -1299,18 +1290,9 @@ def update_tree_denoise():  # 新建当前视图层的节点
                 FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                 FO_RGB_node.format.color_depth = "32"
                 FO_RGB_node.format.exr_codec = "ZIPS"
-                if bpy.context.scene.IDS_FileloC is True:
-                    current_render_path = file_output_to_subfolder_loc()
-                    FO_RGB_node.base_path = (
-                        current_render_path[0]
-                        + f"{view_layer}\\"
-                        + f"{view_layer}_All_"
-                    )
-                else:
-                    FO_RGB_node.base_path = (
-                        file_output_to_1folder_loc() + f"{view_layer}_All_"
-                    )
-                # FO_RGB_node.base_path = current_render_path + f"\\{view_layer}_All_"
+                FO_RGB_node.base_path = create_final_path(
+                    current_render_path, view_layer, "All"
+                )
                 FO_RGB_node.inputs.clear()
                 for input in viewlayer_full[f"{view_layer}Color"]:
                     FO_RGB_node.file_slots.new(f"{input}")
