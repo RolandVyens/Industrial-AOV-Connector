@@ -374,6 +374,22 @@ language_dict = {
             "*",
             'Set override material to "PositionDepth_AA--exP" which outputs Antialias depth, Pworld and Pref',
         ): '将层材质覆盖设为"PositionDepth_AA--exP"，输出抗锯齿depth/z, Pworld和Pref',
+        (
+            "*",
+            "Auto Optimize Sample Count For Data Layers",
+        ): "自动优化数据层采样数",
+        (
+            "*",
+            "If enabled, Data Layers will get sample count override when generating nodes, for faster rendering",
+        ): "如果启用，生成节点时会自动优化数据层的采样数，以便加速渲染",
+        (
+            "*",
+            "Sample Count Used For Data Layers",
+        ): "数据层使用的采样数",
+        (
+            "*",
+            "This value will be used for 'Auto Optimize Sample Count For Data Layers'",
+        ): "这个值会被用于“自动优化数据层采样数”",
     },
     "zh_HANS": {
         (
@@ -750,5 +766,21 @@ language_dict = {
             "*",
             'Set override material to "PositionDepth_AA--exP" which outputs Antialias depth, Pworld and Pref',
         ): '将层材质覆盖设为"PositionDepth_AA--exP"，输出抗锯齿depth/z, Pworld和Pref',
+        (
+            "*",
+            "Auto Optimize Sample Count For Data Layers",
+        ): "自动优化数据层采样数",
+        (
+            "*",
+            "If enabled, Data Layers will get sample count override when generating nodes, for faster rendering",
+        ): "如果启用，生成节点时会自动优化数据层的采样数，以便加速渲染",
+        (
+            "*",
+            "Sample Count Used For Data Layers",
+        ): "数据层使用的采样数",
+        (
+            "*",
+            "This value will be used for 'Auto Optimize Sample Count For Data Layers'",
+        ): "这个值会被用于“自动优化数据层采样数”",
     },
 }

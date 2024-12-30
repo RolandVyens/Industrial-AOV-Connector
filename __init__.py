@@ -96,8 +96,8 @@ class IDS_AddonPrefs(AddonPreferences):
         default=False,
     )  # type: ignore
     Auto_Data_Sample: BoolProperty(
-        name="Auto Set Sample Count For Data Layers",
-        description="If enabled, Data Layers will get sample count override when generating nodes, for faster rendering.",
+        name="Auto Optimize Sample Count For Data Layers",
+        description="If enabled, Data Layers will get sample count override when generating nodes, for faster rendering",
         default=False,
     )  # type: ignore
     Arrange_Scale_Param: FloatProperty(
@@ -110,7 +110,7 @@ class IDS_AddonPrefs(AddonPreferences):
     )  # type: ignore
     Custom_Data_Sample: IntProperty(
         name="Sample Count Used For Data Layers",
-        description="This value will be used for 'Auto Set Sample Count For Data Layers'",
+        description="This value will be used for 'Auto Optimize Sample Count For Data Layers'",
         default=10,
         min=1,
         max=4096,
