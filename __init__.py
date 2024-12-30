@@ -373,7 +373,7 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
         node.location = 0, renderlayer_node_position
         renderlayer_node_y.append(renderlayer_node_position)
         renderlayer_node_position -= (
-            node.dimensions.y + 100 * addon_prefs.Arrange_Scale_Param
+            (node.dimensions.y + 100) * addon_prefs.Arrange_Scale_Param
         )
 
 
