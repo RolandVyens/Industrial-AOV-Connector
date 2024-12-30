@@ -29,7 +29,7 @@ from .renderpath_preset import replaceTokens, restoreTokens
 import os
 import shutil
 from bpy.types import Operator, AddonPreferences
-from bpy.props import StringProperty, BoolProperty, FloatProperty
+from bpy.props import StringProperty, BoolProperty, FloatProperty, IntProperty
 
 
 """
@@ -93,6 +93,11 @@ class IDS_AddonPrefs(AddonPreferences):
         description="If enabled, show UI in compositor N panel in addition to the property panel",
         default=False,
     )  # type: ignore
+    Auto_Data_Sample: BoolProperty(
+        name="Auto Set Sample Count For Data Layers",
+        description="If enabled, Data Layers will get sample count override when generating nodes, for faster rendering.",
+        default=False,
+    )  # type: ignore
     Arrange_Scale_Param: FloatProperty(
         name="Node Interval Scale When Arranging",
         description="Scale of node interval when arranging node, fix too wide node interval and space consumption. this is a compensation for system-wide UI scaling, for example My Windows uses a 1.5x scale, set this to 0.67 will generate proper nodetree",
@@ -100,6 +105,14 @@ class IDS_AddonPrefs(AddonPreferences):
         min=0.1,
         max=10.0,
         precision=2,
+    )  # type: ignore
+    Custom_Data_Sample: IntProperty(
+        name="Sample Count Used For Data Layers",
+        description="This value will be used for 'Auto Set Sample Count For Data Layers'",
+        default=10,
+        min=1,
+        max=4096,
+        step=1,
     )  # type: ignore
     Custom_Suffix: StringProperty(
         name="Custom Name Suffix",
@@ -115,6 +128,9 @@ class IDS_AddonPrefs(AddonPreferences):
         box1.prop(self, "Denoise_Col")
         box1.prop(self, "Use_Old_Layer_Naming")
         box1.prop(self, "Only_Create_Enabled_Viewlayer")
+        box1.prop(self, "Auto_Data_Sample")
+        if self.Auto_Data_Sample is True:
+            box1.prop(self, "Custom_Data_Sample")
         box1.prop(self, "Custom_Suffix")
         box1.prop(self, "Arrange_Scale_Param", slider=False)
         box2 = layout.box()
@@ -373,8 +389,8 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
         node.location = 0, renderlayer_node_position
         renderlayer_node_y.append(renderlayer_node_position)
         renderlayer_node_position -= (
-            (node.dimensions.y + 120) * addon_prefs.Arrange_Scale_Param
-        )
+            node.dimensions.y + 120
+        ) * addon_prefs.Arrange_Scale_Param
 
 
 def make_tree_denoise():  # 主要功能函数之建立节点
