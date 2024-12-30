@@ -324,22 +324,22 @@ bpy.types.Scene.IDS_DataMatType = bpy.props.EnumProperty(  # 层材质覆盖
         (
             "Pure Diffuse BSDF",
             "Pure Diffuse BSDF",
-            "Override Layer Material To A Diffuse BSDF",
+            "A Diffuse BSDF with Pref",
         ),
         (
             "Accurate Depth Material",
             "Accurate Depth Material",
-            "A utility BSDF that output perfect depth/z channel",
+            "A utility BSDF that output perfect depth/z channel with Pref",
         ),
         (
             "Accurate Position Material",
             "Accurate Position Material",
-            "A utility BSDF that output perfect world position channel",
+            "A utility BSDF that output perfect Pworld channel with Pref",
         ),
         (
             "Accurate Depth & Position Material",
             "Accurate Depth & Position Material",
-            "A utility BSDF that output perfect depth and world position channel",
+            "A utility BSDF that output perfect depth and Pworld channel with Pref",
         ),
     ],
     default="Accurate Depth & Position Material",
@@ -3229,7 +3229,7 @@ class IDS_OT_Make_DatalayerCopy(Operator):
 class IDS_OT_Convert_DATALayer(Operator):
     bl_idname = "viewlayer.convertdatalayer"
     bl_label = "Convert To DATA Layer"
-    bl_description = "Convert current layer to DATA layer"
+    bl_description = "Convert current viewlayer to DATA layer"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -3393,7 +3393,7 @@ class IDS_MT_Make_DatalayerMenu(bpy.types.Menu):
 class IDS_OT_Draw_DataMenu(Operator):
     bl_idname = "wm.drawdatalayermenu"
     bl_label = "Make A DATA Layer"
-    bl_description = "make a data exclusive viewlayer, the addon recognize data layer by naming, and this is actually a modified 'add viewlayer' button"
+    bl_description = "make a data exclusive viewlayer. the addon recognize data layer by naming, and supports multiple data layers. this button is actually a modified 'add viewlayer' button"
     bl_options = {"REGISTER"}
 
     def execute(self, context):

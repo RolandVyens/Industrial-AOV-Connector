@@ -612,5 +612,37 @@ language_dict = {
             "*",
             "Use old EXR layer naming which is the same with 2.4.x below. The new layer naming is easier to read in nuke",
         ): "使用2.4.x及以前版本的EXR层命名规范。新版的层命名在nuke中更易读",
+        (
+            "*",
+            "Go to advanced mode for more customized control"
+        ): "进入高级模式以实现更多控制",
+        (
+            "*",
+            "Separate cryptomatte to an independent file output"
+        ): "把cryptomatte作为单独文件输出",
+        (
+            "*",
+            "make a data exclusive viewlayer. the addon recognize data layer by naming, and supports multiple data layers. this button is actually a modified 'add viewlayer' button"
+        ): "创建一个专门的数据层。插件通过命名来识别数据层，可以有多个数据层同时存在。这个按钮实际上是一个魔改过的“添加视图层”按钮",
+        (
+            "*",
+            "Convert current viewlayer to DATA layer"
+        ): "将当前视图层转换为数据层",
+        (
+            "*",
+            "A Diffuse BSDF with Pref"
+        ): "一个漫射材质，带Pref输出",
+        (
+            "*",
+            "A utility BSDF that output perfect depth/z channel with Pref"
+        ): "一个特制材质，输出完美抗锯齿depth/z通道，带Pref输出",
+        (
+            "*",
+            "A utility BSDF that output perfect Pworld channel with Pref"
+        ): "一个特制材质，输出完美Pworld和Pref",
+        (
+            "*",
+            "A utility BSDF that output perfect depth and Pworld channel with Pref"
+        ): "一个特制材质，输出完美depth/z通道，Pworld和Pref",
     },
 }
