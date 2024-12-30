@@ -358,6 +358,22 @@ language_dict = {
             "*",
             "Scale of node interval when arranging node, fix too wide node interval and space consumption. this is a compensation for system-wide UI scaling, for example My Windows uses a 1.5x scale, set this to 0.67 will generate proper nodetree",
         ): "节点排列时节点间隔的缩放比例，修复节点间隔过宽和空间消耗问题。\n这是对系统范围的UI缩放的补偿，例如我的Windows使用1.5倍的缩放比例，\n设置为0.67将生成正确的节点树",
+        (
+            "*",
+            'Set override material to "override--exP" which is a diffuse BSDF with Pref',
+        ): '将层材质覆盖设为"override--exP"，一个带Pref输出的漫射材质',
+        (
+            "*",
+            'Set override material to "Depth_AA--exP" which outputs Antialias depth and Pref',
+        ): '将层材质覆盖设为"Depth_AA--exP"，输出抗锯齿depth/z和Pref',
+        (
+            "*",
+            'Set override material to "Position_AA--exP" which outputs Antialias Pworld and Pref',
+        ): '将层材质覆盖设为"Position_AA--exP"，输出抗锯齿Pworld和Pref',
+        (
+            "*",
+            'Set override material to "PositionDepth_AA--exP" which outputs Antialias depth, Pworld and Pref',
+        ): '将层材质覆盖设为"PositionDepth_AA--exP"，输出抗锯齿depth/z, Pworld和Pref',
     },
     "zh_HANS": {
         (
@@ -718,5 +734,21 @@ language_dict = {
             "*",
             "Scale of node interval when arranging node, fix too wide node interval and space consumption. this is a compensation for system-wide UI scaling, for example My Windows uses a 1.5x scale, set this to 0.67 will generate proper nodetree",
         ): "节点排列时节点间隔的缩放比例，修复节点间隔过宽和空间消耗问题。\n这是对系统范围的UI缩放的补偿，例如我的Windows使用1.5倍的缩放比例，\n设置为0.67将生成正确的节点树",
+        (
+            "*",
+            'Set override material to "override--exP" which is a diffuse BSDF with Pref',
+        ): '将层材质覆盖设为"override--exP"，一个带Pref输出的漫射材质',
+        (
+            "*",
+            'Set override material to "Depth_AA--exP" which outputs Antialias depth and Pref',
+        ): '将层材质覆盖设为"Depth_AA--exP"，输出抗锯齿depth/z和Pref',
+        (
+            "*",
+            'Set override material to "Position_AA--exP" which outputs Antialias Pworld and Pref',
+        ): '将层材质覆盖设为"Position_AA--exP"，输出抗锯齿Pworld和Pref',
+        (
+            "*",
+            'Set override material to "PositionDepth_AA--exP" which outputs Antialias depth, Pworld and Pref',
+        ): '将层材质覆盖设为"PositionDepth_AA--exP"，输出抗锯齿depth/z, Pworld和Pref',
     },
 }

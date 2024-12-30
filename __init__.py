@@ -3289,7 +3289,7 @@ class IDS_OT_Override_DATAMaTadv(Operator):
             self.report(
                 {"INFO"},
                 bpy.app.translations.pgettext(
-                    'Set override material to "override--exP" which is a diffuse BSDF'
+                    'Set override material to "override--exP" which is a diffuse BSDF with Pref'
                 ),
             )
             for aov in bpy.context.view_layer.aovs:
@@ -3314,7 +3314,7 @@ class IDS_OT_Override_DATAMaTadv(Operator):
             self.report(
                 {"INFO"},
                 bpy.app.translations.pgettext(
-                    'Set override material to "Depth_AA--exP" which outputs Antialias depth'
+                    'Set override material to "Depth_AA--exP" which outputs Antialias depth and Pref'
                 ),
             )
 
@@ -3329,7 +3329,7 @@ class IDS_OT_Override_DATAMaTadv(Operator):
             self.report(
                 {"INFO"},
                 bpy.app.translations.pgettext(
-                    'Set override material to "Position_AA--exP" which outputs Antialias world position'
+                    'Set override material to "Position_AA--exP" which outputs Antialias Pworld and Pref'
                 ),
             )
             for aov in bpy.context.view_layer.aovs:
@@ -3355,7 +3355,7 @@ class IDS_OT_Override_DATAMaTadv(Operator):
             self.report(
                 {"INFO"},
                 bpy.app.translations.pgettext(
-                    'Set override material to "PositionDepth_AA--exP" which outputs Antialias depth and world position'
+                    'Set override material to "PositionDepth_AA--exP" which outputs Antialias depth, Pworld and Pref'
                 ),
             )
             for aov in bpy.context.view_layer.aovs:
