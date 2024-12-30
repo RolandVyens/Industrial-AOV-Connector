@@ -134,3 +134,26 @@ class IDS_OT_Open_Preference(bpy.types.Operator):
                 bpy.context.window_manager.addon_search = "Industrial AOV Connector"
 
         return {"FINISHED"}
+
+
+def auto_data_sample():
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons[__package__].preferences
+    viewlayers = []
+    for view_layer in bpy.context.scene.view_layers:
+        viewlayers.append(view_layer.name)
+    for viewlayer in viewlayers:
+        if viewlayer.name[:7] == "-_-exP_" and "_DATA" in viewlayer.name:
+            viewlayer.samples = addon_prefs.Custom_Data_Sample
+
+    return {"FINISHED"}
+
+
+def update_data_sample():
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons[__package__].preferences
+    viewlayer = bpy.context.view_layer
+    if viewlayer.name[:7] == "-_-exP_" and "_DATA" in viewlayer.name:
+        viewlayer.samples = addon_prefs.Custom_Data_Sample
+
+    return {"FINISHED"}

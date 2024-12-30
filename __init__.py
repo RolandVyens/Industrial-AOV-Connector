@@ -20,6 +20,8 @@ from .handy_functions import (
     arrange_list,
     sorting_data,
     IDS_OT_Open_Preference,
+    auto_data_sample,
+    update_data_sample,
 )
 from .path_modify_v2 import (
     origin_render_path_change_loc,
@@ -3058,6 +3060,7 @@ class IDS_OT_Make_Tree(bpy.types.Operator):
             and bpy.context.scene.IDS_UseDATALayer is True
         ):
             auto_connect_adv()
+            auto_data_sample()
         else:
             auto_connect()
         if bpy.context.scene.IDS_Autoarr is True:
@@ -3091,6 +3094,7 @@ class IDS_OT_Update_Tree(bpy.types.Operator):
             and bpy.context.scene.IDS_UseDATALayer is True
         ):
             update_connect_adv()
+            update_data_sample()
         else:
             update_connect()
         if bpy.context.scene.IDS_Autoarr is True:
