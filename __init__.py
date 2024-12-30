@@ -3278,7 +3278,7 @@ class IDS_OT_Override_DATAMaTadv(Operator):
             )
         else:
             asset_path = os.path.join(addon_directory, "asset.blend")
-        if bpy.context.scene.IDS_DataMatType == "Pure Diffuse BSDF":
+        if bpy.context.scene.IDS_DataMatType == "Pure Diffuse Material":
             if "override--exP" in bpy.data.materials:
                 newlayer.material_override = bpy.data.materials.get("override--exP")
             else:
@@ -3289,7 +3289,7 @@ class IDS_OT_Override_DATAMaTadv(Operator):
             self.report(
                 {"INFO"},
                 bpy.app.translations.pgettext(
-                    'Set override material to "override--exP" which is a diffuse BSDF with Pref'
+                    'Set override material to "override--exP" which is a diffuse Material with Pref'
                 ),
             )
             for aov in bpy.context.view_layer.aovs:

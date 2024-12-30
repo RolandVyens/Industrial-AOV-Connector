@@ -360,7 +360,7 @@ language_dict = {
         ): "节点排列时节点间隔的缩放比例，修复节点间隔过宽和空间消耗问题。\n这是对系统范围的UI缩放的补偿，例如我的Windows使用1.5倍的缩放比例，\n设置为0.67将生成正确的节点树",
         (
             "*",
-            'Set override material to "override--exP" which is a diffuse BSDF with Pref',
+            'Set override material to "override--exP" which is a diffuse Material with Pref',
         ): '将层材质覆盖设为"override--exP"，一个带Pref输出的漫射材质',
         (
             "*",
@@ -736,7 +736,7 @@ language_dict = {
         ): "节点排列时节点间隔的缩放比例，修复节点间隔过宽和空间消耗问题。\n这是对系统范围的UI缩放的补偿，例如我的Windows使用1.5倍的缩放比例，\n设置为0.67将生成正确的节点树",
         (
             "*",
-            'Set override material to "override--exP" which is a diffuse BSDF with Pref',
+            'Set override material to "override--exP" which is a diffuse Material with Pref',
         ): '将层材质覆盖设为"override--exP"，一个带Pref输出的漫射材质',
         (
             "*",
