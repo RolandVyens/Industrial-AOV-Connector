@@ -100,7 +100,7 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
             and bpy.context.scene.IDS_UseDATALayer is True
             and bpy.context.scene.IDS_fakeDeep == True
             and bpy.context.scene.IDS_DataMatType
-            in {"Accurate Depth Material", "Accurate Depth & Position Material"}
+            in {"Antialias Depth Material", "Antialias Depth & Position Material"}
             and "Depth_AA$$aoP" in material_aovs[viewlayer]
         ):
             real_data.append("Deep_From_Image_z")
