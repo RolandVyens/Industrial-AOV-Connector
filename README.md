@@ -24,7 +24,7 @@ Install on blender extensions: https://extensions.blender.org/add-ons/industrial
 
 ======================
 
-![2 5界面](https://github.com/user-attachments/assets/17066c43-5c92-43e1-baad-81264bc53354)
+![3 0界面](https://github.com/user-attachments/assets/a35ebfd8-acd5-495b-b23a-33b4fe298d75)
 
 目前支持3.3 - 最新版 Supports blender 3.3 - newest by now (2024.11.14)
 
@@ -33,7 +33,25 @@ Install on blender extensions: https://extensions.blender.org/add-ons/industrial
 Supports material based aovs and light group based aovs, also can do hybrid. Supports multiple Viewlayers from scratch. This plugin can make output nodes automatically for you, intelligently make denoise nodes based on the outputs' type, convert position/normal pass to nuke standard passes (fusion and ae can also use in theory). After version 2.1, the plugin can output hi-res anti-aliased z and p channel, and a fake deep channel.
 
 **Update Log:**
+2025.1.1: version 3.0.0
+1. Added toggle for whether deleting all nodes in compositor or not when cooking node tree
+2. Added gap offset setting for arranging node, to prevent too wide node interval
+3. compositor N panel UI toggle (yes now you can show the plugin in compositor)
+4. custom name suffix function, which can add custom string after file path when generating nodes. including auto-replacable tags when rendering
+5. auto set data layer sample count, when generating nodes in advanced mode, auto set data layers' sample override for faster rendering
+6. better crossplatform compatibility
+7. optimize file folder and naming structure
+   
+_
 
+1. 添加了是否在烘焙节点树时移除所有节点的开关
+2. 添加了整理节点时的间距偏移设置，以避免过宽的节点间距
+3. 合成器N面板UI开关（是的现在你可以在合成器显示本插件）
+4. 自定义文件名后缀功能，可以在生成的文件名后添加自定义字符，包括渲染时可被自动替换的tag
+5. 自动设置数据层采样，高级模式生成节点时会自动帮你把数据层的采样覆盖以加快渲染
+6. 更好的跨平台兼容性
+7. 优化了文件夹和命名架构
+---
 2024.11.14: version 2.5.0
 
 - 修复了一些bug
@@ -41,38 +59,12 @@ Supports material based aovs and light group based aovs, also can do hybrid. Sup
 - 添加了reference position输出（Pref），需要在高级模式下使用独立数据层，且使用层材质覆盖
 - 新版数据通道命名，更加易懂，类型统一（设置中也提供了旧版命名可供切换）
 
+_
+
 - Fixed some bugs.
 - Continued optimizing the UI and added more customization options.
 - Added reference position output (Pref), which requires using an independent data layer in advanced mode, and utilizing layer material override.
 - New data channel naming for better clarity, with unified types (the old naming convention is also available in settings for switching).
-
-2024.8.13: version 2.4.0
-
-- 插件设置中的新开关允许你不生成停用渲染的viewlayer的节点（默认开启）
-- 插件python语法优化，将不常修改的函数独立为库
-
-- The new switch in the plugin settings allows you not to generate nodes for view layers that are disabled from rendering (enabled by default)
-- Optimize the plugin's Python syntax by separating infrequently modified functions into libraries
-
-2024.7.21: version 2.3.0
-
-修复了一些bug，调整用户界面以加强引导，完全支持blender 4.2
-
-Some bugs fixed, improved user interface, fully support for blender 4.2
-
-2024.5.30: version 2.1.0
-
-1. 基于视图层材质覆写的精确Depth和Position通道，与RGBA逐像素对应
-
-2. 假DEEP支持，可输出在nuke中使用Deep From Image节点一键生成DEEP通道的魔改z通道
-
-3. 支持blender extensions
-
-*1. Accurate Depth and Position pass based on viewlayer material override, align with RGBA pixels
-
-2. Fake DEEP support, this will output a modified Z channel for generating Deep data in nuke with Deep From Image node
-
-3. Support blender extensions
 
 =========================
 
