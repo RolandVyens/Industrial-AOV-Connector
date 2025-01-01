@@ -1,4 +1,4 @@
-# This page will tell you the basic functions of this plugin
+# This page will tell you the basic functions
 <img width="243" alt="basic_mode" src="https://github.com/user-attachments/assets/277fb64b-c135-47f4-9cef-7c9736c90133" />
 
 ### **UI default content**
