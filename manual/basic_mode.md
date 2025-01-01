@@ -24,6 +24,6 @@
     
     click `Preference` on the header, Find "Output Tools" section, turn both of the 2 toggles on. 
 
-    `Default useless renders gather` will auto change blender default render output path to "trash_output" subfolder, for convenient dump later
+    - `Default useless renders gather` will auto change blender default render output path to "trash_output" subfolder, for convenient dump later
 
-    `Show useless renders clean button` will show "Delete Useless Default Renders" button in Output Tools, for quickly delete "trash_output"
+    - `Show useless renders clean button` will show "Delete Useless Default Renders" button in Output Tools, for quickly delete "trash_output"
