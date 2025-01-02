@@ -23,4 +23,15 @@
 3. **Independent DATA Layer Config**:
 
     **Core function** to output data passes more flexible for advanced compositing, will need a whole chapter to explain. 
+---
 ### **Independent DATA Layer**
+By turning on **`Use Independent DATA Layer`**, the usual viewlayers no longer generate **DATA** outputs. You'll need to output DATA from data layers. The addon recognize data layer by naming (`"-_-exP_"`, `"_DATA"` in the begining and end of a viewlayer's name), and supports multiple data layers. 
+
+1. **`Make A DATA Layer` button**: 
+
+    Toggle a **MENU** for making a data exclusive viewlayer. This button is actually a modified `Add View Layer` button on the top right corner of blender, the 2 choice on the called menu are actually modified versions of `Copy Settings` and `New` in `Add View Layer`.
+2. **`Convert To DATA Layer` button**: 
+
+    Convert current viewlayer to a DATA layer, by adding `"-_-exP_"`, `"_DATA"` to the begining and end of the viewlayer's name.
+
+    

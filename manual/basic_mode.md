@@ -17,6 +17,7 @@
 5. **`Arrange Connector Nodes` button**: 
 
     Press to Arrange nodes associated to Industrial AOV Connector. 
+---
 ### **UI hidden content**
 - **`Delete Useless Default Renders` button**: 
 
