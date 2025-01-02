@@ -33,5 +33,10 @@ By turning on **`Use Independent DATA Layer`**, the usual viewlayers no longer g
 2. **`Convert To DATA Layer` button**: 
 
     Convert current viewlayer to a DATA layer, by adding `"-_-exP_"`, `"_DATA"` to the begining and end of the viewlayer's name.
+3. **DATA Layer Material Override**:
 
-    
+    Using this function, we can set **pre-made AOV material** as current layer's material override, automatically setup AOV outputs which you've chosen. Now there are 4 AOV outputs you can use: Antialiased Pworld, Pref, Depth/z, and fake DEEP.
+
+4. **DEEP From Image Z**:
+
+    This uses a 1/z convertion that converts depth to nuke style depth, which can be directly used in `Deep From Image` node, but now because the antialias, it doesn't work on edge. 
