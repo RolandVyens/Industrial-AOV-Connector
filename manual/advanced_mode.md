@@ -1,4 +1,5 @@
 # This page will tell you the advanced functions
+<img width="246" alt="advanced_mode_simple" src="https://github.com/user-attachments/assets/42ba84fc-4f39-4c9d-a890-b028c910fd01" />
 
 ### **Advanced content**
 1. **Use Advanced Mode**: 
@@ -24,6 +25,8 @@
 
     **Core function** to output data passes more flexible for advanced compositing, will need a whole chapter to explain. 
 ---
+<img width="227" alt="independent_data_layer" src="https://github.com/user-attachments/assets/5a197960-a39e-4bdb-a4eb-de761e92fe09" />
+
 ### **Independent DATA Layer**
 By turning on **`Use Independent DATA Layer`**, the usual viewlayers no longer generate **DATA** outputs. You'll need to output DATA from data layers. The addon recognize data layer by naming (`"-_-exP_"`, `"_DATA"` in the begining and end of a viewlayer's name), and supports multiple data layers. 
 
