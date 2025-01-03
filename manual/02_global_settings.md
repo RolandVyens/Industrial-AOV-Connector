@@ -1,5 +1,9 @@
 # This page will tell you the global settings
+<img width="360" alt="global_settings" src="https://github.com/user-attachments/assets/2d1d093f-2c6f-4de7-8ff1-1ad18184daf9" />
+
 ### **Core Function**
+<img width="351" alt="core_function" src="https://github.com/user-attachments/assets/9fa6bb66-417a-4c57-a933-9a5ed51d6764" />
+
 1. **Denoise DiffCol / GlossCol / TransCol**: 
 
     Denoise `DiffCol` / `GlossCol` / `TransCol` (The flat color aovs), may increase divide precision. 
@@ -24,6 +28,8 @@
     Scale of node interval when **arranging node**, fix too wide node interval and space consumption. this is a compensation for system-wide UI scaling, for example my Windows uses a 1.5x scale, set this to 0.67 will generate proper nodetree.
 ---
 ### **Output Tools**
+<img width="352" alt="output_tools" src="https://github.com/user-attachments/assets/ffa908d7-e51f-4367-8544-2ec1629dbe2a" />
+
 1. **Default useless renders gather**: 
 
     Auto change blender default render output path to "trash_output" subfolder, for convenient dump later.
@@ -33,5 +39,6 @@
     Show `Delete Useless Default Renders` button in Output Tools, for quickly delete **"trash_output"**.
 ---
 ### **Appearance**
+<img width="351" alt="appearance" src="https://github.com/user-attachments/assets/cefe5d71-8107-4109-b097-34c9872092eb" />
 
 Pass.
