@@ -12,11 +12,7 @@ Install on blender extensions: https://extensions.blender.org/add-ons/industrial
 
 ======================
 
-**Tips:**
-
-**本插件支持保留已经存在的节点，非破坏性编辑合成节点树，创建节点时按“更新当前可视层的节点”即可**
-
-**This plug-in supports retaining existing nodes and non-destructively editing. Just press "Update Current ViewLayer"**
+### [**`Documentation`**](https://github.com/RolandVyens/Industrial-AOV-Connector/blob/main/manual/00_catalogue.md)
 
 **插件面板位置：属性面板→视图层**
 
