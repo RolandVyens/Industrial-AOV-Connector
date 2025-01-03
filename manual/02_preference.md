@@ -1,5 +1,4 @@
-# This page will tell you the global settings
-<img width="360" alt="global_settings" src="https://github.com/user-attachments/assets/2d1d093f-2c6f-4de7-8ff1-1ad18184daf9" />
+# This page will tell you the preference
 
 ### **Core Function**
 <img width="351" alt="core_function" src="https://github.com/user-attachments/assets/9fa6bb66-417a-4c57-a933-9a5ed51d6764" />
