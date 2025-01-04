@@ -6,9 +6,9 @@
 ### Simple But Powerful AOV Output Tool, born for professional compositing.
 ======================
 
-Support me on blender market: https://blendermarket.com/products/industrial-aov-connector
+Support me on [blender market](https://blendermarket.com/products/industrial-aov-connector)
 
-Install on blender extensions: https://extensions.blender.org/add-ons/industrial-aov-connector/
+Install on [blender extensions](https://extensions.blender.org/add-ons/industrial-aov-connector/)
 
 ======================
 
