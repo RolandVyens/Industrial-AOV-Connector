@@ -30,6 +30,8 @@
 
 By turning on **`Use Independent DATA Layer`**, the usual viewlayers no longer generate **DATA** outputs. You'll need to output DATA from data layers. The addon recognize data layer by naming (`"-_-exP_"`, `"_DATA"` in the begining and end of a viewlayer's name), and supports multiple data layers. 
 
+In some situations, you might want to use Independent DATA Layer. **For example**, your scene has a volume fog that covers everything, when you output depth/position or other data channels, it causes unfixable noise. So now you can use a Independent DATA Layer, hide that volume object using collection, the datas from this layer will no-longer have noise. 
+
 1. **`Make A DATA Layer` button**: 
 
     Toggle a **MENU** for making a data exclusive viewlayer. This button is actually a modified `Add View Layer` button on the top right corner of blender, the 2 choice on the called menu are actually modified versions of `Copy Settings` and `New` in `Add View Layer`.
