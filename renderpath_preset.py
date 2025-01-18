@@ -8,8 +8,8 @@ from bpy.app.handlers import persistent
 
 @persistent
 def replaceTokens(dummy):
-    global renpath
-    # global nodeDict
+    # global renpath
+    global nodeDict
     tokens = {
         "$scene$": bpy.context.scene.name,
         "$file$": os.path.basename(bpy.data.filepath).split(".")[0],
@@ -24,7 +24,7 @@ def replaceTokens(dummy):
 
     print(bpy.context.view_layer.objects.active.name)
 
-    renpath = bpy.context.scene.render.filepath
+    # renpath = bpy.context.scene.render.filepath
 
     nodeDict = []
     # compositor nodes
@@ -52,12 +52,12 @@ def replaceTokens(dummy):
 
 @persistent
 def restoreTokens(dummy):
-    global renpath
-    bpy.context.scene.render.filepath = renpath
+    # global renpath
+    # bpy.context.scene.render.filepath = renpath
 
-    # # restore nodes
-    # for node in nodeDict:
-    #     node[0].base_path = node[1]
+    # restore nodes
+    for node in nodeDict:
+        node[0].base_path = node[1]
 
 
 # //RENDER/$scene$/$file$/$viewlayer$/$camera$
