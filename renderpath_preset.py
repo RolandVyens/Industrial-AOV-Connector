@@ -9,7 +9,7 @@ from bpy.app.handlers import persistent
 @persistent
 def replaceTokens(dummy):
     # global renpath
-    global nodeDict
+    global IDS_nodeDict
     tokens = {
         "$scene$": bpy.context.scene.name,
         "$file$": os.path.basename(bpy.data.filepath).split(".")[0],
@@ -26,12 +26,12 @@ def replaceTokens(dummy):
 
     # renpath = bpy.context.scene.render.filepath
 
-    nodeDict = []
+    IDS_nodeDict = []
     # compositor nodes
     if bpy.context.scene.use_nodes:
         for node in bpy.context.scene.node_tree.nodes:
             if node.type == "OUTPUT_FILE":
-                nodeDict.append([node, node.base_path])
+                IDS_nodeDict.append([node, node.base_path])
                 node.base_path = (
                     node.base_path.replace("$scene$", tokens["$scene$"])
                     .replace("$file$", tokens["$file$"])
@@ -54,10 +54,11 @@ def replaceTokens(dummy):
 def restoreTokens(dummy):
     # global renpath
     # bpy.context.scene.render.filepath = renpath
-
+    global IDS_nodeDict
     # restore nodes
-    for node in nodeDict:
+    for node in IDS_nodeDict:
         node[0].base_path = node[1]
+    IDS_nodeDict = []
 
 
 # //RENDER/$scene$/$file$/$viewlayer$/$camera$
