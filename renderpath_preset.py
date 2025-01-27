@@ -39,7 +39,7 @@ def replaceTokens(dummy):
                     .replace("$camera$", tokens["$camera$"])
                     .replace("$version$", tokens["$version$"])
                 )
-
+                print(node.base_path)
     # bpy.context.scene.render.filepath = (
     #     renpath.replace("$scene$", tokens["$scene$"])
     #     .replace("$file$", tokens["$file$"])
