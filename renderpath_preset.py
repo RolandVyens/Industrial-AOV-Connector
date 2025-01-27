@@ -22,8 +22,6 @@ def replaceTokens(dummy):
         "$version$": os.path.basename(bpy.data.filepath).split(".")[0][-4:],
     }
 
-    print(bpy.context.view_layer.objects.active.name)
-
     # renpath = bpy.context.scene.render.filepath
 
     IDS_nodeDict = []
@@ -39,7 +37,7 @@ def replaceTokens(dummy):
                     .replace("$camera$", tokens["$camera$"])
                     .replace("$version$", tokens["$version$"])
                 )
-
+                print(node.base_path)
     # bpy.context.scene.render.filepath = (
     #     renpath.replace("$scene$", tokens["$scene$"])
     #     .replace("$file$", tokens["$file$"])
