@@ -91,7 +91,7 @@ def origin_render_path_change_loc():  # 将blender默认输出存到垃圾输出
                 pass  # trash_output is not in the path, nothing to do
 
         # Create the new path using os.path.join
-        new_render_path = os.path.join(current_render_path, "trash_output")
+        new_render_path = os.path.join(current_render_path, "trash_output", "")
 
         bpy.context.scene.render.filepath = new_render_path
 
