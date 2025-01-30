@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (3, 0, 3),  # bump doc_url as well!
+    "version": (3, 0, 4),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -26,6 +26,7 @@ from .handy_functions import (
 from .path_modify_v2 import (
     origin_render_path_change_loc,
     create_final_path,
+    IDS_OT_CloudMode
 )
 from .renderpath_preset import replaceTokens, restoreTokens
 import os
@@ -3533,6 +3534,7 @@ class IDS_PT_OutputPanel_Base:
         col1.operator(IDS_OT_Arr_Tree.bl_idname, icon="MOD_ARRAY")
         # box1 = layout.box()
         col2 = layout.column()
+        col2.operator(IDS_OT_CloudMode.bl_idname, icon="SCREEN_BACK")
         if addon_prefs.Show_QuickDel is True:
             col2.label(text="Output Tools:")
             col2.operator(IDS_OT_Delete_Trash.bl_idname, icon="TRASH")
@@ -3587,6 +3589,7 @@ reg_clss = [
     IDS_OT_Convert_DATALayer,
     IDS_OT_Override_DATAMaTadv,
     IDS_OT_Open_Preference,
+    IDS_OT_CloudMode
 ]
 
 
