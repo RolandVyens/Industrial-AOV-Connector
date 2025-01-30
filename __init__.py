@@ -3136,7 +3136,7 @@ class IDS_OT_Arr_Tree(bpy.types.Operator):
     
 
 class IDS_OT_CloudMode(bpy.types.Operator):
-    bl_idname = "object.initcloudmodeIDS"
+    bl_idname = "compositor.cloudmodeids"
     bl_label = "Renderfarm Prepare"
     bl_description = "Pre-replace all naming presets in order to send to render farm"
     bl_options = {"REGISTER", "UNDO"}
@@ -3544,7 +3544,7 @@ class IDS_PT_OutputPanel_Base:
         col.operator(IDS_OT_Update_Tree.bl_idname, icon="NODE_INSERT_OFF")
         col1 = layout.column()
         col1.operator(IDS_OT_Arr_Tree.bl_idname, icon="MOD_ARRAY")
-        # box1 = layout.box()
+        box1 = layout.box()
         col2 = layout.column()
         col2.operator(IDS_OT_CloudMode.bl_idname, icon="SCREEN_BACK")
         if addon_prefs.Show_QuickDel is True:
