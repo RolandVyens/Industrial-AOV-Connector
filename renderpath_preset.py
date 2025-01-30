@@ -60,16 +60,3 @@ def restoreTokens(dummy):
 
 
 # //RENDER/$scene$/$file$/$viewlayer$/$camera$
-
-
-class IDS_OT_CloudMode(bpy.types.Operator):
-    bl_idname = "object.initcloudmodeIDS"
-    bl_label = "Renderfarm Prepare"
-    bl_description = "Pre-replace all naming presets in order to send to render farm"
-    bl_options = {"REGISTER", "UNDO"}
-
-    def execute(self, context):
-        replaceTokens(bpy.context.scene)
-        self.report({"INFO"}, bpy.app.translations.pgettext("Pre-replaced all naming presets"))
-
-        return {"FINISHED"}

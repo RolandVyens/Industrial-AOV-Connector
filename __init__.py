@@ -26,7 +26,6 @@ from .handy_functions import (
 from .path_modify_v2 import (
     origin_render_path_change_loc,
     create_final_path,
-    IDS_OT_CloudMode
 )
 from .renderpath_preset import replaceTokens, restoreTokens
 import os
@@ -3132,6 +3131,19 @@ class IDS_OT_Arr_Tree(bpy.types.Operator):
         auto_arr_outputnode()
         auto_arr_mathnode()
         self.report({"INFO"}, bpy.app.translations.pgettext("Arrange finished"))
+
+        return {"FINISHED"}
+    
+
+class IDS_OT_CloudMode(bpy.types.Operator):
+    bl_idname = "object.initcloudmodeIDS"
+    bl_label = "Renderfarm Prepare"
+    bl_description = "Pre-replace all naming presets in order to send to render farm"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        replaceTokens(bpy.context.scene)
+        self.report({"INFO"}, bpy.app.translations.pgettext("Pre-replaced all naming presets"))
 
         return {"FINISHED"}
 
