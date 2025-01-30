@@ -3544,14 +3544,14 @@ class IDS_PT_OutputPanel_Base:
         col.operator(IDS_OT_Update_Tree.bl_idname, icon="NODE_INSERT_OFF")
         col1 = layout.column()
         col1.operator(IDS_OT_Arr_Tree.bl_idname, icon="MOD_ARRAY")
-        box1 = layout.box()
+        # box1 = layout.box()
         col2 = layout.column()
-        col2.operator(IDS_OT_CloudMode.bl_idname, icon="SCREEN_BACK")
         if addon_prefs.Show_QuickDel is True:
             col2.label(text="Output Tools:")
             col2.operator(IDS_OT_Delete_Trash.bl_idname, icon="TRASH")
         else:
             col2.label(text="Enable Output Tools in addon setting")
+        col2.operator(IDS_OT_CloudMode.bl_idname, icon="SCREEN_BACK")
 
 
 class IDS_PT_OutputPanel(bpy.types.Panel, IDS_PT_OutputPanel_Base):
