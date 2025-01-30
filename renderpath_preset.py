@@ -63,7 +63,7 @@ def restoreTokens(dummy):
 
 
 class IDS_OT_CloudMode(bpy.types.Operator):
-    bl_idname = "object.initcloudmode"
+    bl_idname = "object.initcloudmodeIDS"
     bl_label = "Renderfarm Prepare"
     bl_description = "Pre-replace all naming presets in order to send to render farm"
     bl_options = {"REGISTER", "UNDO"}
