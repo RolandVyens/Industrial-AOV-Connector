@@ -42,6 +42,8 @@ In some situations, you might want to use Independent DATA Layer. **For example*
 
     Using this function, we can set **pre-made AOV material** as current layer's material override, automatically setup AOV outputs which you've chosen. Now there are 4 AOV outputs you can use: Antialiased Pworld, Pref, Depth/z, and fake DEEP.
 
-4. **DEEP From Image Z**:
+   **EX**: To properly use Pref, turn on **`rest position`** under the desired mesh's shape key section
+
+5. **DEEP From Image Z**:
 
     This uses a 1/z convertion that converts depth to nuke style depth, which can be directly used in `Deep From Image` node, but now because the antialias, it doesn't work on edge. 
