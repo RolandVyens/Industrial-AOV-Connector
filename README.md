@@ -28,6 +28,8 @@ Install on [blender extensions](https://extensions.blender.org/add-ons/industria
 
 Supports material based aovs and light group based aovs, also can do hybrid. Supports multiple Viewlayers from scratch. This plugin can make output nodes automatically for you, intelligently make denoise nodes based on the outputs' type, convert position/normal pass to nuke standard passes (fusion and ae can also use in theory). After version 2.1, the plugin can output hi-res anti-aliased z and p channel, and a fake deep channel.
 
+Join [Discord](https://discord.com/invite/qGyYXUNTnm) for discussion
+
 ---
 **Update Log:**
 2025.1.1: version 3.0.0
@@ -120,5 +122,3 @@ _
 10. 假DEEP支持，可输出在nuke中使用Deep From Image节点一键生成DEEP通道的魔改z通道
 
     Fake DEEP support, this will output a modified Z channel for generating Deep data in nuke with Deep From Image node
-
-Join Discord for discussion: https://discord.com/invite/qGyYXUNTnm
