@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (3, 0, 4),  # bump doc_url as well!
+    "version": (3, 0, 5),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -1796,7 +1796,8 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
                 slot.name = slot.name.replace("$$aoP", "")
                 if addon_prefs.Use_Old_Layer_Naming is False:
                     slot.name = slot.name.replace("Position", "Pworld")
-                    slot.name = slot.name.replace("Depth", "z")
+                    if slot.name != "Artistic_Depth":
+                        slot.name = slot.name.replace("Depth", "z")
                 slot.name = slot.name.replace("Denoising z", "Artistic_Depth")
 
 
@@ -3133,7 +3134,7 @@ class IDS_OT_Arr_Tree(bpy.types.Operator):
         self.report({"INFO"}, bpy.app.translations.pgettext("Arrange finished"))
 
         return {"FINISHED"}
-    
+
 
 class IDS_OT_CloudMode(bpy.types.Operator):
     bl_idname = "compositor.cloudmodeids"
@@ -3143,7 +3144,9 @@ class IDS_OT_CloudMode(bpy.types.Operator):
 
     def execute(self, context):
         replaceTokens(bpy.context.scene)
-        self.report({"INFO"}, bpy.app.translations.pgettext("Pre-replaced all naming presets"))
+        self.report(
+            {"INFO"}, bpy.app.translations.pgettext("Pre-replaced all naming presets")
+        )
 
         return {"FINISHED"}
 
@@ -3601,7 +3604,7 @@ reg_clss = [
     IDS_OT_Convert_DATALayer,
     IDS_OT_Override_DATAMaTadv,
     IDS_OT_Open_Preference,
-    IDS_OT_CloudMode
+    IDS_OT_CloudMode,
 ]
 
 
