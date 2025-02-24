@@ -12,7 +12,7 @@ Install on [blender extensions](https://extensions.blender.org/add-ons/industria
 
 ======================
 
-### [**`Documentation`**](https://github.com/RolandVyens/Industrial-AOV-Connector/blob/main/manual/00_catalogue.md) [**`文档`**](https://www.bilibili.com/read/cv40303823/)
+### [**`Documentation`**](https://github.com/RolandVyens/Industrial-AOV-Connector/blob/main/manual/00_catalogue.md) [**`文档`**](https://www.bilibili.com/read/cv40303823/) [**`French document by Spirou4D`**](https://github.com/RolandVyens/Industrial-AOV-Connector/blob/main/manual/Industrial-AOV-Connector_manual_French.pdf)
 
 **插件面板位置：属性面板→视图层**
 
