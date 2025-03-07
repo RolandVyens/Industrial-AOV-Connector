@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (3, 0, 5),  # bump doc_url as well!
+    "version": (3, 0, 6),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -385,14 +385,14 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
     renderlayer_node_y = []
     viewlayers = arrange_list(viewlayers_raw)
     for view_layer in viewlayers:
-        #        for node in bpy.context.scene.node_tree.nodes:
-        #            if node.type == "R_LAYERS" and node.layer == view_layer:
-        node = bpy.context.scene.node_tree.nodes.get(f"{view_layer}")
-        node.location = 0, renderlayer_node_position
-        renderlayer_node_y.append(renderlayer_node_position)
-        renderlayer_node_position -= (
-            node.dimensions.y + 120
-        ) * addon_prefs.Arrange_Scale_Param
+        for node in bpy.context.scene.node_tree.nodes:
+            if node.type == "R_LAYERS" and node.layer == view_layer:
+            # node = bpy.context.scene.node_tree.nodes.get(f"{view_layer}")
+                node.location = 0, renderlayer_node_position
+                renderlayer_node_y.append(renderlayer_node_position)
+                renderlayer_node_position -= (
+                    node.dimensions.y + 120
+                ) * addon_prefs.Arrange_Scale_Param
 
 
 def make_tree_denoise():  # 主要功能函数之建立节点
