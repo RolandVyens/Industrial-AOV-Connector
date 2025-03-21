@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (3, 0, 5),  # bump doc_url as well!
+    "version": (3, 0, 6),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -3098,6 +3098,7 @@ class IDS_OT_Update_Tree(bpy.types.Operator):
             update_data_sample()
         else:
             update_connect()
+        frame_DATA()
         if bpy.context.scene.IDS_Autoarr is True:
             all_aeras = bpy.context.screen.areas[:]
             area_types = []
@@ -3109,8 +3110,6 @@ class IDS_OT_Update_Tree(bpy.types.Operator):
                 auto_arr_denoisenode()
                 auto_arr_outputnode()
                 auto_arr_mathnode()
-        if bpy.context.view_layer.name[:7] == "-_-exP_":
-            frame_DATA()
         auto_rename()
         origin_render_path_change_loc()
         self.report(
@@ -3127,6 +3126,7 @@ class IDS_OT_Arr_Tree(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
+        frame_DATA()
         auto_arrange_viewlayer()
         auto_arr_denoisenode()
         auto_arr_outputnode()
