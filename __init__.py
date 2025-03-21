@@ -3021,6 +3021,22 @@ def frame_DATA():
                 node.parent = FrameNode
 
 
+def arrange_All():
+    all_aeras = bpy.context.screen.areas[:]
+    area_types = []
+    for i in all_aeras:
+        area_types.append(i.ui_type)
+    if bpy.context.scene.IDS_Autoarr is False or "CompositorNodeTree" not in area_types:
+        frame_DATA()
+    else:
+        bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+        frame_DATA()
+        auto_arrange_viewlayer()
+        auto_arr_denoisenode()
+        auto_arr_outputnode()
+        auto_arr_mathnode()
+
+
 """以下为操作符"""
 
 
@@ -3064,18 +3080,7 @@ class IDS_OT_Make_Tree(bpy.types.Operator):
             auto_data_sample()
         else:
             auto_connect()
-        if bpy.context.scene.IDS_Autoarr is True:
-            all_aeras = bpy.context.screen.areas[:]
-            area_types = []
-            for i in all_aeras:
-                area_types.append(i.ui_type)
-            if "CompositorNodeTree" in area_types:
-                bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
-                auto_arrange_viewlayer()
-                auto_arr_denoisenode()
-                auto_arr_outputnode()
-                auto_arr_mathnode()
-        frame_DATA()
+        arrange_All()
         auto_rename()
         origin_render_path_change_loc()
         self.report({"INFO"}, bpy.app.translations.pgettext("All Outputs Updated"))
@@ -3098,19 +3103,7 @@ class IDS_OT_Update_Tree(bpy.types.Operator):
             update_data_sample()
         else:
             update_connect()
-        frame_DATA()
-        if bpy.context.scene.IDS_Autoarr is True:
-            all_aeras = bpy.context.screen.areas[:]
-            area_types = []
-            for i in all_aeras:
-                area_types.append(i.ui_type)
-            if "CompositorNodeTree" in area_types:
-                bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
-                frame_DATA()
-                auto_arrange_viewlayer()
-                auto_arr_denoisenode()
-                auto_arr_outputnode()
-                auto_arr_mathnode()
+        arrange_All()
         auto_rename()
         origin_render_path_change_loc()
         self.report(
