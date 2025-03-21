@@ -3106,6 +3106,7 @@ class IDS_OT_Update_Tree(bpy.types.Operator):
                 area_types.append(i.ui_type)
             if "CompositorNodeTree" in area_types:
                 bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+                frame_DATA()
                 auto_arrange_viewlayer()
                 auto_arr_denoisenode()
                 auto_arr_outputnode()
