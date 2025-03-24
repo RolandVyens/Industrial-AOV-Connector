@@ -29,5 +29,4 @@ Finally, shuffle the processd rgba back to depth channel:
 
 Now you just plug in the deep from image node, you get the deep layer. 
 
-
 Have some fun!
