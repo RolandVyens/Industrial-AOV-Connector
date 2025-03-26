@@ -69,6 +69,8 @@ _
 
 ![屏幕截图 2024-04-29 142447](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/510bc1b6-f692-4a91-8bb3-6bdf75a7ac29)
 
+<img width="1920" alt="屏幕截图 2025-03-26 234126" src="https://github.com/user-attachments/assets/947535fd-3720-4f4d-997d-efdcd4a4c7c4" />
+
 **功能** **Features** **:**
 
 1. 现阶段仅支持exr输出。可以选择将颜色和数据分开输出成两份文件，或将Cryptomatte再分开输出成三份文件，或者合并输出。分开输出时可以使用小体积的16位exr输出颜色aov（实用主义至上，颜色aov没有用32位的必要，当然你也可以选择用32位）
