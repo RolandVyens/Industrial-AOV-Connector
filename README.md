@@ -117,10 +117,14 @@ _
 
    ![artistic depth](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/4dfc2710-e112-4b63-8a54-0c1f57aec5e8)
 
-9. 基于视图层材质覆写的精确Depth和Position通道，与RGBA逐像素对应
+9. 基于视图层材质覆写的精确Depth和Pworld/Pref通道，与RGBA逐像素对应
 
-    Accurate Depth and Position pass based on viewlayer material override, align with RGBA pixels
+    Accurate Depth and Pworld/Pref pass based on viewlayer material override, align with RGBA pixels
 
 10. 假DEEP支持，可输出在nuke中使用Deep From Image节点一键生成DEEP通道的魔改z通道
 
     Fake DEEP support, this will output a modified Z channel for generating Deep data in nuke with Deep From Image node
+
+11. 文件名tag功能，可以根据条件自动替换文件名
+
+    File name prefix, which can be automatically replaced according to given conditions. 
