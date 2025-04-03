@@ -16,13 +16,10 @@ To use fake deep for deep compositing, there do have some limitations when rende
 
 If you already familier with those things, we can move on to the actual performing.
 
-You need 1 gizmo, the [color smear](https://github.com/RichFrazer/colour-smear-for-Nuke/blob/master/colour-smear.nk). This node will help erode out the fake deep's edge pixels, remove the dramatic value change because of antialias when rendering. 
-
 First, Shuffle the fake deep and your beauty's alpha channel into rgba like this:
 <img width="681" alt="屏幕截图 2025-03-24 235033" src="https://github.com/user-attachments/assets/cabc27ab-516c-4aee-b38c-a46d9132cdff" />
 
-Then you plugin the color smear, remove all bright edges (depending on the distance, you may need to adjust the exposure of your viewer):
-<img width="1033" alt="屏幕截图 2025-03-24 235200" src="https://github.com/user-attachments/assets/7713194e-3547-4e4f-8de3-337ff1e989ed" />
+Then you just plugin a premult node, white edges should go away.
 
 Finally, shuffle the processd rgba back to depth channel:
 <img width="686" alt="屏幕截图 2025-03-24 235404" src="https://github.com/user-attachments/assets/249b9baa-0936-4c98-b2df-18ed31fc60ed" />
