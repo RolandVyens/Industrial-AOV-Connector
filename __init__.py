@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (3, 0, 6),  # bump doc_url as well!
+    "version": (3, 1, 0),  # bump doc_url as well!
     "blender": (3, 3, 0),
     "location": "Viewlayer tab in properties panel.",
     "description": "Auto generate outputs for advanced compositing.",
@@ -22,6 +22,7 @@ from .handy_functions import (
     IDS_OT_Open_Preference,
     auto_data_sample,
     update_data_sample,
+    auto_set_material_aov,
 )
 from .path_modify_v2 import (
     origin_render_path_change_loc,
@@ -443,7 +444,10 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         FO_RGB_node.file_slots.new(f"{input}")
                     # FO_RGB_node.hide = True
 
-                    if bpy.context.scene.IDS_UsedN is True:
+                    if (
+                        bpy.context.scene.IDS_UsedN is True
+                        and bpy.context.scene.render.engine == "CYCLES"
+                    ):
                         if addon_prefs.Denoise_Col is True:
                             if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
                                 for socket in viewlayer_full.get(f"{view_layer}Color"):
@@ -606,7 +610,10 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         FO_RGB_node.file_slots.new(f"{input}")
                     # FO_RGB_node.hide = True
 
-                    if bpy.context.scene.IDS_UsedN is True:
+                    if (
+                        bpy.context.scene.IDS_UsedN is True
+                        and bpy.context.scene.render.engine == "CYCLES"
+                    ):
                         if addon_prefs.Denoise_Col is True:
                             if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
                                 for socket in viewlayer_full.get(f"{view_layer}Color"):
@@ -1169,7 +1176,10 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     FO_RGB_node.file_slots.new(f"{input}")
                 # FO_RGB_node.hide = True
 
-                if bpy.context.scene.IDS_UsedN is True:
+                if (
+                    bpy.context.scene.IDS_UsedN is True
+                    and bpy.context.scene.render.engine == "CYCLES"
+                ):
                     if addon_prefs.Denoise_Col is True:
                         if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
                             for socket in viewlayer_full.get(f"{view_layer}Color"):
@@ -1317,7 +1327,10 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     FO_RGB_node.file_slots.new(f"{input}")
                 # FO_RGB_node.hide = True
 
-                if bpy.context.scene.IDS_UsedN is True:
+                if (
+                    bpy.context.scene.IDS_UsedN is True
+                    and bpy.context.scene.render.engine == "CYCLES"
+                ):
                     if addon_prefs.Denoise_Col is True:
                         if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
                             for socket in viewlayer_full.get(f"{view_layer}Color"):
@@ -2063,7 +2076,10 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                         FO_RGB_node.file_slots.new(f"{input}")
                     # FO_RGB_node.hide = True
 
-                    if bpy.context.scene.IDS_UsedN is True:
+                    if (
+                        bpy.context.scene.IDS_UsedN is True
+                        and bpy.context.scene.render.engine == "CYCLES"
+                    ):
                         if addon_prefs.Denoise_Col is True:
                             if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
                                 for socket in viewlayer_full.get(f"{view_layer}Color"):
@@ -2572,7 +2588,10 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                     FO_RGB_node.file_slots.new(f"{input}")
                 # FO_RGB_node.hide = True
 
-                if bpy.context.scene.IDS_UsedN is True:
+                if (
+                    bpy.context.scene.IDS_UsedN is True
+                    and bpy.context.scene.render.engine == "CYCLES"
+                ):
                     if addon_prefs.Denoise_Col is True:
                         if viewlayer_full.get(f"{view_layer}Color") != ["Image"]:
                             for socket in viewlayer_full.get(f"{view_layer}Color"):
@@ -3432,6 +3451,18 @@ class IDS_OT_Draw_DataMenu(Operator):
         return {"FINISHED"}
 
 
+class IDS_OT_Set_Material_AOV(Operator):
+    bl_idname = "scene.setmaterialaov"
+    bl_label = "Auto Set Shader AOV"
+    bl_description = "Auto gather and set shader AOV for all viewlayers"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        auto_set_material_aov()
+
+        return {"FINISHED"}
+
+
 """以下为控制面板"""
 
 
@@ -3541,6 +3572,7 @@ class IDS_PT_OutputPanel_Base:
         col.operator(IDS_OT_Update_Tree.bl_idname, icon="NODE_INSERT_OFF")
         col1 = layout.column()
         col1.operator(IDS_OT_Arr_Tree.bl_idname, icon="MOD_ARRAY")
+        col1.operator(IDS_OT_Set_Material_AOV.bl_idname, icon="MATERIAL")
         # box1 = layout.box()
         col2 = layout.column()
         if addon_prefs.Show_QuickDel is True:
@@ -3599,6 +3631,7 @@ reg_clss = [
     IDS_OT_Override_DATAMaTadv,
     IDS_OT_Open_Preference,
     IDS_OT_CloudMode,
+    IDS_OT_Set_Material_AOV,
 ]
 
 
