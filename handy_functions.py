@@ -159,3 +159,30 @@ def update_data_sample():
             viewlayer.samples = addon_prefs.Custom_Data_Sample
 
     return {"FINISHED"}
+
+
+def auto_set_material_aov():
+    aov_names = set()
+    for material in bpy.data.materials:
+        if material.use_nodes and material.node_tree:
+            for node in material.node_tree.nodes:
+                if node.type == "OUTPUT_AOV":
+                    if (
+                        node.name != ""
+                        and node.name[-5:] != "$$aoP"
+                        and node.name != "Pref"
+                    ):
+                        aov_names.add(node.name)
+    real_aov_names = list(aov_names)
+    for view_layer in bpy.context.scene.view_layers:
+        if view_layer.name[:7] != "-_-exP_" and "_DATA" not in view_layer.name:
+            existing_aov_names = {aov.name for aov in view_layer.aovs}
+            for aov_name in existing_aov_names:
+                if aov_name not in real_aov_names:
+                    view_layer.aovs.remove(view_layer.aovs[aov_name])
+            for aov_name in real_aov_names:
+                if aov_name not in existing_aov_names:
+                    new_aov = view_layer.aovs.add()
+                    new_aov.name = aov_name
+
+    return {"FINISHED"}
