@@ -6,6 +6,8 @@ from bpy.app.handlers import persistent
 # https://github.com/RolandVyens/renderpath-prefix
 
 
+from .handy_functions import is_compositing_enabled, get_compositor_node_tree
+
 @persistent
 def replaceTokens(dummy):
     # global renpath
@@ -26,8 +28,9 @@ def replaceTokens(dummy):
 
     IDS_nodeDict = []
     # compositor nodes
-    if bpy.context.scene.use_nodes:
-        for node in bpy.context.scene.node_tree.nodes:
+    if is_compositing_enabled(bpy.context.scene):
+        node_tree = get_compositor_node_tree(bpy.context.scene)
+        for node in node_tree.nodes:
             if node.type == "OUTPUT_FILE":
                 IDS_nodeDict.append([node, node.base_path])
                 node.base_path = (

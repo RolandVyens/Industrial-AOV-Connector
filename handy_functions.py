@@ -186,3 +186,24 @@ def auto_set_material_aov():
                     new_aov.name = aov_name
 
     return {"FINISHED"}
+
+
+def get_compositor_node_tree(scene):
+    if bpy.app.version >= (5, 0, 0):
+        return scene.compositing_node_group
+    else:
+        return scene.node_tree
+
+
+def is_compositing_enabled(scene):
+    if bpy.app.version >= (5, 0, 0):
+        return scene.render.use_compositing
+    else:
+        return scene.use_nodes
+
+
+def enable_compositing(scene):
+    if bpy.app.version >= (5, 0, 0):
+        scene.render.use_compositing = True
+    else:
+        scene.use_nodes = True

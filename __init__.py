@@ -23,6 +23,9 @@ from .handy_functions import (
     auto_data_sample,
     update_data_sample,
     auto_set_material_aov,
+    get_compositor_node_tree,
+    is_compositing_enabled,
+    enable_compositing,
 )
 from .path_modify_v2 import (
     origin_render_path_change_loc,
@@ -388,7 +391,8 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
     for view_layer in viewlayers:
         #        for node in bpy.context.scene.node_tree.nodes:
         #            if node.type == "R_LAYERS" and node.layer == view_layer:
-        node = bpy.context.scene.node_tree.nodes.get(f"{view_layer}")
+        node_tree = get_compositor_node_tree(bpy.context.scene)
+        node = node_tree.nodes.get(f"{view_layer}")
         node.location = 0, renderlayer_node_position
         renderlayer_node_y.append(renderlayer_node_position)
         renderlayer_node_position -= (
@@ -402,7 +406,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
     current_render_path = bpy.context.scene.render.filepath
     viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
-    tree = bpy.context.scene.node_tree
+    tree = get_compositor_node_tree(bpy.context.scene)
 
     material_aovs = set()
     for scene in bpy.data.scenes:
@@ -413,16 +417,16 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                 material_aovs.add(aov.name)
 
     if bpy.context.scene.IDS_DelNodE is True:
-        for node in bpy.context.scene.node_tree.nodes:
+        for node in tree.nodes:
             if node.type != "R_LAYERS":
-                bpy.context.scene.node_tree.nodes.remove(node)
+                tree.nodes.remove(node)
 
     if (
         bpy.context.scene.IDS_ConfIg == "OPTION1"
         or bpy.context.scene.IDS_AdvMode is True
     ):  # config 1
         for view_layer in viewlayers:
-            for node in bpy.context.scene.node_tree.nodes:
+            for node in tree.nodes:
                 if node.type == "R_LAYERS" and node.layer == view_layer:
                     FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
                     FO_RGB_node.name = f"{view_layer}--RgBA"
@@ -593,7 +597,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
 
     elif bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2
         for view_layer in viewlayers:
-            for node in bpy.context.scene.node_tree.nodes:
+            for node in tree.nodes:
                 if node.type == "R_LAYERS" and node.layer == view_layer:
                     FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
                     FO_RGB_node.name = f"{view_layer}--AlL"
@@ -751,7 +755,8 @@ def auto_connect():  # 主要功能函数之建立连接
                 bpy.data.scenes[str(scene.name)].view_layers[str(layer.name)].aovs
             ):
                 material_aovs.add(aov.name)
-    for node in bpy.context.scene.node_tree.nodes:  # get denoise nodes
+    node_tree = get_compositor_node_tree(bpy.context.scene)
+    for node in node_tree.nodes:  # get denoise nodes
         if node.type == "DENOISE":
             denoise_nodes_all.append(node.name)
 
@@ -766,6 +771,7 @@ def auto_connect():  # 主要功能函数之建立连接
     # print(denoise_nodes)
 
     scene = bpy.context.scene
+    node_tree = get_compositor_node_tree(scene)
     if (
         bpy.context.scene.IDS_ConfIg == "OPTION2"
         and bpy.context.scene.IDS_AdvMode is False
@@ -773,164 +779,164 @@ def auto_connect():  # 主要功能函数之建立连接
         for view_layer in viewlayers:
             # connect denoise passes
             for node in denoise_nodes[view_layer]:
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
                 )
                 if bpy.context.scene.render.engine == "CYCLES":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[
                             "Denoising Normal"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
                             "Normal"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[
                             "Denoising Albedo"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
                             "Albedo"
                         ],
                     )
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
-                    scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
+                    node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
                 )
             # connect non denoise passes
             for node in set(viewlayer_full[f"{view_layer}Color"]) - set(
                 denoise_nodes[view_layer]
             ):
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
                 )
             if (
                 viewlayer_full[f"{view_layer}Crypto"]
                 or viewlayer_full[f"{view_layer}Data"]
             ):
                 for node in viewlayer_full[f"{view_layer}Crypto"]:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
                     )
                 for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                     viewlayer_full[f"{view_layer}Vector"]
                 ):
                     if node != "Vector" and node != "Denoising Depth":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[f"{view_layer}--AlL"].inputs[
                                 f"{node}"
                             ],
                         ),
                     elif node == "Vector" and node != "Denoising Depth":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].inputs["Image"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].outputs["Image"],
-                            scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[
+                            node_tree.nodes[f"{view_layer}--AlL"].inputs[
                                 f"{node}"
                             ],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Green"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Blue"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Blue"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Red"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Blue"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Alpha"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Alpha"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Green"],
                         ),
                     elif node == "Denoising Depth":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[
                                 f"{view_layer}--Denoising Depth_Normalize"
                             ].inputs["Value"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Denoising Depth_Normalize"
                             ].outputs["Value"],
-                            scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[
+                            node_tree.nodes[f"{view_layer}--AlL"].inputs[
                                 f"{node}"
                             ],
                         ),
             if viewlayer_full[f"{view_layer}Vector"]:
                 for node in viewlayer_full[f"{view_layer}Vector"]:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
                             "Vector"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
                             "Vector"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
                     ),
                     if node == "Normal" or "Position":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Break"
                             ].outputs["X"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["X"],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Break"
                             ].outputs["Z"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["Y"],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Break"
                             ].outputs["Y"],
-                            scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[
+                            node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[
                                 0
                             ],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[
                                 0
                             ],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["Z"],
                         )
@@ -942,191 +948,191 @@ def auto_connect():  # 主要功能函数之建立连接
         for view_layer in viewlayers:
             # connect denoise passes
             for node in denoise_nodes[view_layer]:
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
                 )
                 if bpy.context.scene.render.engine == "CYCLES":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[
                             "Denoising Normal"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
                             "Normal"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[
                             "Denoising Albedo"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
                             "Albedo"
                         ],
                     )
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
-                    scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
+                    node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
                 )
             # connect non denoise passes
             for node in set(viewlayer_full[f"{view_layer}Color"]) - set(
                 denoise_nodes[view_layer]
             ):
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
                 )
             if (
                 viewlayer_full.get(f"{view_layer}Crypto")
                 and not bpy.context.scene.IDS_SepCryptO
             ) or viewlayer_full.get(f"{view_layer}Data"):
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                    scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                    node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
                 )
                 for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                     viewlayer_full[f"{view_layer}Vector"]
                 ):
                     if node != "Vector" and node != "Denoising Depth":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
                             ],
                         ),
                     elif node == "Vector" and node != "Denoising Depth":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].inputs["Image"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].outputs["Image"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
                             ],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Green"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Blue"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Blue"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Red"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Blue"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Alpha"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Alpha"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Green"],
                         ),
                     elif node == "Denoising Depth":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[
                                 f"{view_layer}--Denoising Depth_Normalize"
                             ].inputs["Value"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Denoising Depth_Normalize"
                             ].outputs["Value"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
                             ],
                         ),
             if viewlayer_full[f"{view_layer}Vector"]:
                 for node in viewlayer_full[f"{view_layer}Vector"]:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
                             "Vector"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
                             "Vector"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     ),
                     if node == "Normal" or "Position":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Break"
                             ].outputs["X"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["X"],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Break"
                             ].outputs["Z"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["Y"],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Break"
                             ].outputs["Y"],
-                            scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[
+                            node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[
                                 0
                             ],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[
                                 0
                             ],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["Z"],
                         )
             if viewlayer_full.get(f"{view_layer}Crypto"):
                 for node in viewlayer_full[f"{view_layer}Crypto"]:
                     if bpy.context.scene.IDS_SepCryptO is False:
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 "Image"
                             ],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
                             ],
                         )
                     else:
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                            scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                            node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                                 "Image"
                             ],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                                 f"{node}"
                             ],
                         )
@@ -1138,7 +1144,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
     current_render_path = bpy.context.scene.render.filepath
     viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
-    tree = bpy.context.scene.node_tree
+    tree = get_compositor_node_tree(bpy.context.scene)
     view_layer = bpy.context.view_layer.name
     material_aovs = set()
     for scene in bpy.data.scenes:
@@ -1148,15 +1154,15 @@ def update_tree_denoise():  # 新建当前视图层的节点
             ):
                 material_aovs.add(aov.name)
 
-    for node in bpy.context.scene.node_tree.nodes:
+    for node in tree.nodes:
         if node.type != "R_LAYERS" and node.name[: node.name.rfind("--")] == view_layer:
-            bpy.context.scene.node_tree.nodes.remove(node)
+            tree.nodes.remove(node)
 
     if (
         bpy.context.scene.IDS_ConfIg == "OPTION1"
         or bpy.context.scene.IDS_AdvMode is True
     ):  # config 1
-        for node in bpy.context.scene.node_tree.nodes:
+        for node in tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
                 FO_RGB_node.name = f"{view_layer}--RgBA"
@@ -1310,7 +1316,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     # FO_Crypto_node.hide = True
 
     elif bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2
-        for node in bpy.context.scene.node_tree.nodes:
+        for node in tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
                 FO_RGB_node.name = f"{view_layer}--AlL"
@@ -1455,7 +1461,8 @@ def update_connect():  # 新建当前视图层的连接
                 bpy.data.scenes[str(scene.name)].view_layers[str(layer.name)].aovs
             ):
                 material_aovs.add(aov.name)
-    for node in bpy.context.scene.node_tree.nodes:  # get denoise nodes
+    node_tree = get_compositor_node_tree(bpy.context.scene)
+    for node in node_tree.nodes:  # get denoise nodes
         if node.type == "DENOISE":
             denoise_nodes_all.append(node.name)
 
@@ -1476,143 +1483,143 @@ def update_connect():  # 新建当前视图层的连接
     ):  # config 2
         # connect denoise passes
         for node in denoise_nodes[view_layer]:
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
             )
             if bpy.context.scene.render.engine == "CYCLES":
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs["Denoising Normal"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Normal"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs["Denoising Normal"],
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Normal"],
                 )
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs["Denoising Albedo"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Albedo"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs["Denoising Albedo"],
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Albedo"],
                 )
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
-                scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
+                node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
             )
         # connect non denoise passes
         for node in set(viewlayer_full[f"{view_layer}Color"]) - set(
             denoise_nodes[view_layer]
         ):
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
             )
         if viewlayer_full[f"{view_layer}Crypto"] or viewlayer_full[f"{view_layer}Data"]:
             for node in viewlayer_full[f"{view_layer}Crypto"]:
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
                 )
             for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                 viewlayer_full[f"{view_layer}Vector"]
             ):
                 if node != "Vector" and node != "Denoising Depth":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
                     ),
                 elif node == "Vector" and node != "Denoising Depth":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].inputs[
                             "Image"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[
+                    node_tree.links.new(
+                        node_tree.nodes[
                             f"{view_layer}--Vector_VectorOut"
                         ].outputs["Image"],
-                        scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Green"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Blue"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Blue"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Red"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Blue"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Alpha"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Alpha"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Green"
                         ],
                     ),
                 elif node == "Denoising Depth":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[
                             f"{view_layer}--Denoising Depth_Normalize"
                         ].inputs["Value"],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[
+                    node_tree.links.new(
+                        node_tree.nodes[
                             f"{view_layer}--Denoising Depth_Normalize"
                         ].outputs["Value"],
-                        scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
                     ),
         if viewlayer_full[f"{view_layer}Vector"]:
             for node in viewlayer_full[f"{view_layer}Vector"]:
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
                         "Vector"
                     ],
                 ),
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
                         "Vector"
                     ],
-                    scene.node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--AlL"].inputs[f"{node}"],
                 ),
                 if node == "Normal" or "Position":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
                             "X"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
                             "X"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
                             "Z"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
                             "Y"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
                             "Y"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[0],
+                        node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[0],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[0],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[0],
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
                             "Z"
                         ],
                     )
@@ -1623,169 +1630,169 @@ def update_connect():  # 新建当前视图层的连接
     ):
         # connect denoise passes
         for node in denoise_nodes[view_layer]:
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
             )
             if bpy.context.scene.render.engine == "CYCLES":
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs["Denoising Normal"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Normal"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs["Denoising Normal"],
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Normal"],
                 )
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs["Denoising Albedo"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Albedo"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs["Denoising Albedo"],
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Albedo"],
                 )
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
-                scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
+                node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
             )
         # connect non denoise passes
         for node in set(viewlayer_full[f"{view_layer}Color"]) - set(
             denoise_nodes[view_layer]
         ):
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
             )
         if (
             viewlayer_full.get(f"{view_layer}Crypto")
             and not bpy.context.scene.IDS_SepCryptO
         ) or viewlayer_full.get(f"{view_layer}Data"):
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
             )
             for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                 viewlayer_full[f"{view_layer}Vector"]
             ):
                 if node != "Vector" and node != "Denoising Depth":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     ),
                 elif node == "Vector" and node != "Denoising Depth":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].inputs[
                             "Image"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[
+                    node_tree.links.new(
+                        node_tree.nodes[
                             f"{view_layer}--Vector_VectorOut"
                         ].outputs["Image"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Green"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Blue"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Blue"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Red"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Blue"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Alpha"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Alpha"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Green"
                         ],
                     ),
                 elif node == "Denoising Depth":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[
                             f"{view_layer}--Denoising Depth_Normalize"
                         ].inputs["Value"],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[
+                    node_tree.links.new(
+                        node_tree.nodes[
                             f"{view_layer}--Denoising Depth_Normalize"
                         ].outputs["Value"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     ),
         if viewlayer_full[f"{view_layer}Vector"]:
             for node in viewlayer_full[f"{view_layer}Vector"]:
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
                         "Vector"
                     ],
                 ),
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
                         "Vector"
                     ],
-                    scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                 ),
                 if node == "Normal" or "Position":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
                             "X"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
                             "X"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
                             "Z"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
                             "Y"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
                             "Y"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[0],
+                        node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[0],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[0],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[0],
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
                             "Z"
                         ],
                     )
         if viewlayer_full.get(f"{view_layer}Crypto"):
             for node in viewlayer_full[f"{view_layer}Crypto"]:
                 if bpy.context.scene.IDS_SepCryptO is False:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     )
                 else:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                             "Image"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                             f"{node}"
                         ],
                     )
@@ -1798,7 +1805,8 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
     # for view_layer in bpy.context.scene.view_layers:
     #     viewlayers.append(view_layer.name)
     # for view_layer in viewlayers:
-    for node in bpy.context.scene.node_tree.nodes:
+    node_tree = get_compositor_node_tree(bpy.context.scene)
+    for node in node_tree.nodes:
         # if node.type == "R_LAYERS" and node.layer == view_layer:
         #     for node1 in bpy.context.scene.node_tree.nodes:
         if node.type == "OUTPUT_FILE":
@@ -1827,10 +1835,11 @@ def auto_arr_outputnode():  # 排列输出节点
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.append(view_layer.name)
     for view_layer in viewlayers:
-        for node in bpy.context.scene.node_tree.nodes:
+        node_tree = get_compositor_node_tree(bpy.context.scene)
+        for node in node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 VIEWLAYER_location_y[node.name] = node.location.y
-                for node1 in bpy.context.scene.node_tree.nodes:
+                for node1 in node_tree.nodes:
                     if (
                         node1.type == "OUTPUT_FILE"
                         and node1.name[: node1.name.rfind("--")] == node.layer
@@ -1856,7 +1865,7 @@ def auto_arr_outputnode():  # 排列输出节点
     # print(RGBA_dimension_y)
     # print(RGBA_location_y)
     # print(RGBA_location_y.get(node.name[: node.name.rfind("_")] + "_RgBA"))
-    for node in bpy.context.scene.node_tree.nodes:
+    for node in node_tree.nodes:
         if node.type == "OUTPUT_FILE" and "DaTA" in node.name:
             if node.name[: node.name.rfind("--")] + "--RgBA" in RGBA_location_y:
                 node.location = 1200, (
@@ -1875,7 +1884,7 @@ def auto_arr_outputnode():  # 排列输出节点
             DATA_dimension_y[node.name] = (
                 node.dimensions.y * addon_prefs.Arrange_Scale_Param
             )
-    for node in bpy.context.scene.node_tree.nodes:
+    for node in node_tree.nodes:
         if node.type == "OUTPUT_FILE" and "CryptoMaTTe" in node.name:
             if node.name[: node.name.rfind("--")] + "--DaTA" in DATA_location_y:
                 node.location = 1200, (
@@ -1910,9 +1919,10 @@ def auto_arr_denoisenode():  # 排列降噪节点
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.append(view_layer.name)
     for view_layer in viewlayers:
-        for node in bpy.context.scene.node_tree.nodes:
+        node_tree = get_compositor_node_tree(bpy.context.scene)
+        for node in node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
-                for node1 in bpy.context.scene.node_tree.nodes:
+                for node1 in node_tree.nodes:
                     if (
                         node1.type == "DENOISE"
                         and node1.name[: node1.name.rfind("--")] == node.layer
@@ -1939,9 +1949,10 @@ def auto_arr_mathnode():  # 排列数学运算节点
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.append(view_layer.name)
     for view_layer in viewlayers:
-        for node in bpy.context.scene.node_tree.nodes:
+        node_tree = get_compositor_node_tree(bpy.context.scene)
+        for node in node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
-                for node6 in reversed(bpy.context.scene.node_tree.nodes):
+                for node6 in reversed(node_tree.nodes):
                     if node6.name == f"{view_layer}--Depth_AA_Re":
                         node6.location = 660, (
                             node.location.y
@@ -1955,7 +1966,7 @@ def auto_arr_mathnode():  # 排列数学运算节点
                         MA_dimension_y += (
                             node6.dimensions.y + 20
                         ) * addon_prefs.Arrange_Scale_Param
-                for node3 in reversed(bpy.context.scene.node_tree.nodes):
+                for node3 in reversed(node_tree.nodes):
                     if (
                         node3.name[: node3.name.rfind("--")] == node.layer
                         and node3.type == "SEPARATE_COLOR"
@@ -1966,7 +1977,7 @@ def auto_arr_mathnode():  # 排列数学运算节点
                             + node3.dimensions.y * addon_prefs.Arrange_Scale_Param
                             + MA_dimension_y
                         )
-                        for node4 in reversed(bpy.context.scene.node_tree.nodes):
+                        for node4 in reversed(node_tree.nodes):
                             if (
                                 node4.name[: node4.name.rfind("--")] == node.layer
                                 and node4.type == "COMBINE_COLOR"
@@ -1978,7 +1989,7 @@ def auto_arr_mathnode():  # 排列数学运算节点
                         MA_dimension_y += (
                             node3.dimensions.y + 20
                         ) * addon_prefs.Arrange_Scale_Param
-                for node1 in reversed(bpy.context.scene.node_tree.nodes):
+                for node1 in reversed(node_tree.nodes):
                     if (
                         node1.name[: node1.name.rfind("--")] == node.layer
                         and node1.type == "SEPARATE_XYZ"
@@ -1989,7 +2000,7 @@ def auto_arr_mathnode():  # 排列数学运算节点
                             + node1.dimensions.y * addon_prefs.Arrange_Scale_Param
                             + MA_dimension_y
                         )
-                        for node2 in reversed(bpy.context.scene.node_tree.nodes):
+                        for node2 in reversed(node_tree.nodes):
                             if (
                                 node2.name[: node2.name.rfind("--")] == node.layer
                                 and node2.type == "MATH"
@@ -2018,7 +2029,7 @@ def auto_arr_mathnode():  # 排列数学运算节点
                         MA_dimension_y += (
                             node1.dimensions.y + 20
                         ) * addon_prefs.Arrange_Scale_Param
-                for node5 in reversed(bpy.context.scene.node_tree.nodes):
+                for node5 in reversed(node_tree.nodes):
                     if (
                         node5.name[: node5.name.rfind("--")] == node.layer
                         and node5.type == "NORMALIZE"
@@ -2042,7 +2053,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
     current_render_path = bpy.context.scene.render.filepath
     viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
-    tree = bpy.context.scene.node_tree
+    tree = get_compositor_node_tree(bpy.context.scene)
 
     material_aovs = set()
     for scene in bpy.data.scenes:
@@ -2053,12 +2064,12 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                 material_aovs.add(aov.name)
 
     if bpy.context.scene.IDS_DelNodE is True:
-        for node in bpy.context.scene.node_tree.nodes:
+        for node in tree.nodes:
             if node.type != "R_LAYERS":
-                bpy.context.scene.node_tree.nodes.remove(node)
+                tree.nodes.remove(node)
 
     for view_layer in viewlayers:
-        for node in bpy.context.scene.node_tree.nodes:
+        for node in tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 if node.layer[:7] != "-_-exP_" and "_DATA" not in node.layer:
                     FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
@@ -2286,7 +2297,8 @@ def auto_connect_adv():  # 高级模式建立连接
                 bpy.data.scenes[str(scene.name)].view_layers[str(layer.name)].aovs
             ):
                 material_aovs.add(aov.name)
-    for node in bpy.context.scene.node_tree.nodes:  # get denoise nodes
+    node_tree = get_compositor_node_tree(bpy.context.scene)
+    for node in node_tree.nodes:  # get denoise nodes
         if node.type == "DENOISE":
             denoise_nodes_all.append(node.name)
 
@@ -2305,38 +2317,38 @@ def auto_connect_adv():  # 高级模式建立连接
         if view_layer[:7] != "-_-exP_" and "_DATA" not in view_layer:
             # connect denoise passes
             for node in denoise_nodes[view_layer]:
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
                 )
                 if bpy.context.scene.render.engine == "CYCLES":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[
                             "Denoising Normal"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
                             "Normal"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[
                             "Denoising Albedo"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs[
                             "Albedo"
                         ],
                     )
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
-                    scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
+                    node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
                 )
             # connect non denoise passes
             for node in set(viewlayer_full[f"{view_layer}Color"]) - set(
                 denoise_nodes[view_layer]
             ):
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
                 )
             if (
                 bpy.context.scene.IDS_SepCryptO is True
@@ -2345,28 +2357,28 @@ def auto_connect_adv():  # 高级模式建立连接
             ):
                 for node in viewlayer_full[f"{view_layer}Crypto"]:
                     if bpy.context.scene.IDS_SepCryptO is False:
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 "Image"
                             ],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
                             ],
                         )
                     else:
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                            scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                            node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                                 "Image"
                             ],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                                 f"{node}"
                             ],
                         )
@@ -2376,9 +2388,9 @@ def auto_connect_adv():  # 高级模式建立连接
                 viewlayer_full.get(f"{view_layer}Crypto")
                 and not bpy.context.scene.IDS_SepCryptO
             ) or viewlayer_full.get(f"{view_layer}Data"):
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                    scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                    node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
                 )
                 for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                     viewlayer_full[f"{view_layer}Vector"]
@@ -2388,163 +2400,163 @@ def auto_connect_adv():  # 高级模式建立连接
                         and node != "Denoising Depth"
                         and node != "Deep_From_Image_z"
                     ):
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
                             ],
                         ),
                     elif node == "Vector" and node != "Denoising Depth":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].inputs["Image"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].outputs["Image"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
                             ],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Green"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Blue"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Blue"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Red"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Blue"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Alpha"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorIn"
                             ].outputs["Alpha"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--Vector_VectorOut"
                             ].inputs["Green"],
                         ),
                     elif node == "Denoising Depth" and node != "Deep_From_Image_z":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[
                                 f"{view_layer}--Denoising Depth_Normalize"
                             ].inputs["Value"],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--Denoising Depth_Normalize"
                             ].outputs["Value"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
                             ],
                         ),
                     elif node == "Deep_From_Image_z":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[
                                 "Depth_AA$$aoP"
                             ],
-                            scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].inputs[
+                            node_tree.nodes[f"{view_layer}--Depth_AA_Re"].inputs[
                                 1
                             ],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].outputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}--Depth_AA_Re"].outputs[
                                 "Value"
                             ],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 "Deep_From_Image_z"
                             ],
                         ),
             if viewlayer_full[f"{view_layer}Vector"]:
                 for node in viewlayer_full[f"{view_layer}Vector"]:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
                             "Vector"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
                             "Vector"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     ),
                     if node == "Normal" or "Position":
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Break"
                             ].outputs["X"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["X"],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Break"
                             ].outputs["Z"],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["Y"],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[
+                        node_tree.links.new(
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Break"
                             ].outputs["Y"],
-                            scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[
+                            node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[
                                 0
                             ],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[
                                 0
                             ],
-                            scene.node_tree.nodes[
+                            node_tree.nodes[
                                 f"{view_layer}--{node}_Combine"
                             ].inputs["Z"],
                         )
             if viewlayer_full.get(f"{view_layer}Crypto"):
                 for node in viewlayer_full[f"{view_layer}Crypto"]:
                     if bpy.context.scene.IDS_SepCryptO is False:
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 "Image"
                             ],
                         ),
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                                 f"{node}"
                             ],
                         )
                     elif bpy.context.scene.IDS_UseAdvCrypto is False:
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                            scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                            node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                                 "Image"
                             ],
                         )
-                        scene.node_tree.links.new(
-                            scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                        node_tree.links.new(
+                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                            node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                                 f"{node}"
                             ],
                         )
@@ -2556,7 +2568,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
     current_render_path = bpy.context.scene.render.filepath
     viewlayer_full, viewlayers = sort_passes()
     # print(viewlayer_full)
-    tree = bpy.context.scene.node_tree
+    tree = get_compositor_node_tree(bpy.context.scene)
     view_layer = bpy.context.view_layer.name
     material_aovs = set()
     for scene in bpy.data.scenes:
@@ -2566,11 +2578,11 @@ def update_tree_denoise_adv():  # 高级模式节点创建
             ):
                 material_aovs.add(aov.name)
 
-    for node in bpy.context.scene.node_tree.nodes:
+    for node in tree.nodes:
         if node.type != "R_LAYERS" and node.name[: node.name.rfind("--")] == view_layer:
-            bpy.context.scene.node_tree.nodes.remove(node)
+            tree.nodes.remove(node)
 
-    for node in bpy.context.scene.node_tree.nodes:
+    for node in tree.nodes:
         if node.type == "R_LAYERS" and node.layer == view_layer:
             if node.layer[:7] != "-_-exP_" and "_DATA" not in node.layer:
                 FO_RGB_node = tree.nodes.new("CompositorNodeOutputFile")
@@ -2783,7 +2795,8 @@ def update_connect_adv():  # 高级模式建立连接
                 bpy.data.scenes[str(scene.name)].view_layers[str(layer.name)].aovs
             ):
                 material_aovs.add(aov.name)
-    for node in bpy.context.scene.node_tree.nodes:  # get denoise nodes
+    node_tree = get_compositor_node_tree(bpy.context.scene)
+    for node in node_tree.nodes:  # get denoise nodes
         if node.type == "DENOISE":
             denoise_nodes_all.append(node.name)
 
@@ -2801,30 +2814,30 @@ def update_connect_adv():  # 高级模式建立连接
     if view_layer[:7] != "-_-exP_" and "_DATA" not in view_layer:
         # connect denoise passes
         for node in denoise_nodes[view_layer]:
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Image"],
             )
             if bpy.context.scene.render.engine == "CYCLES":
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs["Denoising Normal"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Normal"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs["Denoising Normal"],
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Normal"],
                 )
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs["Denoising Albedo"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Albedo"],
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs["Denoising Albedo"],
+                    node_tree.nodes[f"{view_layer}--{node}_Dn"].inputs["Albedo"],
                 )
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
-                scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}--{node}_Dn"].outputs["Image"],
+                node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
             )
         # connect non denoise passes
         for node in set(viewlayer_full[f"{view_layer}Color"]) - set(
             denoise_nodes[view_layer]
         ):
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                scene.node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                node_tree.nodes[f"{view_layer}--RgBA"].inputs[f"{node}"],
             )
         if (
             bpy.context.scene.IDS_SepCryptO is True
@@ -2833,24 +2846,24 @@ def update_connect_adv():  # 高级模式建立连接
         ):
             for node in viewlayer_full[f"{view_layer}Crypto"]:
                 if bpy.context.scene.IDS_SepCryptO is False:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     )
                 else:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                             "Image"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                             f"{node}"
                         ],
                     )
@@ -2860,9 +2873,9 @@ def update_connect_adv():  # 高级模式建立连接
             viewlayer_full.get(f"{view_layer}Crypto")
             and not bpy.context.scene.IDS_SepCryptO
         ) or viewlayer_full.get(f"{view_layer}Data"):
-            scene.node_tree.links.new(
-                scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+            node_tree.links.new(
+                node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
             )
             for node in set(viewlayer_full[f"{view_layer}Data"]) - set(
                 viewlayer_full[f"{view_layer}Vector"]
@@ -2872,149 +2885,149 @@ def update_connect_adv():  # 高级模式建立连接
                     and node != "Denoising Depth"
                     and node != "Deep_From_Image_z"
                 ):
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     ),
                 elif (
                     node == "Vector"
                     and node != "Denoising Depth"
                     and node != "Deep_From_Image_z"
                 ):
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].inputs[
                             "Image"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[
+                    node_tree.links.new(
+                        node_tree.nodes[
                             f"{view_layer}--Vector_VectorOut"
                         ].outputs["Image"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Green"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Blue"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Blue"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Red"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Blue"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Alpha"
                         ],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Vector_VectorIn"].outputs[
                             "Alpha"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
+                        node_tree.nodes[f"{view_layer}--Vector_VectorOut"].inputs[
                             "Green"
                         ],
                     ),
                 elif node == "Denoising Depth" and node != "Deep_From_Image_z":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[
                             f"{view_layer}--Denoising Depth_Normalize"
                         ].inputs["Value"],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[
+                    node_tree.links.new(
+                        node_tree.nodes[
                             f"{view_layer}--Denoising Depth_Normalize"
                         ].outputs["Value"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     ),
                 elif node == "Deep_From_Image_z":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs["Depth_AA$$aoP"],
-                        scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].inputs[1],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs["Depth_AA$$aoP"],
+                        node_tree.nodes[f"{view_layer}--Depth_AA_Re"].inputs[1],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--Depth_AA_Re"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--Depth_AA_Re"].outputs[
                             "Value"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[
                             "Deep_From_Image_z"
                         ],
                     ),
         if viewlayer_full[f"{view_layer}Vector"]:
             for node in viewlayer_full[f"{view_layer}Vector"]:
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--{node}_Break"].inputs[
                         "Vector"
                     ],
                 ),
-                scene.node_tree.links.new(
-                    scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
+                node_tree.links.new(
+                    node_tree.nodes[f"{view_layer}--{node}_Combine"].outputs[
                         "Vector"
                     ],
-                    scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                 ),
                 if node == "Normal" or "Position":
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
                             "X"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
                             "X"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
                             "Z"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
                             "Y"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Break"].outputs[
                             "Y"
                         ],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[0],
+                        node_tree.nodes[f"{view_layer}--{node}_Inv"].inputs[0],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[0],
-                        scene.node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}--{node}_Inv"].outputs[0],
+                        node_tree.nodes[f"{view_layer}--{node}_Combine"].inputs[
                             "Z"
                         ],
                     )
         if viewlayer_full.get(f"{view_layer}Crypto"):
             for node in viewlayer_full[f"{view_layer}Crypto"]:
                 if bpy.context.scene.IDS_SepCryptO is False:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs["Image"],
                     ),
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--DaTA"].inputs[f"{node}"],
                     )
                 elif bpy.context.scene.IDS_UseAdvCrypto is False:
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs["Image"],
+                        node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                             "Image"
                         ],
                     )
-                    scene.node_tree.links.new(
-                        scene.node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        scene.node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
+                    node_tree.links.new(
+                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
+                        node_tree.nodes[f"{view_layer}--CryptoMaTTe"].inputs[
                             f"{node}"
                         ],
                     )
@@ -3022,20 +3035,21 @@ def update_connect_adv():  # 高级模式建立连接
 
 def frame_DATA():
     do = False
-    for node in bpy.context.scene.node_tree.nodes:
+    node_tree = get_compositor_node_tree(bpy.context.scene)
+    for node in node_tree.nodes:
         if "-_-exP_" in node.name:
             do = True
     if do is True:
-        for node in bpy.context.scene.node_tree.nodes:
+        for node in node_tree.nodes:
             if node.name == "DataFramE":
-                bpy.context.scene.node_tree.nodes.remove(node)
-        tree = bpy.context.scene.node_tree
+                node_tree.nodes.remove(node)
+        tree = node_tree
         FrameNode = tree.nodes.new("NodeFrame")
         FrameNode.name = "DataFramE"
         FrameNode.label = "Industrial AOV Connector DATA Layers-_-exP_"
         FrameNode.use_custom_color = True
         FrameNode.color = (0.04, 0.04, 0.227)
-        for node in bpy.context.scene.node_tree.nodes:
+        for node in node_tree.nodes:
             if node.name[:7] == "-_-exP_":
                 node.parent = FrameNode
 
@@ -3066,7 +3080,7 @@ class Compositor_OT_enable_use_nodes(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        bpy.context.scene.use_nodes = True
+        enable_compositing(bpy.context.scene)
         return {"FINISHED"}
 
 
@@ -3505,7 +3519,7 @@ class IDS_PT_OutputPanel_Base:
         addon_prefs = preferences.addons[__package__].preferences
 
         layout = self.layout
-        if bpy.context.scene.use_nodes is False:
+        if is_compositing_enabled(bpy.context.scene) is False:
             box = layout.box()
             box.label(text="↓↓↓Turn on Use Nodes in compositor.↓↓↓", icon="ERROR")
             box.operator(Compositor_OT_enable_use_nodes.bl_idname)
