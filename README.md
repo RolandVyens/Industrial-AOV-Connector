@@ -24,7 +24,7 @@ Co-work with [Industrial Light AOV Splitter](https://github.com/RolandVyens/Indu
 
 ![3 0界面](https://github.com/user-attachments/assets/a35ebfd8-acd5-495b-b23a-33b4fe298d75)
 
-目前支持3.3 - 最新版 Supports blender 3.3 - newest by now (2024.11.14)
+目前支持3.3 - 最新版 Supports blender 3.3 - newest by now (2025.12.3)
 
 **现在自定义路径tag功能需要修改格式，目前跟blender官方变量相同，兼容性有问题不能用。**
 
@@ -38,6 +38,14 @@ Join [Discord](https://discord.com/invite/qGyYXUNTnm) for discussion
 
 ---
 **Update Log:**
+2025.12.3: version 3.2.0
+- fix for blender 5.0
+
+-
+
+- 支持了blender 5.0
+---
+
 2025.1.1: version 3.0.0
 1. Added toggle for whether deleting all nodes in compositor or not when cooking node tree
 2. Added gap offset setting for arranging node, to prevent too wide node interval
@@ -56,20 +64,6 @@ _
 5. 自动设置数据层采样，高级模式生成节点时会自动帮你把数据层的采样覆盖以加快渲染
 6. 更好的跨平台兼容性
 7. 优化了文件夹和命名架构
----
-2024.11.14: version 2.5.0
-
-- 修复了一些bug
-- 继续优化UI，添加了更多自定义选项
-- 添加了reference position输出（Pref），需要在高级模式下使用独立数据层，且使用层材质覆盖
-- 新版数据通道命名，更加易懂，类型统一（设置中也提供了旧版命名可供切换）
-
-_
-
-- Fixed some bugs.
-- Continued optimizing the UI and added more customization options.
-- Added reference position output (Pref), which requires using an independent data layer in advanced mode, and utilizing layer material override.
-- New data channel naming for better clarity, with unified types (the old naming convention is also available in settings for switching).
 
 =========================
 
