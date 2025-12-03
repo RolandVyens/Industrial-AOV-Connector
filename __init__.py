@@ -26,6 +26,12 @@ from .handy_functions import (
     get_compositor_node_tree,
     is_compositing_enabled,
     enable_compositing,
+    set_output_node_path,
+    add_file_slot,
+    get_math_node_id,
+    get_separate_xyz_node_id,
+    get_combine_xyz_node_id,
+    get_file_slots,
 )
 from .path_modify_v2 import (
     origin_render_path_change_loc,
@@ -440,12 +446,13 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         FO_RGB_node.format.exr_codec = (
                             bpy.context.scene.IDS_RGBACompression
                         )
-                    FO_RGB_node.base_path = create_final_path(
-                        current_render_path, view_layer, "RGBA"
+                    set_output_node_path(
+                        FO_RGB_node,
+                        create_final_path(current_render_path, view_layer, "RGBA"),
                     )
                     FO_RGB_node.inputs.clear()
                     for input in viewlayer_full[f"{view_layer}Color"]:
-                        FO_RGB_node.file_slots.new(f"{input}")
+                        add_file_slot(FO_RGB_node, f"{input}")
                     # FO_RGB_node.hide = True
 
                     if (
@@ -504,14 +511,15 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                             FO_DATA_node.format.exr_codec = (
                                 bpy.context.scene.IDS_DATACompression
                             )
-                        FO_DATA_node.base_path = create_final_path(
-                            current_render_path, view_layer, "DATA"
+                        set_output_node_path(
+                            FO_DATA_node,
+                            create_final_path(current_render_path, view_layer, "DATA"),
                         )
                         FO_DATA_node.inputs.clear()
-                        FO_DATA_node.file_slots.new("Image")
+                        add_file_slot(FO_DATA_node, "Image")
                         datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                         for input in datatemp:
-                            FO_DATA_node.file_slots.new(f"{input}")
+                            add_file_slot(FO_DATA_node, f"{input}")
                         # FO_DATA_node.hide = True
 
                         if bpy.context.scene.IDS_ArtDepth == True:
@@ -549,19 +557,19 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 "Denoising Normal"
                             )
                         for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeSeparateXYZ")
+                            Convert_node = tree.nodes.new(get_separate_xyz_node_id())
                             Convert_node.name = f"{view_layer}--{socket}_Break"
                             Convert_node.label = f"{view_layer}_{socket}_BREAK"
                             Convert_node.hide = True
                             Convert_node.location = 500, 0
                         for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeCombineXYZ")
+                            Convert_node = tree.nodes.new(get_combine_xyz_node_id())
                             Convert_node.name = f"{view_layer}--{socket}_Combine"
                             Convert_node.label = f"{view_layer}_{socket}_COMBINE"
                             Convert_node.hide = True
                             Convert_node.location = 820, 0
                         for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeMath")
+                            Convert_node = tree.nodes.new(get_math_node_id())
                             Convert_node.name = f"{view_layer}--{socket}_Inv"
                             Convert_node.label = f"{view_layer}_{socket}_INVERT"
                             Convert_node.operation = "MULTIPLY"
@@ -583,16 +591,19 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 FO_Crypto_node.format.exr_codec = (
                                     bpy.context.scene.IDS_CryptoCompression
                                 )
-                            FO_Crypto_node.base_path = create_final_path(
-                                current_render_path, view_layer, "Cryptomatte"
+                            set_output_node_path(
+                                FO_Crypto_node,
+                                create_final_path(
+                                    current_render_path, view_layer, "Cryptomatte"
+                                ),
                             )
                             FO_Crypto_node.inputs.clear()
-                            FO_Crypto_node.file_slots.new("Image")
+                            add_file_slot(FO_Crypto_node, "Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                FO_Crypto_node.file_slots.new(f"{input}")
+                                add_file_slot(FO_Crypto_node, f"{input}")
                         else:
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                FO_DATA_node.file_slots.new(f"{input}")
+                                add_file_slot(FO_DATA_node, f"{input}")
                         # FO_Crypto_node.hide = True
 
     elif bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2
@@ -606,12 +617,13 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                     FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_RGB_node.format.color_depth = "32"
                     FO_RGB_node.format.exr_codec = "ZIPS"
-                    FO_RGB_node.base_path = create_final_path(
-                        current_render_path, view_layer, "All"
+                    set_output_node_path(
+                        FO_RGB_node,
+                        create_final_path(current_render_path, view_layer, "All"),
                     )
                     FO_RGB_node.inputs.clear()
                     for input in viewlayer_full[f"{view_layer}Color"]:
-                        FO_RGB_node.file_slots.new(f"{input}")
+                        add_file_slot(FO_RGB_node, f"{input}")
                     # FO_RGB_node.hide = True
 
                     if (
@@ -668,7 +680,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         # FO_DATA_node.file_slots.new("Image")
                         datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                         for input in datatemp:
-                            FO_RGB_node.file_slots.new(f"{input}")
+                            add_file_slot(FO_RGB_node, f"{input}")
                         # FO_DATA_node.hide = True
 
                         if bpy.context.scene.IDS_ArtDepth == True:
@@ -706,19 +718,19 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                 "Denoising Normal"
                             )
                         for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeSeparateXYZ")
+                            Convert_node = tree.nodes.new(get_separate_xyz_node_id())
                             Convert_node.name = f"{view_layer}--{socket}_Break"
                             Convert_node.label = f"{view_layer}_{socket}_BREAK"
                             Convert_node.hide = True
                             Convert_node.location = 500, 0
                         for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeCombineXYZ")
+                            Convert_node = tree.nodes.new(get_combine_xyz_node_id())
                             Convert_node.name = f"{view_layer}--{socket}_Combine"
                             Convert_node.label = f"{view_layer}_{socket}_COMBINE"
                             Convert_node.hide = True
                             Convert_node.location = 820, 0
                         for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeMath")
+                            Convert_node = tree.nodes.new(get_math_node_id())
                             Convert_node.name = f"{view_layer}--{socket}_Inv"
                             Convert_node.label = f"{view_layer}_{socket}_INVERT"
                             Convert_node.operation = "MULTIPLY"
@@ -738,7 +750,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         # )
                         # FO_Crypto_node.file_slots.new("Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_RGB_node.file_slots.new(f"{input}")
+                            add_file_slot(FO_RGB_node, f"{input}")
                         # FO_Crypto_node.hide = True
     return viewlayer_full, viewlayers
 
@@ -1174,12 +1186,13 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     FO_RGB_node.format.exr_codec = "ZIPS"
                 else:
                     FO_RGB_node.format.exr_codec = bpy.context.scene.IDS_RGBACompression
-                FO_RGB_node.base_path = create_final_path(
-                    current_render_path, view_layer, "RGBA"
+                set_output_node_path(
+                    FO_RGB_node,
+                    create_final_path(current_render_path, view_layer, "RGBA"),
                 )
                 FO_RGB_node.inputs.clear()
                 for input in viewlayer_full[f"{view_layer}Color"]:
-                    FO_RGB_node.file_slots.new(f"{input}")
+                    add_file_slot(FO_RGB_node, f"{input}")
                 # FO_RGB_node.hide = True
 
                 if (
@@ -1234,14 +1247,15 @@ def update_tree_denoise():  # 新建当前视图层的节点
                         FO_DATA_node.format.exr_codec = (
                             bpy.context.scene.IDS_DATACompression
                         )
-                    FO_DATA_node.base_path = create_final_path(
-                        current_render_path, view_layer, "DATA"
+                    set_output_node_path(
+                        FO_DATA_node,
+                        create_final_path(current_render_path, view_layer, "DATA"),
                     )
                     FO_DATA_node.inputs.clear()
-                    FO_DATA_node.file_slots.new("Image")
+                    add_file_slot(FO_DATA_node, "Image")
                     datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                     for input in datatemp:
-                        FO_DATA_node.file_slots.new(f"{input}")
+                        add_file_slot(FO_DATA_node, f"{input}")
                     # FO_DATA_node.hide = True
 
                     if bpy.context.scene.IDS_ArtDepth == True:
@@ -1269,19 +1283,19 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             "Denoising Normal"
                         )
                     for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeSeparateXYZ")
+                        Convert_node = tree.nodes.new(get_separate_xyz_node_id())
                         Convert_node.name = f"{view_layer}--{socket}_Break"
                         Convert_node.label = f"{view_layer}_{socket}_BREAK"
                         Convert_node.hide = True
                         Convert_node.location = 500, 0
                     for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeCombineXYZ")
+                        Convert_node = tree.nodes.new(get_combine_xyz_node_id())
                         Convert_node.name = f"{view_layer}--{socket}_Combine"
                         Convert_node.label = f"{view_layer}_{socket}_COMBINE"
                         Convert_node.hide = True
                         Convert_node.location = 820, 0
                     for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeMath")
+                        Convert_node = tree.nodes.new(get_math_node_id())
                         Convert_node.name = f"{view_layer}--{socket}_Inv"
                         Convert_node.label = f"{view_layer}_{socket}_INVERT"
                         Convert_node.operation = "MULTIPLY"
@@ -1303,16 +1317,19 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             FO_Crypto_node.format.exr_codec = (
                                 bpy.context.scene.IDS_CryptoCompression
                             )
-                        FO_Crypto_node.base_path = create_final_path(
-                            current_render_path, view_layer, "Cryptomatte"
+                        set_output_node_path(
+                            FO_Crypto_node,
+                            create_final_path(
+                                current_render_path, view_layer, "Cryptomatte"
+                            ),
                         )
                         FO_Crypto_node.inputs.clear()
-                        FO_Crypto_node.file_slots.new("Image")
+                        add_file_slot(FO_Crypto_node, "Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_Crypto_node.file_slots.new(f"{input}")
+                            add_file_slot(FO_Crypto_node, f"{input}")
                     else:
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_DATA_node.file_slots.new(f"{input}")
+                            add_file_slot(FO_DATA_node, f"{input}")
                     # FO_Crypto_node.hide = True
 
     elif bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2
@@ -1325,12 +1342,13 @@ def update_tree_denoise():  # 新建当前视图层的节点
                 FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                 FO_RGB_node.format.color_depth = "32"
                 FO_RGB_node.format.exr_codec = "ZIPS"
-                FO_RGB_node.base_path = create_final_path(
-                    current_render_path, view_layer, "All"
+                set_output_node_path(
+                    FO_RGB_node,
+                    create_final_path(current_render_path, view_layer, "All"),
                 )
                 FO_RGB_node.inputs.clear()
                 for input in viewlayer_full[f"{view_layer}Color"]:
-                    FO_RGB_node.file_slots.new(f"{input}")
+                    add_file_slot(FO_RGB_node, f"{input}")
                 # FO_RGB_node.hide = True
 
                 if (
@@ -1383,7 +1401,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     # FO_DATA_node.file_slots.new("Image")
                     datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                     for input in datatemp:
-                        FO_RGB_node.file_slots.new(f"{input}")
+                        add_file_slot(FO_RGB_node, f"{input}")
                     # FO_DATA_node.hide = True
 
                     if bpy.context.scene.IDS_ArtDepth == True:
@@ -1411,19 +1429,19 @@ def update_tree_denoise():  # 新建当前视图层的节点
                             "Denoising Normal"
                         )
                     for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeSeparateXYZ")
+                        Convert_node = tree.nodes.new(get_separate_xyz_node_id())
                         Convert_node.name = f"{view_layer}--{socket}_Break"
                         Convert_node.label = f"{view_layer}_{socket}_BREAK"
                         Convert_node.hide = True
                         Convert_node.location = 500, 0
                     for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeCombineXYZ")
+                        Convert_node = tree.nodes.new(get_combine_xyz_node_id())
                         Convert_node.name = f"{view_layer}--{socket}_Combine"
                         Convert_node.label = f"{view_layer}_{socket}_COMBINE"
                         Convert_node.hide = True
                         Convert_node.location = 820, 0
                     for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeMath")
+                        Convert_node = tree.nodes.new(get_math_node_id())
                         Convert_node.name = f"{view_layer}--{socket}_Inv"
                         Convert_node.label = f"{view_layer}_{socket}_INVERT"
                         Convert_node.operation = "MULTIPLY"
@@ -1443,7 +1461,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     # )
                     # FO_Crypto_node.file_slots.new("Image")
                     for input in viewlayer_full[f"{view_layer}Crypto"]:
-                        FO_RGB_node.file_slots.new(f"{input}")
+                        add_file_slot(FO_RGB_node, f"{input}")
                     # FO_Crypto_node.hide = True
     return viewlayer_full, viewlayers
 
@@ -1810,7 +1828,7 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
         # if node.type == "R_LAYERS" and node.layer == view_layer:
         #     for node1 in bpy.context.scene.node_tree.nodes:
         if node.type == "OUTPUT_FILE":
-            for slot in node.layer_slots:
+            for slot in get_file_slots(node):
                 if slot.name != "Deep_From_Image_z":
                     slot.name = slot.name.replace("Image", "rgba")
                 slot.name = slot.name.replace("Combined", "RGBA")
@@ -1992,7 +2010,7 @@ def auto_arr_mathnode():  # 排列数学运算节点
                 for node1 in reversed(node_tree.nodes):
                     if (
                         node1.name[: node1.name.rfind("--")] == node.layer
-                        and node1.type == "SEPARATE_XYZ"
+                        and node1.type in ("SEPARATE_XYZ", "SEPXYZ")
                     ):
                         node1.location = 500, (
                             node.location.y
@@ -2014,7 +2032,7 @@ def auto_arr_mathnode():  # 排列数学运算节点
                                 node2.location = 660, node1.location.y
                             if (
                                 node2.name[: node2.name.rfind("--")] == node.layer
-                                and node2.type == "COMBINE_XYZ"
+                                and node2.type in ("COMBINE_XYZ", "COMBXYZ")
                                 and extract_string_between_patterns(
                                     node2.name, "--", "_Combine"
                                 )
@@ -2079,12 +2097,13 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                     FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                     FO_RGB_node.format.color_depth = "16"
                     FO_RGB_node.format.exr_codec = bpy.context.scene.IDS_RGBACompression
-                    FO_RGB_node.base_path = create_final_path(
-                        current_render_path, view_layer, "RGBA"
+                    set_output_node_path(
+                        FO_RGB_node,
+                        create_final_path(current_render_path, view_layer, "RGBA"),
                     )
                     FO_RGB_node.inputs.clear()
                     for input in viewlayer_full[f"{view_layer}Color"]:
-                        FO_RGB_node.file_slots.new(f"{input}")
+                        add_file_slot(FO_RGB_node, f"{input}")
                     # FO_RGB_node.hide = True
 
                     if (
@@ -2145,14 +2164,14 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                 current_render_path, view_layer, "Cryptomatte"
                             )
                             final_path = base_path.replace("-_-exP_", "")
-                            FO_Crypto_node.base_path = final_path
+                            set_output_node_path(FO_Crypto_node, final_path)
                             FO_Crypto_node.inputs.clear()
-                            FO_Crypto_node.file_slots.new("Image")
+                            add_file_slot(FO_Crypto_node, "Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                FO_Crypto_node.file_slots.new(f"{input}")
+                                add_file_slot(FO_Crypto_node, f"{input}")
                         elif bpy.context.scene.IDS_UseDATALayer is False:
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                FO_DATA_node.file_slots.new(f"{input}")
+                                add_file_slot(FO_DATA_node, f"{input}")
 
                 # elif node.layer[:7] == "-_-exP_" and "_DATA" in node.layer:
                 else:
@@ -2173,12 +2192,12 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             current_render_path, view_layer, "DATA"
                         )
                         final_path = base_path.replace("-_-exP_", "")
-                        FO_DATA_node.base_path = final_path
+                        set_output_node_path(FO_DATA_node, final_path)
                         FO_DATA_node.inputs.clear()
-                        FO_DATA_node.file_slots.new("Image")
+                        add_file_slot(FO_DATA_node, "Image")
                         datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                         for input in datatemp:
-                            FO_DATA_node.file_slots.new(f"{input}")
+                            add_file_slot(FO_DATA_node, f"{input}")
                         # FO_DATA_node.hide = True
 
                         if bpy.context.scene.IDS_ArtDepth == True:
@@ -2201,7 +2220,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             }
                             and "Depth_AA$$aoP" in viewlayer_full[f"{view_layer}Data"]
                         ):
-                            FakeDeep_node = tree.nodes.new("CompositorNodeMath")
+                            FakeDeep_node = tree.nodes.new(get_math_node_id())
                             FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
                             FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
                             FakeDeep_node.operation = "DIVIDE"
@@ -2233,19 +2252,19 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                 "Denoising Normal"
                             )
                         for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeSeparateXYZ")
+                            Convert_node = tree.nodes.new(get_separate_xyz_node_id())
                             Convert_node.name = f"{view_layer}--{socket}_Break"
                             Convert_node.label = f"{view_layer}_{socket}_BREAK"
                             Convert_node.hide = True
                             Convert_node.location = 500, 0
                         for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeCombineXYZ")
+                            Convert_node = tree.nodes.new(get_combine_xyz_node_id())
                             Convert_node.name = f"{view_layer}--{socket}_Combine"
                             Convert_node.label = f"{view_layer}_{socket}_COMBINE"
                             Convert_node.hide = True
                             Convert_node.location = 820, 0
                         for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                            Convert_node = tree.nodes.new("CompositorNodeMath")
+                            Convert_node = tree.nodes.new(get_math_node_id())
                             Convert_node.name = f"{view_layer}--{socket}_Inv"
                             Convert_node.label = f"{view_layer}_{socket}_INVERT"
                             Convert_node.operation = "MULTIPLY"
@@ -2272,14 +2291,14 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                 current_render_path, view_layer, "Cryptomatte"
                             )
                             final_path = base_path.replace("-_-exP_", "")
-                            FO_Crypto_node.base_path = final_path
+                            set_output_node_path(FO_Crypto_node, final_path)
                             FO_Crypto_node.inputs.clear()
-                            FO_Crypto_node.file_slots.new("Image")
+                            add_file_slot(FO_Crypto_node, "Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                FO_Crypto_node.file_slots.new(f"{input}")
+                                add_file_slot(FO_Crypto_node, f"{input}")
                     else:
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_DATA_node.file_slots.new(f"{input}")
+                            add_file_slot(FO_DATA_node, f"{input}")
 
     return viewlayer_full, viewlayers
 
@@ -2592,12 +2611,13 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                 FO_RGB_node.format.file_format = "OPEN_EXR_MULTILAYER"
                 FO_RGB_node.format.color_depth = "16"
                 FO_RGB_node.format.exr_codec = bpy.context.scene.IDS_RGBACompression
-                FO_RGB_node.base_path = create_final_path(
-                    current_render_path, view_layer, "RGBA"
+                set_output_node_path(
+                    FO_RGB_node,
+                    create_final_path(current_render_path, view_layer, "RGBA"),
                 )
                 FO_RGB_node.inputs.clear()
                 for input in viewlayer_full[f"{view_layer}Color"]:
-                    FO_RGB_node.file_slots.new(f"{input}")
+                    add_file_slot(FO_RGB_node, f"{input}")
                 # FO_RGB_node.hide = True
 
                 if (
@@ -2653,14 +2673,14 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                             current_render_path, view_layer, "Cryptomatte"
                         )
                         final_path = base_path.replace("-_-exP_", "")
-                        FO_Crypto_node.base_path = final_path
+                        set_output_node_path(FO_Crypto_node, final_path)
                         FO_Crypto_node.inputs.clear()
-                        FO_Crypto_node.file_slots.new("Image")
+                        add_file_slot(FO_Crypto_node, "Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_Crypto_node.file_slots.new(f"{input}")
+                            add_file_slot(FO_Crypto_node, f"{input}")
                     elif bpy.context.scene.IDS_UseDATALayer is False:
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_DATA_node.file_slots.new(f"{input}")
+                            add_file_slot(FO_DATA_node, f"{input}")
 
             # elif node.layer[:7] == "-_-exP_" and "_DATA" in node.layer:
             else:
@@ -2681,12 +2701,12 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         current_render_path, view_layer, "DATA"
                     )
                     final_path = base_path.replace("-_-exP_", "")
-                    FO_DATA_node.base_path = final_path
+                    set_output_node_path(FO_DATA_node, final_path)
                     FO_DATA_node.inputs.clear()
-                    FO_DATA_node.file_slots.new("Image")
+                    add_file_slot(FO_DATA_node, "Image")
                     datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                     for input in datatemp:
-                        FO_DATA_node.file_slots.new(f"{input}")
+                        add_file_slot(FO_DATA_node, f"{input}")
                     # FO_DATA_node.hide = True
 
                     if bpy.context.scene.IDS_ArtDepth == True:
@@ -2705,7 +2725,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         }
                         and "Depth_AA$$aoP" in viewlayer_full[f"{view_layer}Data"]
                     ):
-                        FakeDeep_node = tree.nodes.new("CompositorNodeMath")
+                        FakeDeep_node = tree.nodes.new(get_math_node_id())
                         FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
                         FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
                         FakeDeep_node.operation = "DIVIDE"
@@ -2731,19 +2751,19 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                             "Denoising Normal"
                         )
                     for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeSeparateXYZ")
+                        Convert_node = tree.nodes.new(get_separate_xyz_node_id())
                         Convert_node.name = f"{view_layer}--{socket}_Break"
                         Convert_node.label = f"{view_layer}_{socket}_BREAK"
                         Convert_node.hide = True
                         Convert_node.location = 500, 0
                     for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeCombineXYZ")
+                        Convert_node = tree.nodes.new(get_combine_xyz_node_id())
                         Convert_node.name = f"{view_layer}--{socket}_Combine"
                         Convert_node.label = f"{view_layer}_{socket}_COMBINE"
                         Convert_node.hide = True
                         Convert_node.location = 820, 0
                     for socket in viewlayer_full.get(f"{view_layer}Vector"):
-                        Convert_node = tree.nodes.new("CompositorNodeMath")
+                        Convert_node = tree.nodes.new(get_math_node_id())
                         Convert_node.name = f"{view_layer}--{socket}_Inv"
                         Convert_node.label = f"{view_layer}_{socket}_INVERT"
                         Convert_node.operation = "MULTIPLY"
@@ -2770,14 +2790,14 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                             current_render_path, view_layer, "Cryptomatte"
                         )
                         final_path = base_path.replace("-_-exP_", "")
-                        FO_Crypto_node.base_path = final_path
+                        set_output_node_path(FO_Crypto_node, final_path)
                         FO_Crypto_node.inputs.clear()
-                        FO_Crypto_node.file_slots.new("Image")
+                        add_file_slot(FO_Crypto_node, "Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            FO_Crypto_node.file_slots.new(f"{input}")
+                            add_file_slot(FO_Crypto_node, f"{input}")
                 else:
                     for input in viewlayer_full[f"{view_layer}Crypto"]:
-                        FO_DATA_node.file_slots.new(f"{input}")
+                        add_file_slot(FO_DATA_node, f"{input}")
 
     return viewlayer_full, viewlayers
 
@@ -3062,7 +3082,8 @@ def arrange_All():
     if bpy.context.scene.IDS_Autoarr is False or "CompositorNodeTree" not in area_types:
         frame_DATA()
     else:
-        bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+        if not bpy.app.background:
+            bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
         frame_DATA()
         auto_arrange_viewlayer()
         auto_arr_denoisenode()
