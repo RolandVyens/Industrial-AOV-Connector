@@ -186,3 +186,93 @@ def auto_set_material_aov():
                     new_aov.name = aov_name
 
     return {"FINISHED"}
+
+
+def get_compositor_node_tree(scene):
+    if bpy.app.version >= (5, 0, 0):
+        return scene.compositing_node_group
+    else:
+        return scene.node_tree
+
+
+def is_compositing_enabled(scene):
+    if bpy.app.version >= (5, 0, 0):
+        return scene.render.use_compositing
+    else:
+        return scene.use_nodes
+
+
+def get_diffuse_color_name():
+    if bpy.app.version >= (5, 0, 0):
+        return "Diffuse Color"
+    else:
+        return "DiffCol"
+
+
+def get_glossy_color_name():
+    if bpy.app.version >= (5, 0, 0):
+        return "Glossy Color"
+    else:
+        return "GlossCol"
+
+
+def get_transmission_color_name():
+    if bpy.app.version >= (5, 0, 0):
+        return "Transmission Color"
+    else:
+        return "TransCol"
+
+
+def enable_compositing(scene):
+    if bpy.app.version >= (5, 0, 0):
+        scene.render.use_compositing = True
+    else:
+        scene.use_nodes = True
+
+
+def set_output_node_path(node, path):
+    if bpy.app.version >= (5, 0, 0):
+        directory, file_name = os.path.split(path)
+        node.directory = directory
+        node.file_name = file_name
+    else:
+        node.base_path = path
+
+
+def add_file_slot(node, name):
+    if bpy.app.version >= (5, 0, 0):
+        node.file_output_items.new("RGBA", name)
+    else:
+        node.file_slots.new(name)
+
+
+def get_math_node_id():
+    if bpy.app.version >= (5, 0, 0):
+        return "ShaderNodeMath"
+    else:
+        return "CompositorNodeMath"
+
+
+def get_separate_xyz_node_id():
+    if bpy.app.version >= (5, 0, 0):
+        return "ShaderNodeSeparateXYZ"
+    else:
+        return "CompositorNodeSeparateXYZ"
+
+
+def get_combine_xyz_node_id():
+    if bpy.app.version >= (5, 0, 0):
+        return "ShaderNodeCombineXYZ"
+    else:
+        return "CompositorNodeCombineXYZ"
+
+
+def get_file_slots(node):
+    if bpy.app.version >= (5, 0, 0):
+        return node.file_output_items
+    else:
+        # Fallback for older versions that might use layer_slots or file_slots
+        # Prefer layer_slots because it has 'name' attribute which is used in the code
+        if hasattr(node, "layer_slots"):
+            return node.layer_slots
+        return node.file_slots

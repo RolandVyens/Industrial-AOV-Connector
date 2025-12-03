@@ -13,6 +13,8 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
     unexposed_viewlayers = []
     material_aov = []
     material_aovs = {}
+    from .handy_functions import get_compositor_node_tree
+    node_tree = get_compositor_node_tree(bpy.context.scene)
     for layer in bpy.context.scene.view_layers:
         for aov in layer.aovs:
             material_aov.append(aov.name)
@@ -21,7 +23,7 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
     # print(material_aovs)
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.append(view_layer.name)
-    for node in bpy.context.scene.node_tree.nodes:
+    for node in node_tree.nodes:
         if node.type == "R_LAYERS":
             already_present_viewlayers.add(node.layer)
             viewlayers_presented.append(node.layer)
@@ -31,7 +33,7 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
         unexposed_viewlayers.append(element)
     if unexposed_viewlayers:
         for i in unexposed_viewlayers:
-            render_layers_node = bpy.context.scene.node_tree.nodes.new(
+            render_layers_node = node_tree.nodes.new(
                 "CompositorNodeRLayers"
             )
             render_layers_node.layer = i
@@ -43,13 +45,13 @@ def sort_passes():  # 获取所有可视层输出并返回整理好的字典，�
         print("all viewlayers presented")
     element_counts = Counter(viewlayers_presented)
     duplicates = [element for element, count in element_counts.items() if count > 1]
-    for node in bpy.context.scene.node_tree.nodes:
+    for node in node_tree.nodes:
         if node.type == "R_LAYERS" and node.layer in duplicates:
             duplicates.remove(node.layer)
-            bpy.context.scene.node_tree.nodes.remove(node)
+            node_tree.nodes.remove(node)
     enabled_passes = []
     all_passes = {}
-    for node in bpy.context.scene.node_tree.nodes:
+    for node in node_tree.nodes:
         if node.type == "R_LAYERS":
             node.select = True
             for output in node.outputs:
