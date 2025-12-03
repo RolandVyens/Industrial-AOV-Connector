@@ -202,6 +202,27 @@ def is_compositing_enabled(scene):
         return scene.use_nodes
 
 
+def get_diffuse_color_name():
+    if bpy.app.version >= (5, 0, 0):
+        return "Diffuse Color"
+    else:
+        return "DiffCol"
+
+
+def get_glossy_color_name():
+    if bpy.app.version >= (5, 0, 0):
+        return "Glossy Color"
+    else:
+        return "GlossCol"
+
+
+def get_transmission_color_name():
+    if bpy.app.version >= (5, 0, 0):
+        return "Transmission Color"
+    else:
+        return "TransCol"
+
+
 def enable_compositing(scene):
     if bpy.app.version >= (5, 0, 0):
         scene.render.use_compositing = True

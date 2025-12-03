@@ -32,6 +32,9 @@ from .handy_functions import (
     get_separate_xyz_node_id,
     get_combine_xyz_node_id,
     get_file_slots,
+    get_diffuse_color_name,
+    get_glossy_color_name,
+    get_transmission_color_name,
 )
 from .path_modify_v2 import (
     origin_render_path_change_loc,
@@ -401,8 +404,9 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
         node = node_tree.nodes.get(f"{view_layer}")
         node.location = 0, renderlayer_node_position
         renderlayer_node_y.append(renderlayer_node_position)
+        spacing = 240 if bpy.app.version >= (5, 0, 0) else 120
         renderlayer_node_position -= (
-            node.dimensions.y + 120
+            node.dimensions.y + spacing
         ) * addon_prefs.Arrange_Scale_Param
 
 
@@ -482,9 +486,9 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                         socket != "Image"
                                         # and socket != "Emit"
                                         and socket != "Shadow Catcher"
-                                        and socket != "DiffCol"
-                                        and socket != "GlossCol"
-                                        and socket != "TransCol"
+                                        and socket != get_diffuse_color_name()
+                                        and socket != get_glossy_color_name()
+                                        and socket != get_transmission_color_name()
                                         and socket not in material_aovs
                                     ):
                                         DN_node = tree.nodes.new(
@@ -653,9 +657,9 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                                         socket != "Image"
                                         # and socket != "Emit"
                                         and socket != "Shadow Catcher"
-                                        and socket != "DiffCol"
-                                        and socket != "GlossCol"
-                                        and socket != "TransCol"
+                                        and socket != get_diffuse_color_name()
+                                        and socket != get_glossy_color_name()
+                                        and socket != get_transmission_color_name()
                                         and socket not in material_aovs
                                     ):
                                         DN_node = tree.nodes.new(
@@ -2133,9 +2137,9 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                         socket != "Image"
                                         # and socket != "Emit"
                                         and socket != "Shadow Catcher"
-                                        and socket != "DiffCol"
-                                        and socket != "GlossCol"
-                                        and socket != "TransCol"
+                                        and socket != get_diffuse_color_name()
+                                        and socket != get_glossy_color_name()
+                                        and socket != get_transmission_color_name()
                                         and socket not in material_aovs
                                     ):
                                         DN_node = tree.nodes.new(
