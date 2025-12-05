@@ -4,7 +4,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (3, 7),
+    "version": (3, 3, 0),
     "blender": (4, 1, 0),
     "location": "Render > View layer Properties > Industrial AOV Connector",
     "description": "Industrial Render Output Plugin, creates multilayer EXR nodes automatically",
