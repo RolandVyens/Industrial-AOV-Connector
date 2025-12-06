@@ -3,6 +3,73 @@ import os
 import bpy
 
 
+class BlenderCompat:
+    """Stores version-dependent constants, initialized once at addon registration.
+    
+    This class provides the fastest possible lookup for version-dependent values
+    by computing them once at registration time and storing as class attributes.
+    """
+    
+    # Version-dependent node/pass names
+    diffuse_color_name: str = ""
+    glossy_color_name: str = ""
+    transmission_color_name: str = ""
+    math_node_id: str = ""
+    separate_xyz_node_id: str = ""
+    combine_xyz_node_id: str = ""
+    
+    # Constant values
+    addon_package: str = ""
+    asset_path: str = ""
+    node_spacing: int = 120
+    is_blender_5_plus: bool = False
+    
+    @classmethod
+    def init(cls, package_name: str):
+        """Initialize all version-dependent values. Call from register().
+        
+        Args:
+            package_name: The addon's __package__ value from __init__.py
+        """
+        version = bpy.app.version
+        cls.is_blender_5_plus = version >= (5, 0, 0)
+        
+        # Pass names changed in Blender 5.0
+        if cls.is_blender_5_plus:
+            cls.diffuse_color_name = "Diffuse Color"
+            cls.glossy_color_name = "Glossy Color" 
+            cls.transmission_color_name = "Transmission Color"
+            cls.math_node_id = "ShaderNodeMath"
+            cls.separate_xyz_node_id = "ShaderNodeSeparateXYZ"
+            cls.combine_xyz_node_id = "ShaderNodeCombineXYZ"
+            cls.node_spacing = 360
+        else:
+            cls.diffuse_color_name = "DiffCol"
+            cls.glossy_color_name = "GlossCol"
+            cls.transmission_color_name = "TransCol"
+            cls.math_node_id = "CompositorNodeMath"
+            cls.separate_xyz_node_id = "CompositorNodeSeparateXYZ"
+            cls.combine_xyz_node_id = "CompositorNodeCombineXYZ"
+            cls.node_spacing = 120
+        
+        # Package name (from root __init__.py's __package__)
+        cls.addon_package = package_name
+        
+        # Asset path (computed once based on installation type)
+        addon_file = os.path.realpath(__file__)
+        addon_directory = os.path.dirname(addon_file)
+        bl_version_num = int(f"{version[0]}{version[1]}")
+        
+        if bl_version_num < 42 or "extensions" not in addon_directory:
+            user_path = bpy.utils.resource_path("USER")
+            cls.asset_path = os.path.join(
+                user_path, "scripts", "addons",
+                "Industrial-AOV-Connector", "asset.blend"
+            )
+        else:
+            cls.asset_path = os.path.join(addon_directory, "asset.blend")
+
+
 def extract_string_between_patterns(
     input_string, start_pattern, end_pattern
 ):  # 提取位于两个字符串中间的特定字符
@@ -93,22 +160,11 @@ class IDS_OT_Open_Preference(bpy.types.Operator):
         else:
             bpy.context.window_manager.addon_filter = category
             bpy.context.window_manager.addon_search = "Industrial AOV Connector"
-        # print(bpy.utils.extension_path_user(__package__, path="", create=False))
-        print(__package__)
-        print(__package__.split(".")[0])
-        bl_version = bpy.app.version
-        addon_file = os.path.realpath(__file__)
-        addon_directory = os.path.dirname(addon_file)
+        
+        package = BlenderCompat.addon_package
 
         try:
             addon_utils.modules(refresh=False)[0].__name__
-            if (
-                int(f"{bl_version[0]}{bl_version[1]}") < 42
-                or "extensions" not in addon_directory
-            ):
-                package = __package__.split(".")[0]
-            else:
-                package = __package__
             for mod in addon_utils.modules(refresh=False):
                 if mod.__name__ != package:
                     continue
@@ -116,13 +172,6 @@ class IDS_OT_Open_Preference(bpy.types.Operator):
                     continue
                 bpy.ops.preferences.addon_expand(module=package)
         except TypeError:
-            if (
-                int(f"{bl_version[0]}{bl_version[1]}") < 42
-                or "extensions" not in addon_directory
-            ):
-                package = __package__.split(".")[0]
-            else:
-                package = __package__
             modules = addon_utils.modules(refresh=False).mapping
             for mod_key in modules:
                 mod = modules[mod_key]
@@ -202,27 +251,6 @@ def is_compositing_enabled(scene):
         return scene.use_nodes
 
 
-def get_diffuse_color_name():
-    if bpy.app.version >= (5, 0, 0):
-        return "Diffuse Color"
-    else:
-        return "DiffCol"
-
-
-def get_glossy_color_name():
-    if bpy.app.version >= (5, 0, 0):
-        return "Glossy Color"
-    else:
-        return "GlossCol"
-
-
-def get_transmission_color_name():
-    if bpy.app.version >= (5, 0, 0):
-        return "Transmission Color"
-    else:
-        return "TransCol"
-
-
 def enable_compositing(scene):
     if bpy.app.version >= (5, 0, 0):
         scene.render.use_compositing = True
@@ -239,32 +267,19 @@ def set_output_node_path(node, path):
         node.base_path = path
 
 
+def get_output_node_path(node):
+    if bpy.app.version >= (5, 0, 0):
+        return os.path.join(node.directory, node.file_name)
+    else:
+        return node.base_path
+
+
 def add_file_slot(node, name):
     if bpy.app.version >= (5, 0, 0):
         node.file_output_items.new("RGBA", name)
     else:
         node.file_slots.new(name)
 
-
-def get_math_node_id():
-    if bpy.app.version >= (5, 0, 0):
-        return "ShaderNodeMath"
-    else:
-        return "CompositorNodeMath"
-
-
-def get_separate_xyz_node_id():
-    if bpy.app.version >= (5, 0, 0):
-        return "ShaderNodeSeparateXYZ"
-    else:
-        return "CompositorNodeSeparateXYZ"
-
-
-def get_combine_xyz_node_id():
-    if bpy.app.version >= (5, 0, 0):
-        return "ShaderNodeCombineXYZ"
-    else:
-        return "CompositorNodeCombineXYZ"
 
 
 def get_file_slots(node):
