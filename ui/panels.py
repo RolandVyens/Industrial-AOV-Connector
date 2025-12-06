@@ -134,7 +134,10 @@ class IDS_PT_OutputPanel_Base:
             col2.operator(IDS_OT_Delete_Trash.bl_idname, icon="TRASH")
         else:
             col2.label(text="Enable Output Tools in addon setting")
-        col2.operator(IDS_OT_CloudMode.bl_idname, icon="SCREEN_BACK")
+        if context.scene.IDS_CloudModeActive:
+            col2.operator(IDS_OT_CloudMode.bl_idname, text="Restore Path Preset", icon="LOOP_BACK")
+        else:
+            col2.operator(IDS_OT_CloudMode.bl_idname, icon="SCREEN_BACK")
 
 
 class IDS_PT_OutputPanel(bpy.types.Panel, IDS_PT_OutputPanel_Base):

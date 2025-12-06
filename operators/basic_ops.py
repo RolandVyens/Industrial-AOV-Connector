@@ -12,7 +12,7 @@ from ..handy_functions import (
     enable_compositing,
     auto_set_material_aov,
 )
-from ..renderpath_preset import replaceTokens
+from ..renderpath_preset import replaceTokens, restoreTokens
 
 
 
@@ -44,14 +44,22 @@ class IDS_OT_Turn_Denoise(bpy.types.Operator):
 class IDS_OT_CloudMode(bpy.types.Operator):
     bl_idname = "compositor.cloudmodeids"
     bl_label = "Renderfarm Prepare"
-    bl_description = "Pre-replace all naming presets in order to send to render farm"
+    bl_description = "Toggle: Replace naming presets for render farm / Restore original paths"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        replaceTokens(bpy.context.scene)
-        self.report(
-            {"INFO"}, bpy.app.translations.pgettext("Pre-replaced all naming presets")
-        )
+        if context.scene.IDS_CloudModeActive:
+            restoreTokens(context.scene)
+            context.scene.IDS_CloudModeActive = False
+            self.report(
+                {"INFO"}, bpy.app.translations.pgettext("Restored all naming presets")
+            )
+        else:
+            replaceTokens(context.scene)
+            context.scene.IDS_CloudModeActive = True
+            self.report(
+                {"INFO"}, bpy.app.translations.pgettext("Pre-replaced all naming presets")
+            )
 
         return {"FINISHED"}
 

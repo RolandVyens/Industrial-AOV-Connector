@@ -447,6 +447,27 @@ language_dict["zh_CN"].update({
         "*",
         "Make DATA Exclusive Viewlayer",
     ): "创建专用数据视图层",
+    # CloudMode restore functionality
+    (
+        "*",
+        "Toggle: Replace naming presets for render farm / Restore original paths",
+    ): "切换：替换命名预设用于渲染农场 / 恢复原始路径",
+    (
+        "*",
+        "Restored all naming presets",
+    ): "已恢复所有命名预设",
+    (
+        "*",
+        "Restore Path Preset",
+    ): "恢复路径预设",
+    (
+        "*",
+        "Renderfarm Mode Active",
+    ): "云渲染模式激活",
+    (
+        "*",
+        "Whether render paths are currently substituted for render farm",
+    ): "渲染路径当前是否已替换用于渲染农场",
 })
 
 # Make zh_HANS reference the same dictionary as zh_CN

@@ -221,6 +221,13 @@ def register_properties():
         default=False,
     )
 
+    # CloudMode state tracking
+    bpy.types.Scene.IDS_CloudModeActive = bpy.props.BoolProperty(
+        name="Renderfarm Mode Active",
+        description="Whether render paths are currently substituted for render farm",
+        default=False,
+    )
+
 
 def unregister_properties():
     """Unregister all scene properties."""
@@ -240,6 +247,7 @@ def unregister_properties():
         "IDS_CryptoCompression",
         "IDS_DataMatType",
         "IDS_fakeDeep",
+        "IDS_CloudModeActive",
     ]
     for prop in props:
         if hasattr(bpy.types.Scene, prop):

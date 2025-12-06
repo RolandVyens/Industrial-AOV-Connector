@@ -267,6 +267,13 @@ def set_output_node_path(node, path):
         node.base_path = path
 
 
+def get_output_node_path(node):
+    if bpy.app.version >= (5, 0, 0):
+        return os.path.join(node.directory, node.file_name)
+    else:
+        return node.base_path
+
+
 def add_file_slot(node, name):
     if bpy.app.version >= (5, 0, 0):
         node.file_output_items.new("RGBA", name)
