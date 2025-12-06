@@ -4,7 +4,7 @@
 
 import bpy
 
-from ..handy_functions import auto_data_sample, update_data_sample
+from ..handy_functions import auto_data_sample, update_data_sample, BlenderCompat
 from ..path_modify_v2 import origin_render_path_change_loc
 from ..core import node_builder
 
@@ -69,6 +69,14 @@ class IDS_OT_Arr_Tree(bpy.types.Operator):
         node_builder.auto_arr_denoisenode()
         node_builder.auto_arr_outputnode()
         node_builder.auto_arr_mathnode()
+        
+        # Horizontal DATA arrangement if enabled
+        preferences = bpy.context.preferences
+        addon_prefs = preferences.addons[BlenderCompat.addon_package].preferences
+        if addon_prefs.Horizontal_DATA_Arrange and bpy.context.scene.IDS_AdvMode:
+            node_builder.arrange_data_layers_horizontal()
+        
         self.report({"INFO"}, bpy.app.translations.pgettext("Arrange finished"))
 
         return {"FINISHED"}
+

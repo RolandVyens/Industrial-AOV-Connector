@@ -84,6 +84,11 @@ class IDS_AddonPrefs(AddonPreferences):
         default="####",
         maxlen=100,
     )  # type: ignore
+    Horizontal_DATA_Arrange: BoolProperty(
+        name="Horizontal DATA Layer Arrangement",
+        description="In advanced mode, arrange DATA layers to the right of RGBA layers instead of below them",
+        default=True,
+    )  # type: ignore
 
     def draw(self, context):
         layout = self.layout
@@ -97,6 +102,7 @@ class IDS_AddonPrefs(AddonPreferences):
             box1.prop(self, "Custom_Data_Sample")
         box1.prop(self, "Custom_Suffix")
         box1.prop(self, "Arrange_Scale_Param", slider=False)
+        box1.prop(self, "Horizontal_DATA_Arrange")
         box2 = layout.box()
         box2.label(text="Output Tools:", icon="MODIFIER_ON")
         box2.prop(self, "Put_Default_To_trash_output")

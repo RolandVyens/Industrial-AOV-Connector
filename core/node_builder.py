@@ -1666,3 +1666,58 @@ def arrange_All():
         auto_arr_denoisenode()
         auto_arr_outputnode()
         auto_arr_mathnode()
+        
+        # Horizontal DATA arrangement if enabled
+        addon_prefs = get_addon_prefs()
+        if addon_prefs.Horizontal_DATA_Arrange and bpy.context.scene.IDS_AdvMode:
+            arrange_data_layers_horizontal()
+
+
+def arrange_data_layers_horizontal():
+    """Move DATA layer nodes to the right side of non-DATA layers.
+    
+    Called after normal arrangement. Relocates all DATA layer
+    render nodes and their children (output, math nodes) horizontally.
+    All DATA layers are stacked from y=0 going down.
+    """
+    addon_prefs = get_addon_prefs()
+    node_tree = get_compositor_node_tree(bpy.context.scene)
+    
+    # Constants: 1200 (output x) + 420 (output width) + 450 (gap) = 2070
+    DATA_LAYER_X_OFFSET = 2070
+    
+    # Find all DATA layer render nodes
+    data_layers = []
+    for node in node_tree.nodes:
+        if node.type == "R_LAYERS":
+            if node.layer[:7] == "-_-exP_" or "_DATA" in node.layer:
+                data_layers.append(node)
+    
+    # Stack DATA layers from y=0 going down
+    y_position = 0
+    spacing = BlenderCompat.node_spacing
+    
+    for render_node in data_layers:
+        old_x = render_node.location.x
+        old_y = render_node.location.y
+        
+        # Move render layer node
+        render_node.location = DATA_LAYER_X_OFFSET, y_position
+        
+        # Calculate offset to apply to children
+        x_offset = DATA_LAYER_X_OFFSET - old_x
+        y_offset = y_position - old_y
+        
+        # Move associated child nodes (those starting with "viewlayer_name--")
+        view_layer = render_node.layer
+        for child in node_tree.nodes:
+            if child.name.startswith(f"{view_layer}--"):
+                child.location = (
+                    child.location.x + x_offset,
+                    child.location.y + y_offset
+                )
+        
+        # Update y for next DATA layer
+        y_position -= (
+            render_node.dimensions.y + spacing
+        ) * addon_prefs.Arrange_Scale_Param
