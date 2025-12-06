@@ -38,11 +38,20 @@ Join [Discord](https://discord.com/invite/qGyYXUNTnm) for discussion
 
 ---
 **Update Log:**
+
+2025.12.7: version 4.0.0
+- refactored the plugin to make life easier.
+- added support for putting data layers at right of the normal layers instead of putting them down. can switch back in extension preference.
+- fixed the render path preset function completely, and can restore the renderfarm prepare function.
+-
+- 重构了插件架构。
+- 新增支持将数据层放置在普通层右侧（原为下方）。可在插件偏好设置中切换回原方式。
+- 彻底修复了渲染路径预设功能，并支持还原渲染农场路径设置。
+
+---
 2025.12.3: version 3.2.0
 - fix for blender 5.0
-
 -
-
 - 支持了blender 5.0
 ---
 
@@ -54,9 +63,7 @@ Join [Discord](https://discord.com/invite/qGyYXUNTnm) for discussion
 5. auto set data layer sample count, when generating nodes in advanced mode, auto set data layers' sample override for faster rendering
 6. better crossplatform compatibility
 7. optimize file folder and naming structure
-   
-_
-
+-
 1. 添加了是否在烘焙节点树时移除所有节点的开关
 2. 添加了整理节点时的间距偏移设置，以避免过宽的节点间距
 3. 合成器N面板UI开关（是的现在你可以在合成器显示本插件）
