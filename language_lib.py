@@ -393,5 +393,61 @@ language_dict = {
     },
 }
 
+# --- Added translations ---
+language_dict["zh_CN"].update({
+    (
+        "Operator",
+        "Renderfarm Prepare",
+    ): "云渲染预处理",
+    (
+        "*",
+        "Pre-replace all naming presets in order to send to render farm",
+    ): "预先替换所有命名预设，以便发送到渲染农场",
+    (
+        "*",
+        "Pre-replaced all naming presets",
+    ): "已预先替换所有命名预设",
+    (
+        "*",
+        "Danger file detected, interrupted",
+    ): "探测到危险文件，中断运行",
+    (
+        "Operator",
+        "Auto Set Shader AOV",
+    ): "自动设置着色器AOV",
+    (
+        "*",
+        "Auto gather and set shader AOV for all viewlayers",
+    ): "自动收集并为所有视图层设置着色器AOV",
+    (
+        "*",
+        "make a data exclusive viewlayer with all collections turned on, without any data passes",
+    ): "创建一个专门的数据视图层，开启所有集合，不含数据通道",
+    (
+        "*",
+        "New DATA Layer Created",
+    ): "新数据层已创建",
+    (
+        "*",
+        "make a data exclusive viewlayer that copys current viewlayer settings and passes",
+    ): "创建一个复制当前视图层设置和通道的专用数据视图层",
+    (
+        "*",
+        "Copy DATA Layer Created",
+    ): "复制数据层已创建",
+    (
+        "*",
+        "Current layer has been converted to DATA Layer",
+    ): "当前层已转换为数据层",
+    (
+        "*",
+        "Current layer is DATA Layer",
+    ): "当前层已经是数据层",
+    (
+        "*",
+        "Make DATA Exclusive Viewlayer",
+    ): "创建专用数据视图层",
+})
+
 # Make zh_HANS reference the same dictionary as zh_CN
 language_dict["zh_HANS"] = language_dict["zh_CN"]
