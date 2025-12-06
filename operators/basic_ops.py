@@ -7,15 +7,13 @@ import os
 import shutil
 
 from ..handy_functions import (
+    BlenderCompat,
     has_subfolder,
     enable_compositing,
     auto_set_material_aov,
 )
 from ..renderpath_preset import replaceTokens
 
-
-def get_addon_package():
-    return __package__.rsplit(".", 1)[0]
 
 
 class Compositor_OT_enable_use_nodes(bpy.types.Operator):
@@ -67,7 +65,7 @@ class IDS_OT_Delete_Trash(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         preferences = bpy.context.preferences
-        addon_prefs = preferences.addons[get_addon_package()].preferences
+        addon_prefs = preferences.addons[BlenderCompat.addon_package].preferences
 
         return addon_prefs.Show_QuickDel
 

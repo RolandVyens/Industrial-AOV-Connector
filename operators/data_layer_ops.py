@@ -6,7 +6,7 @@ import bpy
 import os
 from bpy.types import Operator
 
-from ..handy_functions import extract_string_between_patterns
+from ..handy_functions import extract_string_between_patterns, BlenderCompat
 
 
 class IDS_OT_Make_DatalayerNew(Operator):
@@ -109,23 +109,7 @@ class IDS_OT_Override_DATAMaTadv(Operator):
 
     def execute(self, context):
         newlayer = bpy.context.view_layer
-        bl_version = bpy.app.version
-        addon_file = os.path.realpath(__file__)
-        addon_directory = os.path.dirname(os.path.dirname(addon_file))
-        if (
-            int(f"{bl_version[0]}{bl_version[1]}") < 42
-            or "extensions" not in addon_directory
-        ):
-            user_path = bpy.utils.resource_path("USER")
-            asset_path = os.path.join(
-                user_path,
-                "scripts",
-                "addons",
-                "Industrial-AOV-Connector",
-                "asset.blend",
-            )
-        else:
-            asset_path = os.path.join(addon_directory, "asset.blend")
+        asset_path = BlenderCompat.asset_path
         if bpy.context.scene.IDS_DataMatType == "Pure Diffuse Material":
             if "override--exP" in bpy.data.materials:
                 newlayer.material_override = bpy.data.materials.get("override--exP")

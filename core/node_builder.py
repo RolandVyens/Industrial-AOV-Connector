@@ -10,26 +10,21 @@ import bpy
 
 from ..sort_passes import sort_passes
 from ..handy_functions import (
+    BlenderCompat,
     extract_string_between_patterns,
     arrange_list,
     sorting_data,
     get_compositor_node_tree,
     set_output_node_path,
     add_file_slot,
-    get_math_node_id,
-    get_separate_xyz_node_id,
-    get_combine_xyz_node_id,
     get_file_slots,
-    get_diffuse_color_name,
-    get_glossy_color_name,
-    get_transmission_color_name,
 )
 from ..path_modify_v2 import create_final_path
 
 
 def get_addon_prefs():
     preferences = bpy.context.preferences
-    return preferences.addons[__package__.rsplit(".", 1)[0]].preferences
+    return preferences.addons[BlenderCompat.addon_package].preferences
 
 
 # =============================================================================
@@ -62,9 +57,9 @@ def should_create_denoise_node(socket, material_aovs, denoise_col=False):
     if socket in material_aovs:
         return False
     if not denoise_col and socket in (
-        get_diffuse_color_name(),
-        get_glossy_color_name(),
-        get_transmission_color_name(),
+        BlenderCompat.diffuse_color_name,
+        BlenderCompat.glossy_color_name,
+        BlenderCompat.transmission_color_name,
     ):
         return False
     return True
@@ -108,21 +103,21 @@ def create_vector_conversion_nodes(tree, view_layer, vector_sockets):
     
     for socket in vector_sockets:
         # Break node (Separate XYZ)
-        brk = tree.nodes.new(get_separate_xyz_node_id())
+        brk = tree.nodes.new(BlenderCompat.separate_xyz_node_id)
         brk.name = f"{view_layer}--{socket}_Break"
         brk.label = f"{view_layer}_{socket}_BREAK"
         brk.hide = True
         brk.location = 500, 0
         
         # Combine node (Combine XYZ)
-        comb = tree.nodes.new(get_combine_xyz_node_id())
+        comb = tree.nodes.new(BlenderCompat.combine_xyz_node_id)
         comb.name = f"{view_layer}--{socket}_Combine"
         comb.label = f"{view_layer}_{socket}_COMBINE"
         comb.hide = True
         comb.location = 820, 0
         
         # Invert node (Math multiply by -1)
-        inv = tree.nodes.new(get_math_node_id())
+        inv = tree.nodes.new(BlenderCompat.math_node_id)
         inv.name = f"{view_layer}--{socket}_Inv"
         inv.label = f"{view_layer}_{socket}_INVERT"
         inv.operation = "MULTIPLY"
@@ -243,7 +238,7 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
         node = node_tree.nodes.get(f"{view_layer}")
         node.location = 0, renderlayer_node_position
         renderlayer_node_y.append(renderlayer_node_position)
-        spacing = 360 if bpy.app.version >= (5, 0, 0) else 120
+        spacing = BlenderCompat.node_spacing
         renderlayer_node_position -= (
             node.dimensions.y + spacing
         ) * addon_prefs.Arrange_Scale_Param
@@ -1199,7 +1194,7 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             }
                             and "Depth_AA$$aoP" in viewlayer_full[f"{view_layer}Data"]
                         ):
-                            FakeDeep_node = tree.nodes.new(get_math_node_id())
+                            FakeDeep_node = tree.nodes.new(BlenderCompat.math_node_id)
                             FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
                             FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
                             FakeDeep_node.operation = "DIVIDE"
@@ -1467,7 +1462,7 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         }
                         and "Depth_AA$$aoP" in viewlayer_full[f"{view_layer}Data"]
                     ):
-                        FakeDeep_node = tree.nodes.new(get_math_node_id())
+                        FakeDeep_node = tree.nodes.new(BlenderCompat.math_node_id)
                         FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
                         FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
                         FakeDeep_node.operation = "DIVIDE"

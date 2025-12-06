@@ -9,10 +9,6 @@ from ..path_modify_v2 import origin_render_path_change_loc
 from ..core import node_builder
 
 
-def get_addon_package():
-    return __package__.rsplit(".", 1)[0]
-
-
 class IDS_OT_Make_Tree(bpy.types.Operator):
     bl_idname = "compositor.make_tree"
     bl_label = "Cook Nodetree"

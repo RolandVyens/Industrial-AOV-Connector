@@ -4,7 +4,7 @@
 
 import bpy
 
-from ..handy_functions import is_compositing_enabled, IDS_OT_Open_Preference
+from ..handy_functions import BlenderCompat, is_compositing_enabled, IDS_OT_Open_Preference
 from ..operators import (
     Compositor_OT_enable_use_nodes,
     IDS_OT_Turn_Denoise,
@@ -20,15 +20,12 @@ from ..operators import (
 )
 
 
-def get_addon_package():
-    return __package__.rsplit(".", 1)[0]
-
 
 class IDS_PT_OutputPanel_Base:
 
     def draw_header(self, context):
         preferences = bpy.context.preferences
-        addon_prefs = preferences.addons[get_addon_package()].preferences
+        addon_prefs = preferences.addons[BlenderCompat.addon_package].preferences
         layout = self.layout
         if addon_prefs.Preference_Button_Show_Alert is True:
             layout.alert = True
@@ -44,7 +41,7 @@ class IDS_PT_OutputPanel_Base:
 
     def draw_header_preset(self, context):
         preferences = bpy.context.preferences
-        addon_prefs = preferences.addons[get_addon_package()].preferences
+        addon_prefs = preferences.addons[BlenderCompat.addon_package].preferences
         layout = self.layout
         if addon_prefs.Preference_Button_Show_Alert is True:
             layout.alert = True
@@ -60,7 +57,7 @@ class IDS_PT_OutputPanel_Base:
 
     def draw(self, context):
         preferences = bpy.context.preferences
-        addon_prefs = preferences.addons[get_addon_package()].preferences
+        addon_prefs = preferences.addons[BlenderCompat.addon_package].preferences
 
         layout = self.layout
         if is_compositing_enabled(bpy.context.scene) is False:
@@ -159,7 +156,7 @@ class IDS_PT_OutputPanel_N(bpy.types.Panel, IDS_PT_OutputPanel_Base):
     @classmethod
     def poll(cls, context):
         preferences = bpy.context.preferences
-        addon_prefs = preferences.addons[get_addon_package()].preferences
+        addon_prefs = preferences.addons[BlenderCompat.addon_package].preferences
         # Ensure the panel only shows when in the compositor editor
         return (
             context.space_data.tree_type == "CompositorNodeTree"

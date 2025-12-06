@@ -18,7 +18,7 @@ import bpy
 
 from .language_lib import language_dict
 from .renderpath_preset import replaceTokens, restoreTokens
-from .handy_functions import IDS_OT_Open_Preference
+from .handy_functions import IDS_OT_Open_Preference, BlenderCompat
 from .core import IDS_AddonPrefs, register_properties, unregister_properties
 from .operators import (
     Compositor_OT_enable_use_nodes,
@@ -63,6 +63,9 @@ reg_clss = [
 
 
 def register():
+    # Initialize version-dependent constants first
+    BlenderCompat.init(__package__)
+    
     for cls in reg_clss:
         bpy.utils.register_class(cls)
     register_properties()
