@@ -47,7 +47,7 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
         node = node_tree.nodes.get(f"{view_layer}")
         node.location = 0, renderlayer_node_position
         renderlayer_node_y.append(renderlayer_node_position)
-        spacing = 240 if bpy.app.version >= (5, 0, 0) else 120
+        spacing = 360 if bpy.app.version >= (5, 0, 0) else 120
         renderlayer_node_position -= (
             node.dimensions.y + spacing
         ) * addon_prefs.Arrange_Scale_Param
