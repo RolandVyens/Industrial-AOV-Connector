@@ -76,7 +76,7 @@ Join [Discord](https://discord.com/invite/qGyYXUNTnm) for discussion
 
 ![屏幕截图 2024-04-29 142447](https://github.com/RolandVyens/Industrial-AOV-Connector/assets/30930721/510bc1b6-f692-4a91-8bb3-6bdf75a7ac29)
 
-<img width="1920" alt="屏幕截图 2025-03-26 234126" src="https://github.com/user-attachments/assets/947535fd-3720-4f4d-997d-efdcd4a4c7c4" />
+<img width="1920" height="1080" alt="屏幕截图 2025-12-07 011740" src="https://github.com/user-attachments/assets/b659234e-f0af-4ff8-94ef-8d64643e42da" />
 
 **功能** **Features** **:**
 
