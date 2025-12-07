@@ -577,6 +577,7 @@ class NodeConnector:
     def __init__(self, scene=None):
         self.scene = scene or bpy.context.scene
         self.addon_prefs = get_addon_prefs()
+        self.node_tree = CompositorHelper.get_node_tree(self.scene)
     
     def _collect_denoise_nodes(self, node_tree, viewlayers):
         """Collect and group denoise nodes by view layer.
@@ -620,91 +621,12 @@ class NodeConnector:
     def _connect_all_in_one(self, node_tree, viewlayer_full, viewlayers, denoise_nodes):
         """Connect nodes for Config 2: All in one file"""
         for view_layer in viewlayers:
-            output_node = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_ALL}"
-            connect_denoise_passes(node_tree, view_layer, denoise_nodes[view_layer], output_node)
-            
-            for node in set(viewlayer_full[f"{view_layer}Color"]) - set(denoise_nodes[view_layer]):
-                node_tree.links.new(
-                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    node_tree.nodes[output_node].inputs[f"{node}"],
-                )
-            
-            if viewlayer_full[f"{view_layer}Crypto"] or viewlayer_full[f"{view_layer}Data"]:
-                for node in viewlayer_full[f"{view_layer}Crypto"]:
-                    node_tree.links.new(
-                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        node_tree.nodes[output_node].inputs[f"{node}"],
-                    )
-                for node in set(viewlayer_full[f"{view_layer}Data"]) - set(viewlayer_full[f"{view_layer}Vector"]):
-                    if node != "Vector" and node != "Denoising Depth":
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            node_tree.nodes[output_node].inputs[f"{node}"],
-                        )
-                    elif node == "Vector":
-                        self._connect_vector_pass(node_tree, view_layer, output_node)
-                    elif node == "Denoising Depth":
-                        self._connect_denoising_depth(node_tree, view_layer, output_node)
-            
-            if viewlayer_full[f"{view_layer}Vector"]:
-                for node in viewlayer_full[f"{view_layer}Vector"]:
-                    connect_vector_nodes(node_tree, view_layer, node, output_node)
+            self._connect_current_all_in_one(node_tree, viewlayer_full, view_layer, denoise_nodes)
     
     def _connect_separate(self, node_tree, viewlayer_full, viewlayers, denoise_nodes):
         """Connect nodes for Config 1: Separate RGBA and DATA files"""
         for view_layer in viewlayers:
-            rgba_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_RGBA}"
-            data_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_DATA}"
-            
-            connect_denoise_passes(node_tree, view_layer, denoise_nodes[view_layer], rgba_output)
-            
-            for node in set(viewlayer_full[f"{view_layer}Color"]) - set(denoise_nodes[view_layer]):
-                node_tree.links.new(
-                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    node_tree.nodes[rgba_output].inputs[f"{node}"],
-                )
-            
-            if (viewlayer_full.get(f"{view_layer}Crypto") and not self.scene.IDS_SepCryptO) or viewlayer_full.get(f"{view_layer}Data"):
-                node_tree.links.new(
-                    node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                    node_tree.nodes[data_output].inputs["Image"],
-                )
-                for node in set(viewlayer_full[f"{view_layer}Data"]) - set(viewlayer_full[f"{view_layer}Vector"]):
-                    if node != "Vector" and node != "Denoising Depth":
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            node_tree.nodes[data_output].inputs[f"{node}"],
-                        )
-                    elif node == "Vector":
-                        self._connect_vector_pass(node_tree, view_layer, data_output)
-                    elif node == "Denoising Depth":
-                        self._connect_denoising_depth(node_tree, view_layer, data_output)
-            
-            if viewlayer_full[f"{view_layer}Vector"]:
-                for node in viewlayer_full[f"{view_layer}Vector"]:
-                    connect_vector_nodes(node_tree, view_layer, node, data_output)
-            
-            if viewlayer_full.get(f"{view_layer}Crypto"):
-                for node in viewlayer_full[f"{view_layer}Crypto"]:
-                    if self.scene.IDS_SepCryptO is False:
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                            node_tree.nodes[data_output].inputs["Image"],
-                        )
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            node_tree.nodes[data_output].inputs[f"{node}"],
-                        )
-                    else:
-                        crypto_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_CRYPTO}"
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                            node_tree.nodes[crypto_output].inputs["Image"],
-                        )
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            node_tree.nodes[crypto_output].inputs[f"{node}"],
-                        )
+            self._connect_current_separate(node_tree, viewlayer_full, view_layer, denoise_nodes)
     
     def connect_current(self):
         """Connect compositor nodes for current view layer only."""
@@ -826,31 +748,12 @@ class NodeConnector:
         - IDS_UseAdvCrypto handling for Cryptomatte
         - Deep_From_Image_z connection for fake depth
         """
-        denoise_nodes_all = []
-        denoise_nodes = {}
-        denoise_nodes_temp = []
         viewlayer_full, viewlayers = TreeBuilder(self.scene).build_all_adv()
         node_tree = CompositorHelper.get_node_tree(self.scene)
-        
-        # Collect all denoise nodes
-        for node in node_tree.nodes:
-            if node.type == "DENOISE":
-                denoise_nodes_all.append(node.name)
-
-        # Group denoise nodes by view layer
-        for view_layer in viewlayers:
-            for node in denoise_nodes_all:
-                if view_layer == node[: node.rfind("--")]:
-                    denoise_nodes_temp.append(
-                        extract_string_between_patterns(node, "--", "_Dn")
-                    )
-            denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
-            denoise_nodes_temp.clear()
+        denoise_nodes = self._collect_denoise_nodes(node_tree, viewlayers)
 
         for view_layer in viewlayers:
-            is_data_or_exp_layer = is_data_layer(view_layer)
-            
-            if not is_data_or_exp_layer:
+            if not is_data_layer(view_layer):
                 self._connect_adv_regular_layer(node_tree, view_layer, viewlayer_full, denoise_nodes)
             else:
                 self._connect_adv_data_layer(node_tree, view_layer, viewlayer_full)
@@ -953,29 +856,12 @@ class NodeConnector:
         Works on one view layer at a time with advanced mode features like
         -_-exP_ handling and Deep_From_Image_z connections.
         """
-        denoise_nodes_all = []
-        denoise_nodes = {}
-        denoise_nodes_temp = []
         view_layer = bpy.context.view_layer.name
         viewlayer_full, viewlayers = TreeBuilder(self.scene).build_current_adv()
         node_tree = CompositorHelper.get_node_tree(self.scene)
+        denoise_nodes = self._collect_denoise_nodes(node_tree, [view_layer])
         
-        # Collect all denoise nodes for current view layer
-        for node in node_tree.nodes:
-            if node.type == "DENOISE":
-                denoise_nodes_all.append(node.name)
-            
-            for dn_node in denoise_nodes_all:
-                if view_layer == dn_node[: dn_node.rfind("--")]:
-                    denoise_nodes_temp.append(
-                        extract_string_between_patterns(dn_node, "--", "_Dn")
-                    )
-            denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
-            denoise_nodes_temp.clear()
-
-        is_data_or_exp_layer = view_layer[:7] == "-_-exP_" or "_DATA" in view_layer
-        
-        if not is_data_or_exp_layer:
+        if not is_data_layer(view_layer):
             self._connect_adv_regular_layer(node_tree, view_layer, viewlayer_full, denoise_nodes)
         else:
             self._connect_adv_data_layer(node_tree, view_layer, viewlayer_full)
@@ -1008,6 +894,7 @@ class NodeArranger:
     def __init__(self, scene=None):
         self.scene = scene or bpy.context.scene
         self.addon_prefs = get_addon_prefs()
+        self.node_tree = CompositorHelper.get_node_tree(self.scene)
     
     def arrange_all(self):
         """Arrange all connector nodes (master function)"""
@@ -1033,8 +920,7 @@ class NodeArranger:
         renderlayer_node_position = 0
         viewlayers = arrange_list(viewlayers_raw)
         for view_layer in viewlayers:
-            node_tree = CompositorHelper.get_node_tree(self.scene)
-            node = node_tree.nodes.get(view_layer)
+            node = self.node_tree.nodes.get(view_layer)
             if node:
                 node.location = 0, renderlayer_node_position
                 spacing = BlenderCompat.node_spacing
@@ -1051,12 +937,11 @@ class NodeArranger:
         DATA_dimension_y = {}
         VIEWLAYER_location_y = {}
         
-        node_tree = CompositorHelper.get_node_tree(self.scene)
         for view_layer in viewlayers:
-            for node in node_tree.nodes:
+            for node in self.node_tree.nodes:
                 if node.type == "R_LAYERS" and node.layer == view_layer:
                     VIEWLAYER_location_y[node.name] = node.location.y
-                    for node1 in node_tree.nodes:
+                    for node1 in self.node_tree.nodes:
                         if (
                             node1.type == "OUTPUT_FILE"
                             and node1.name[: node1.name.rfind("--")] == node.layer
@@ -1069,7 +954,7 @@ class NodeArranger:
                                 node1.dimensions.y * self.addon_prefs.Arrange_Scale_Param
                             )
         
-        for node in node_tree.nodes:
+        for node in self.node_tree.nodes:
             if node.type == "OUTPUT_FILE" and OUTPUT_SUFFIX_DATA in node.name:
                 rgba_key = node.name[: node.name.rfind(NODE_NAME_SEPARATOR)] + NODE_NAME_SEPARATOR + OUTPUT_SUFFIX_RGBA
                 if rgba_key in RGBA_location_y:
@@ -1087,7 +972,7 @@ class NodeArranger:
                     node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
                 )
         
-        for node in node_tree.nodes:
+        for node in self.node_tree.nodes:
             if node.type == "OUTPUT_FILE" and OUTPUT_SUFFIX_CRYPTO in node.name:
                 data_key = node.name[: node.name.rfind(NODE_NAME_SEPARATOR)] + NODE_NAME_SEPARATOR + OUTPUT_SUFFIX_DATA
                 rgba_key = node.name[: node.name.rfind(NODE_NAME_SEPARATOR)] + NODE_NAME_SEPARATOR + OUTPUT_SUFFIX_RGBA
@@ -1109,14 +994,13 @@ class NodeArranger:
     def arrange_denoise(self):
         """Arrange denoise nodes"""
         viewlayers = [vl.name for vl in self.scene.view_layers]
-        node_tree = CompositorHelper.get_node_tree(self.scene)
         
         for view_layer in viewlayers:
             DN_location_y = 0
             DN_dimension_y = 0
-            for node in node_tree.nodes:
+            for node in self.node_tree.nodes:
                 if node.type == "R_LAYERS" and node.layer == view_layer:
-                    for node1 in node_tree.nodes:
+                    for node1 in self.node_tree.nodes:
                         if (
                             node1.type == "DENOISE"
                             and node1.name[: node1.name.rfind("--")] == node.layer
@@ -1136,16 +1020,15 @@ class NodeArranger:
         Delegates to focused helper methods for each node type category.
         """
         viewlayers = [vl.name for vl in self.scene.view_layers]
-        node_tree = CompositorHelper.get_node_tree(self.scene)
         
         for view_layer in viewlayers:
-            for node in node_tree.nodes:
+            for node in self.node_tree.nodes:
                 if node.type == "R_LAYERS" and node.layer == view_layer:
                     offset = 0
-                    offset = self._arrange_depth_aa_nodes(node_tree, node, view_layer, offset)
-                    offset = self._arrange_color_separation_nodes(node_tree, node, view_layer, offset)
-                    offset = self._arrange_xyz_nodes(node_tree, node, view_layer, offset)
-                    self._arrange_normalize_nodes(node_tree, node, view_layer, offset)
+                    offset = self._arrange_depth_aa_nodes(self.node_tree, node, view_layer, offset)
+                    offset = self._arrange_color_separation_nodes(self.node_tree, node, view_layer, offset)
+                    offset = self._arrange_xyz_nodes(self.node_tree, node, view_layer, offset)
+                    self._arrange_normalize_nodes(self.node_tree, node, view_layer, offset)
     
     def _arrange_depth_aa_nodes(self, node_tree, render_node, view_layer, y_offset):
         """Arrange Depth_AA_Re math nodes."""
@@ -1232,11 +1115,10 @@ class NodeArranger:
     
     def arrange_data_horizontal(self):
         """Move DATA layer nodes to right side of non-DATA layers"""
-        node_tree = CompositorHelper.get_node_tree(self.scene)
         DATA_LAYER_X_OFFSET = 2070
         
         data_layers = [
-            node for node in node_tree.nodes
+            node for node in self.node_tree.nodes
             if node.type == "R_LAYERS" and is_data_layer(node.layer)
         ]
         
@@ -1251,7 +1133,7 @@ class NodeArranger:
             y_offset = y_position - old_y
             
             view_layer = render_node.layer
-            for child in node_tree.nodes:
+            for child in self.node_tree.nodes:
                 if child.name.startswith(f"{view_layer}--"):
                     child.location = (child.location.x + x_offset, child.location.y + y_offset)
             
@@ -1259,26 +1141,24 @@ class NodeArranger:
     
     def frame_data_layers(self):
         """Create frame for DATA layers"""
-        node_tree = CompositorHelper.get_node_tree(self.scene)
-        do = any(DATA_LAYER_PREFIX in node.name for node in node_tree.nodes)
+        do = any(DATA_LAYER_PREFIX in node.name for node in self.node_tree.nodes)
         
         if do:
-            for node in node_tree.nodes:
+            for node in self.node_tree.nodes:
                 if node.name == "DataFramE":
-                    node_tree.nodes.remove(node)
-            FrameNode = node_tree.nodes.new("NodeFrame")
+                    self.node_tree.nodes.remove(node)
+            FrameNode = self.node_tree.nodes.new("NodeFrame")
             FrameNode.name = "DataFramE"
             FrameNode.label = f"Industrial AOV Connector DATA Layers{DATA_LAYER_PREFIX}"
             FrameNode.use_custom_color = True
             FrameNode.color = (0.04, 0.04, 0.227)
-            for node in node_tree.nodes:
+            for node in self.node_tree.nodes:
                 if node.name.startswith(DATA_LAYER_PREFIX):
                     node.parent = FrameNode
     
     def rename_outputs(self):
         """Rename output slots to Nuke-compatible names"""
-        node_tree = CompositorHelper.get_node_tree(self.scene)
-        for node in node_tree.nodes:
+        for node in self.node_tree.nodes:
             if node.type == "OUTPUT_FILE":
                 for slot in CompositorHelper.get_slots(node):
                     if slot.name != "Deep_From_Image_z":
