@@ -109,30 +109,34 @@ The addon supports "Data Layers" - specific View Layers dedicated to non-beauty 
 
 ```mermaid
 graph TD
-    User([User / 用户]) -->|Click 'Cook Nodetree'| Start[IDS_OT_Make_Tree]
+    %% Define Modern Color Palette
+    classDef start fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
+    classDef phase1 fill:#ecfeff,stroke:#0891b2,stroke-width:2px,color:#155e75
+    classDef phase2 fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#5b21b6
+    classDef phase3 fill:#fdf2f8,stroke:#db2777,stroke-width:2px,color:#9d174d
+    classDef finish fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#14532d
+    classDef logic fill:#fffbeb,stroke:#d97706,stroke-width:2px,color:#92400e
+    classDef base fill:#f9fafb,stroke:#9ca3af,stroke-width:1px,color:#374151
+
+    User([User / 用户]) -->|Click 'Cook Nodetree'| Start[IDS_OT_Make_Tree]:::start
     
     %% 1. Creation Phase
-    Start -->|1. Build Nodes| Creator[TreeBuilder.build_all]
-    Creator --> Sorter[sort_passes.py]
+    Start -->|1. Build Nodes| Creator[TreeBuilder.build_all]:::phase1
+    Creator --> Sorter[sort_passes.py]:::logic
     Sorter -->|ViewLayer Dict| Creator
-    Creator --> CreateLoop[Create Nodes Loop]
+    Creator --> CreateLoop[Create Nodes Loop]:::base
     
     %% 2. Connection Phase
-    CreateLoop -->|2. Connect Nodes| Connector[NodeConnector.connect_all]
-    Connector --> LinkLogic{Config Logic}
-    LinkLogic -->|Std/Adv| ConnectLinks[Connect Sockets]
+    CreateLoop -->|2. Connect Nodes| Connector[NodeConnector.connect_all]:::phase2
+    Connector --> LinkLogic{Config Logic}:::logic
+    LinkLogic -->|Std/Adv| ConnectLinks[Connect Sockets]:::base
     
     %% 3. Arrangement Phase
-    ConnectLinks -->|3. Arrange Nodes| Arranger[NodeArranger.arrange_all]
-    Arranger --> Frame[Frame Data Layers]
-    Frame --> Stack[Stack Textures]
+    ConnectLinks -->|3. Arrange Nodes| Arranger[NodeArranger.arrange_all]:::phase3
+    Arranger --> Frame[Frame Data Layers]:::base
+    Frame --> Stack[Stack Textures]:::base
     
-    Stack --> Finish([Ready to Render / 准备完毕])
-
-    style Start fill:#f9f,stroke:#333
-    style Creator fill:#ddf,stroke:#333
-    style Connector fill:#ddf,stroke:#333
-    style Arranger fill:#ddf,stroke:#333
+    Stack --> Finish([Ready to Render / 准备完毕]):::finish
 ```
 
 > *Note: Diagram uses Mermaid syntax. If not rendering, view the simplified ASCII version below.*
