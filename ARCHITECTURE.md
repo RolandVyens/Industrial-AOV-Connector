@@ -49,6 +49,155 @@ The project follows a modular architecture that separates logic (Core), executio
 - **`panels.py`**: Defines the UI panels in the Properties window and Compositor N-panel.
   **面板**。定义属性窗口和合成器 N 面板中的 UI 面板。
 
+---
+
+## 2. Key Components & Logic / 关键组件逻辑
+
+### The Node Building Process / 节点构建流程
+
+The core functionality revolves around the "Cook Nodetree" button, orchestrating the `TreeBuilder` class.
+核心功能围绕 "Cook Nodetree"（烘焙节点树）按钮展开，编排 `TreeBuilder` 类。
+
+1.  **Analysis (`sort_passes.py`)** / **分析**
+    - The `sort_passes()` function scans all View Layers.
+    - It categorizes available AOVs into `Color` (Beauty, Diffuse), `Data` (Normal, Depth), and `Crypto` (Cryptomatte).
+    - `sort_passes()` 函数扫描所有视图层，将 AOV 分类为 Color、Data 和 Crypto。
+
+2.  **Creation (`core/node_builder.py`)** / **创建**
+    - `TreeBuilder.build_current()` (or `build_all()`) iterates through the analyzed data.
+    - Examples:
+      - **RGBA Node**: Created for standard color passes.
+      - **DATA Node**: Created for utility passes (32-bit float).
+      - **Denoise Node**: Injected for noisy passes if enabled.
+
+3.  **Connection (`core/node_builder.py`)** / **连接**
+    - Logic connects the Render Layer sockets to the newly created Denoise and Output nodes.
+    - Handles special logic like **Vector Conversion** (Blender to Nuke coords) and **Normalization**.
+
+4.  **Arrangement (`core/node_builder.py`)** / **排列**
+    - `TreeBuilder` calculates heights and vertically stacks nodes for clean layout.
+
+---
+
+## 3. Version Compatibility / 版本兼容性
+
+### `BlenderCompat` Class / `BlenderCompat` 类
+Located in `handy_functions.py`, this class abstracts API changes between Blender versions (e.g., 3.x vs 4.x vs 5.0).
+位于 `handy_functions.py` 中，此类抽象了 Blender 版本之间的 API 更改。
+
+- **Usage**: Access `BlenderCompat.separate_xyz_node_id` instead of hardcoding node IDs.
+- **Initialization**: `BlenderCompat.init()` is called during `register()` in `__init__.py`.
+
+---
+
+## 4. Advanced Features / 高级功能
+
+### Data Layers / 数据层
+The addon supports "Data Layers" - specific View Layers dedicated to non-beauty passes to save render time.
+插件支持"数据层" - 专用于非美景通道的特定视图层。
+- Logic handles separating these from main RGBA renders.
+- Controlled via `operators/data_layer_ops.py`.
+
+### Path Management / 路径管理
+- `path_modify_v2.py` provides path manipulation functions.
+- `renderpath_preset.py` handles token replacement in output paths.
+- Code ensures paths are "Crash-Safe" by verifying directory existence before render.
+
+---
+
+## 5. Architecture Diagram / 架构图
+
+```mermaid
+graph TD
+    User([User / 用户]) -->|Click 'Cook Nodetree'| Operator[IDS_OT_Make_Tree]
+    
+    subgraph Execution [Execution Flow / 执行流程]
+        Operator --> Connector[NodeConnector.connect_all]
+        
+        %% Phase 1: Creation
+        subgraph Creation [Phase 1: Creation / 创建阶段]
+            Connector -->|1. Build Nodes| Builder[TreeBuilder.build_all]
+            Builder --> Sorter[sort_passes.py]
+            Sorter -->|Return Dict| Builder
+            
+            Builder --> CreateRGBA[Create RGBA Nodes]
+            Builder --> CreateData[Create DATA Nodes]
+            Builder --> CreateDenoise[Create Denoise Nodes]
+            Builder --> CreateVector[Create Vector Nodes]
+        end
+        
+        %% Phase 2: Connection
+        subgraph Connection [Phase 2: Connection / 连接阶段]
+            Connector -->|2. Link Nodes| LinkLogic{Config Logic}
+            LinkLogic -->|Option 1/Adv| LinkSep[_connect_separate]
+            LinkLogic -->|Option 2| LinkAll[_connect_all_in_one]
+            
+            LinkSep & LinkAll --> LinkDenoise[Link Denoise]
+            LinkSep & LinkAll --> LinkVector[Link Vector Conversion]
+            LinkSep & LinkAll --> LinkOutput[Link to FileOutput]
+        end
+        
+        %% Phase 3: Arrangement
+        subgraph Arrangement [Phase 3: Arrangement / 排列阶段]
+            Operator -->|3. Arrange| Arranger[NodeArranger]
+            Arranger --> Frame[Frame Data Layers]
+            Arranger --> Stack[Stack Textures]
+            Arranger --> Rename[Rename Sockets]
+        end
+    end
+    
+    Rename --> Finish([Ready to Render / 准备完毕])
+```
+
+> *Note: Diagram uses Mermaid syntax. If not rendering, view the simplified ASCII version below.*
+> *注：图表使用 Mermaid 语法。若是无法渲染，请查看下方的简化 ASCII 版本。*
+
+```
+[User] -> [IDS_OT_Make_Tree]
+             |
+             v
+      [NodeConnector]
+             |
+             +---> 1. CREATION (TreeBuilder)
+             |       |
+             |       +-> [sort_passes] -> [ViewLayer Dict]
+             |       +-> [Create FileOutput Nodes]
+             |       +-> [Create Utility Nodes (Denoise/Vector)]
+             |
+             +---> 2. CONNECTION (NodeConnector)
+             |       |
+             |       +-> [Connect RenderLayer -> Denoise -> Output]
+             |       +-> [Connect RenderLayer -> Vector -> Output]
+             |
+             v
+      [NodeArranger]
+             |
+             +---> 3. ARRANGEMENT
+                     +-> [Frame Layers]
+                     +-> [Stack Nodes]
+                     +-> [Rename Outputs]
+```
+
+---
+
+## 6. Configuration Modes / 配置模式
+
+### Standard Mode (IDS_AdvMode = False) / 标准模式
+
+| Option | Behavior |
+|--------|----------|
+| **OPTION1** | Separate RGBA (16-bit) and DATA (32-bit) files<br>分离 RGBA（16位）和 DATA（32位）文件 |
+| **OPTION2** | Single ALL file (32-bit) with all passes<br>单个 ALL 文件（32位）包含所有通道 |
+
+### Advanced Mode (IDS_AdvMode = True) / 高级模式
+
+Adds control over compression codecs, Data Layers, Cryptomatte separation, and Fake Deep passes.
+包含对压缩编码、数据层、Cryptomatte 分离和 Fake Deep 通道的控制。
+
+---
+
+## 7. Naming Conventions / 命名约定
+
 Managed via `constants.py`. All nodes follow the pattern:
 由 `constants.py` 管理。所有节点遵循此模式：
 
