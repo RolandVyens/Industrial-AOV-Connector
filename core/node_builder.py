@@ -31,6 +31,16 @@ from ..constants import (
     EXR_COLOR_DEPTH_DATA,
     NODE_NAME_SEPARATOR,
     DENOISE_EXCLUDE_PASSES,
+    DATA_LAYER_PREFIX,
+    DATA_LAYER_SUFFIX,
+    OUTPUT_SUFFIX_RGBA,
+    OUTPUT_SUFFIX_DATA,
+    OUTPUT_SUFFIX_CRYPTO,
+    OUTPUT_SUFFIX_ALL,
+    LABEL_SUFFIX_RGBA,
+    LABEL_SUFFIX_DATA,
+    LABEL_SUFFIX_CRYPTO,
+    LABEL_SUFFIX_ALL,
 )
 
 
@@ -42,6 +52,17 @@ def get_addon_prefs():
 # =============================================================================
 # Helper Functions (Refactored to reduce duplicate code)
 # =============================================================================
+
+def is_data_layer(layer_name: str) -> bool:
+    """Check if a view layer is a DATA/export layer.
+    
+    Args:
+        layer_name: Name of the view layer to check
+        
+    Returns:
+        bool: True if layer starts with DATA_LAYER_PREFIX or contains DATA_LAYER_SUFFIX
+    """
+    return layer_name.startswith(DATA_LAYER_PREFIX) or DATA_LAYER_SUFFIX in layer_name
 
 def get_material_aovs():
     """Collect all material AOVs from all scenes/layers."""
@@ -295,7 +316,7 @@ class TreeBuilder:
         for node in self.tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 codec = "ZIPS" if not self.scene.IDS_AdvMode else self.scene.IDS_RGBACompression
-                FO_RGB_node = create_output_file_node(self.tree, view_layer, "RgBA", "RGBA", "16", codec)
+                FO_RGB_node = create_output_file_node(self.tree, view_layer, OUTPUT_SUFFIX_RGBA, LABEL_SUFFIX_RGBA, "16", codec)
                 CompositorHelper.set_output_path(FO_RGB_node, PathManager().create_final_path(view_layer, "RGBA"))
                 for input in viewlayer_full[f"{view_layer}Color"]:
                     CompositorHelper.add_slot(FO_RGB_node, f"{input}")
@@ -318,7 +339,7 @@ class TreeBuilder:
         """Build all-in-one file for a single layer"""
         for node in self.tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
-                FO_RGB_node = create_output_file_node(self.tree, view_layer, "AlL", "ALL", "32", "ZIPS")
+                FO_RGB_node = create_output_file_node(self.tree, view_layer, OUTPUT_SUFFIX_ALL, LABEL_SUFFIX_ALL, "32", "ZIPS")
                 CompositorHelper.set_output_path(FO_RGB_node, PathManager().create_final_path(view_layer, "All"))
                 for input in viewlayer_full[f"{view_layer}Color"]:
                     CompositorHelper.add_slot(FO_RGB_node, f"{input}")
@@ -344,7 +365,7 @@ class TreeBuilder:
     def _create_data_nodes(self, view_layer, viewlayer_full):
         """Create DATA output nodes and auxiliary nodes"""
         data_codec = "ZIPS" if not self.scene.IDS_AdvMode else self.scene.IDS_DATACompression
-        FO_DATA_node = create_output_file_node(self.tree, view_layer, "DaTA", "DATA", "32", data_codec)
+        FO_DATA_node = create_output_file_node(self.tree, view_layer, OUTPUT_SUFFIX_DATA, LABEL_SUFFIX_DATA, "32", data_codec)
         CompositorHelper.set_output_path(FO_DATA_node, PathManager().create_final_path(view_layer, "DATA"))
         CompositorHelper.add_slot(FO_DATA_node, "Image")
         datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
@@ -377,7 +398,7 @@ class TreeBuilder:
         """Create Cryptomatte output nodes"""
         if self.scene.IDS_SepCryptO is True:
             crypto_codec = "ZIPS" if not self.scene.IDS_AdvMode else self.scene.IDS_CryptoCompression
-            FO_Crypto_node = create_output_file_node(self.tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32", crypto_codec)
+            FO_Crypto_node = create_output_file_node(self.tree, view_layer, OUTPUT_SUFFIX_CRYPTO, LABEL_SUFFIX_CRYPTO, "32", crypto_codec)
             CompositorHelper.set_output_path(FO_Crypto_node, PathManager().create_final_path(view_layer, "Cryptomatte"))
             CompositorHelper.add_slot(FO_Crypto_node, "Image")
             for input in viewlayer_full[f"{view_layer}Crypto"]:
@@ -403,7 +424,7 @@ class TreeBuilder:
         for view_layer in viewlayers:
             for node in self.tree.nodes:
                 if node.type == "R_LAYERS" and node.layer == view_layer:
-                    is_data_or_exp_layer = node.layer[:7] == "-_-exP_" or "_DATA" in node.layer
+                    is_data_or_exp_layer = is_data_layer(node.layer)
                     
                     if not is_data_or_exp_layer:
                         self._build_adv_regular_layer(view_layer, viewlayer_full, addon_prefs)
@@ -416,7 +437,7 @@ class TreeBuilder:
         """Build nodes for regular view layers in advanced mode"""
         # Create RGBA output node
         FO_RGB_node = create_output_file_node(
-            self.tree, view_layer, "RgBA", "RGBA", "16",
+            self.tree, view_layer, OUTPUT_SUFFIX_RGBA, LABEL_SUFFIX_RGBA, "16",
             self.scene.IDS_RGBACompression
         )
         CompositorHelper.set_output_path(
@@ -438,11 +459,11 @@ class TreeBuilder:
         if self.scene.IDS_UseAdvCrypto is True and viewlayer_full.get(f"{view_layer}Crypto"):
             if self.scene.IDS_SepCryptO is True:
                 FO_Crypto_node = create_output_file_node(
-                    self.tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
+                    self.tree, view_layer, OUTPUT_SUFFIX_CRYPTO, LABEL_SUFFIX_CRYPTO, "32",
                     self.scene.IDS_CryptoCompression
                 )
                 base_path = PathManager().create_final_path(view_layer, "Cryptomatte")
-                CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
+                CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace(DATA_LAYER_PREFIX, ""))
                 CompositorHelper.add_slot(FO_Crypto_node, "Image")
                 for input in viewlayer_full[f"{view_layer}Crypto"]:
                     CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
@@ -455,11 +476,11 @@ class TreeBuilder:
             viewlayer_full.get(f"{view_layer}Crypto") and not self.scene.IDS_SepCryptO
         ):
             FO_DATA_node = create_output_file_node(
-                self.tree, view_layer, "DaTA", "DATA", "32",
+                self.tree, view_layer, OUTPUT_SUFFIX_DATA, LABEL_SUFFIX_DATA, "32",
                 self.scene.IDS_DATACompression
             )
             base_path = PathManager().create_final_path(view_layer, "DATA")
-            CompositorHelper.set_output_path(FO_DATA_node, base_path.replace("-_-exP_", ""))
+            CompositorHelper.set_output_path(FO_DATA_node, base_path.replace(DATA_LAYER_PREFIX, ""))
             CompositorHelper.add_slot(FO_DATA_node, "Image")
             datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
             for input in datatemp:
@@ -510,11 +531,11 @@ class TreeBuilder:
         if self.scene.IDS_SepCryptO is True:
             if self.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(f"{view_layer}Crypto"):
                 FO_Crypto_node = create_output_file_node(
-                    self.tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
+                    self.tree, view_layer, OUTPUT_SUFFIX_CRYPTO, LABEL_SUFFIX_CRYPTO, "32",
                     self.scene.IDS_CryptoCompression
                 )
                 base_path = PathManager().create_final_path(view_layer, "Cryptomatte")
-                CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
+                CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace(DATA_LAYER_PREFIX, ""))
                 CompositorHelper.add_slot(FO_Crypto_node, "Image")
                 for input in viewlayer_full[f"{view_layer}Crypto"]:
                     CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
@@ -539,7 +560,7 @@ class TreeBuilder:
 
         for node in self.tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
-                is_data_or_exp_layer = node.layer[:7] == "-_-exP_" or "_DATA" in node.layer
+                is_data_or_exp_layer = is_data_layer(node.layer)
                 
                 if not is_data_or_exp_layer:
                     self._build_adv_regular_layer(view_layer, viewlayer_full, addon_prefs)
@@ -557,26 +578,39 @@ class NodeConnector:
         self.scene = scene or bpy.context.scene
         self.addon_prefs = get_addon_prefs()
     
-    def connect_all(self):
-        """Connect all compositor nodes for all view layers."""
+    def _collect_denoise_nodes(self, node_tree, viewlayers):
+        """Collect and group denoise nodes by view layer.
+        
+        Args:
+            node_tree: The compositor node tree
+            viewlayers: List of view layer names to collect denoise nodes for
+            
+        Returns:
+            dict: Mapping of view_layer name -> list of denoise pass names
+        """
         denoise_nodes_all = []
         denoise_nodes = {}
-        denoise_nodes_temp = []
-        viewlayer_full, viewlayers = TreeBuilder(self.scene).build_all()
-        node_tree = CompositorHelper.get_node_tree(self.scene)
         
         # Collect all denoise nodes
         for node in node_tree.nodes:
             if node.type == "DENOISE":
                 denoise_nodes_all.append(node.name)
-
-        # Group denoise nodes by view layer
+        
+        # Group by view layer
         for view_layer in viewlayers:
+            passes = []
             for node in denoise_nodes_all:
-                if view_layer == node[: node.rfind("--")]:
-                    denoise_nodes_temp.append(extract_string_between_patterns(node, "--", "_Dn"))
-            denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
-            denoise_nodes_temp.clear()
+                if view_layer == node[: node.rfind(NODE_NAME_SEPARATOR)]:
+                    passes.append(extract_string_between_patterns(node, NODE_NAME_SEPARATOR, "_Dn"))
+            denoise_nodes[view_layer] = passes
+        
+        return denoise_nodes
+    
+    def connect_all(self):
+        """Connect all compositor nodes for all view layers."""
+        viewlayer_full, viewlayers = TreeBuilder(self.scene).build_all()
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        denoise_nodes = self._collect_denoise_nodes(node_tree, viewlayers)
 
         if self.scene.IDS_ConfIg == "OPTION2" and self.scene.IDS_AdvMode is False:
             self._connect_all_in_one(node_tree, viewlayer_full, viewlayers, denoise_nodes)
@@ -586,7 +620,7 @@ class NodeConnector:
     def _connect_all_in_one(self, node_tree, viewlayer_full, viewlayers, denoise_nodes):
         """Connect nodes for Config 2: All in one file"""
         for view_layer in viewlayers:
-            output_node = f"{view_layer}--AlL"
+            output_node = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_ALL}"
             connect_denoise_passes(node_tree, view_layer, denoise_nodes[view_layer], output_node)
             
             for node in set(viewlayer_full[f"{view_layer}Color"]) - set(denoise_nodes[view_layer]):
@@ -619,8 +653,8 @@ class NodeConnector:
     def _connect_separate(self, node_tree, viewlayer_full, viewlayers, denoise_nodes):
         """Connect nodes for Config 1: Separate RGBA and DATA files"""
         for view_layer in viewlayers:
-            rgba_output = f"{view_layer}--RgBA"
-            data_output = f"{view_layer}--DaTA"
+            rgba_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_RGBA}"
+            data_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_DATA}"
             
             connect_denoise_passes(node_tree, view_layer, denoise_nodes[view_layer], rgba_output)
             
@@ -662,7 +696,7 @@ class NodeConnector:
                             node_tree.nodes[data_output].inputs[f"{node}"],
                         )
                     else:
-                        crypto_output = f"{view_layer}--CryptoMaTTe"
+                        crypto_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_CRYPTO}"
                         node_tree.links.new(
                             node_tree.nodes[f"{view_layer}"].outputs["Image"],
                             node_tree.nodes[crypto_output].inputs["Image"],
@@ -675,28 +709,10 @@ class NodeConnector:
     def connect_current(self):
         """Connect compositor nodes for current view layer only."""
         view_layer = bpy.context.view_layer.name
-        denoise_nodes_all = []
-        denoise_nodes = {}
-        denoise_nodes_temp = []
-        
-        # Build nodes for current view layer
         viewlayer_full, viewlayers = TreeBuilder(self.scene).build_current()
         node_tree = CompositorHelper.get_node_tree(self.scene)
-        
-        # Collect all denoise nodes for current view layer
-        for node in node_tree.nodes:
-            if node.type == "DENOISE":
-                denoise_nodes_all.append(node.name)
-            
-            for dn_node in denoise_nodes_all:
-                if view_layer == dn_node[: dn_node.rfind("--")]:
-                    denoise_nodes_temp.append(
-                        extract_string_between_patterns(dn_node, "--", "_Dn")
-                    )
-            denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
-            denoise_nodes_temp.clear()
+        denoise_nodes = self._collect_denoise_nodes(node_tree, [view_layer])
 
-        # Connect based on configuration
         if self.scene.IDS_ConfIg == "OPTION2" and self.scene.IDS_AdvMode is False:
             self._connect_current_all_in_one(node_tree, viewlayer_full, view_layer, denoise_nodes)
         elif self.scene.IDS_ConfIg == "OPTION1" or self.scene.IDS_AdvMode is True:
@@ -704,7 +720,7 @@ class NodeConnector:
     
     def _connect_current_all_in_one(self, node_tree, viewlayer_full, view_layer, denoise_nodes):
         """Connect current view layer nodes for Config 2: All in one file"""
-        output_node = f"{view_layer}--AlL"
+        output_node = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_ALL}"
         
         # Connect denoise passes
         connect_denoise_passes(node_tree, view_layer, denoise_nodes[view_layer], output_node)
@@ -741,8 +757,8 @@ class NodeConnector:
     
     def _connect_current_separate(self, node_tree, viewlayer_full, view_layer, denoise_nodes):
         """Connect current view layer nodes for Config 1: Separate RGBA and DATA files"""
-        rgba_output = f"{view_layer}--RgBA"
-        data_output = f"{view_layer}--DaTA"
+        rgba_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_RGBA}"
+        data_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_DATA}"
         
         # Connect denoise passes to RGBA
         connect_denoise_passes(node_tree, view_layer, denoise_nodes[view_layer], rgba_output)
@@ -792,7 +808,7 @@ class NodeConnector:
                         node_tree.nodes[data_output].inputs[f"{node}"],
                     )
                 else:
-                    crypto_output = f"{view_layer}--CryptoMaTTe"
+                    crypto_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_CRYPTO}"
                     node_tree.links.new(
                         node_tree.nodes[f"{view_layer}"].outputs["Image"],
                         node_tree.nodes[crypto_output].inputs["Image"],
@@ -832,7 +848,7 @@ class NodeConnector:
             denoise_nodes_temp.clear()
 
         for view_layer in viewlayers:
-            is_data_or_exp_layer = view_layer[:7] == "-_-exP_" or "_DATA" in view_layer
+            is_data_or_exp_layer = is_data_layer(view_layer)
             
             if not is_data_or_exp_layer:
                 self._connect_adv_regular_layer(node_tree, view_layer, viewlayer_full, denoise_nodes)
@@ -841,7 +857,7 @@ class NodeConnector:
     
     def _connect_adv_regular_layer(self, node_tree, view_layer, viewlayer_full, denoise_nodes):
         """Connect regular view layer nodes in advanced mode"""
-        rgba_output = f"{view_layer}--RgBA"
+        rgba_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_RGBA}"
         
         # Connect denoise passes
         connect_denoise_passes(node_tree, view_layer, denoise_nodes[view_layer], rgba_output)
@@ -859,7 +875,7 @@ class NodeConnector:
             and self.scene.IDS_UseAdvCrypto is True
             and viewlayer_full.get(f"{view_layer}Crypto")
         ):
-            crypto_output = f"{view_layer}--CryptoMaTTe"
+            crypto_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_CRYPTO}"
             for node in viewlayer_full[f"{view_layer}Crypto"]:
                 node_tree.links.new(
                     node_tree.nodes[f"{view_layer}"].outputs["Image"],
@@ -872,7 +888,7 @@ class NodeConnector:
     
     def _connect_adv_data_layer(self, node_tree, view_layer, viewlayer_full):
         """Connect DATA and -_-exP_ layer nodes in advanced mode"""
-        data_output = f"{view_layer}--DaTA"
+        data_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_DATA}"
         
         if (
             viewlayer_full.get(f"{view_layer}Crypto")
@@ -921,7 +937,7 @@ class NodeConnector:
                         node_tree.nodes[data_output].inputs[f"{node}"],
                     )
                 elif self.scene.IDS_UseAdvCrypto is False:
-                    crypto_output = f"{view_layer}--CryptoMaTTe"
+                    crypto_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_CRYPTO}"
                     node_tree.links.new(
                         node_tree.nodes[f"{view_layer}"].outputs["Image"],
                         node_tree.nodes[crypto_output].inputs["Image"],
@@ -1044,7 +1060,7 @@ class NodeArranger:
                         if (
                             node1.type == "OUTPUT_FILE"
                             and node1.name[: node1.name.rfind("--")] == node.layer
-                            and ("RgBA" in node1.name or "AlL" in node1.name)
+                            and (OUTPUT_SUFFIX_RGBA in node1.name or OUTPUT_SUFFIX_ALL in node1.name)
                         ):
                             node1.location = 1200, node.location.y
                             node1.width = 420
@@ -1054,8 +1070,8 @@ class NodeArranger:
                             )
         
         for node in node_tree.nodes:
-            if node.type == "OUTPUT_FILE" and "DaTA" in node.name:
-                rgba_key = node.name[: node.name.rfind("--")] + "--RgBA"
+            if node.type == "OUTPUT_FILE" and OUTPUT_SUFFIX_DATA in node.name:
+                rgba_key = node.name[: node.name.rfind(NODE_NAME_SEPARATOR)] + NODE_NAME_SEPARATOR + OUTPUT_SUFFIX_RGBA
                 if rgba_key in RGBA_location_y:
                     node.location = 1200, (
                         RGBA_location_y[rgba_key]
@@ -1072,9 +1088,9 @@ class NodeArranger:
                 )
         
         for node in node_tree.nodes:
-            if node.type == "OUTPUT_FILE" and "CryptoMaTTe" in node.name:
-                data_key = node.name[: node.name.rfind("--")] + "--DaTA"
-                rgba_key = node.name[: node.name.rfind("--")] + "--RgBA"
+            if node.type == "OUTPUT_FILE" and OUTPUT_SUFFIX_CRYPTO in node.name:
+                data_key = node.name[: node.name.rfind(NODE_NAME_SEPARATOR)] + NODE_NAME_SEPARATOR + OUTPUT_SUFFIX_DATA
+                rgba_key = node.name[: node.name.rfind(NODE_NAME_SEPARATOR)] + NODE_NAME_SEPARATOR + OUTPUT_SUFFIX_RGBA
                 if data_key in DATA_location_y:
                     node.location = 1200, (
                         DATA_location_y[data_key] - DATA_dimension_y[data_key] - 20
@@ -1115,86 +1131,104 @@ class NodeArranger:
                             node1.width = 260
     
     def arrange_math(self):
-        """Arrange math nodes (Break, Combine, Invert, Normalize, etc.)"""
+        """Arrange math nodes (Break, Combine, Invert, Normalize, etc.)
+        
+        Delegates to focused helper methods for each node type category.
+        """
         viewlayers = [vl.name for vl in self.scene.view_layers]
         node_tree = CompositorHelper.get_node_tree(self.scene)
         
         for view_layer in viewlayers:
-            MA_location_y = 0
-            MA_dimension_y = 0
             for node in node_tree.nodes:
                 if node.type == "R_LAYERS" and node.layer == view_layer:
-                    # Depth_AA_Re nodes
-                    for node6 in reversed(node_tree.nodes):
-                        if node6.name == f"{view_layer}--Depth_AA_Re":
-                            node6.location = 660, (
-                                node.location.y
-                                - node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
-                                + node6.dimensions.y * self.addon_prefs.Arrange_Scale_Param
-                                + MA_dimension_y
-                            )
-                            MA_dimension_y += (node6.dimensions.y + 20) * self.addon_prefs.Arrange_Scale_Param
-                    
-                    # Separate/Combine Color nodes
-                    for node3 in reversed(node_tree.nodes):
+                    offset = 0
+                    offset = self._arrange_depth_aa_nodes(node_tree, node, view_layer, offset)
+                    offset = self._arrange_color_separation_nodes(node_tree, node, view_layer, offset)
+                    offset = self._arrange_xyz_nodes(node_tree, node, view_layer, offset)
+                    self._arrange_normalize_nodes(node_tree, node, view_layer, offset)
+    
+    def _arrange_depth_aa_nodes(self, node_tree, render_node, view_layer, y_offset):
+        """Arrange Depth_AA_Re math nodes."""
+        for node in reversed(node_tree.nodes):
+            if node.name == f"{view_layer}{NODE_NAME_SEPARATOR}Depth_AA_Re":
+                node.location = 660, (
+                    render_node.location.y
+                    - render_node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                    + node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                    + y_offset
+                )
+                y_offset += (node.dimensions.y + 20) * self.addon_prefs.Arrange_Scale_Param
+        return y_offset
+    
+    def _arrange_color_separation_nodes(self, node_tree, render_node, view_layer, y_offset):
+        """Arrange Separate/Combine Color nodes."""
+        for sep_node in reversed(node_tree.nodes):
+            if (
+                sep_node.name[: sep_node.name.rfind(NODE_NAME_SEPARATOR)] == render_node.layer
+                and sep_node.type == "SEPARATE_COLOR"
+            ):
+                sep_node.location = 550, (
+                    render_node.location.y
+                    - render_node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                    + sep_node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                    + y_offset
+                )
+                # Find matching Combine Color node
+                for comb_node in reversed(node_tree.nodes):
+                    if (
+                        comb_node.name[: comb_node.name.rfind(NODE_NAME_SEPARATOR)] == render_node.layer
+                        and comb_node.type == "COMBINE_COLOR"
+                    ):
+                        comb_node.location = 780, sep_node.location.y
+                y_offset += (sep_node.dimensions.y + 20) * self.addon_prefs.Arrange_Scale_Param
+        return y_offset
+    
+    def _arrange_xyz_nodes(self, node_tree, render_node, view_layer, y_offset):
+        """Arrange Separate/Combine XYZ and Math (Invert) nodes."""
+        for sep_node in reversed(node_tree.nodes):
+            if (
+                sep_node.name[: sep_node.name.rfind(NODE_NAME_SEPARATOR)] == render_node.layer
+                and sep_node.type in ("SEPARATE_XYZ", "SEPXYZ")
+            ):
+                sep_node.location = 500, (
+                    render_node.location.y
+                    - render_node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                    + sep_node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                    + y_offset
+                )
+                # Find matching Invert and Combine nodes
+                for related_node in reversed(node_tree.nodes):
+                    if related_node.name[: related_node.name.rfind(NODE_NAME_SEPARATOR)] == render_node.layer:
+                        # Math Invert node
                         if (
-                            node3.name[: node3.name.rfind("--")] == node.layer
-                            and node3.type == "SEPARATE_COLOR"
+                            related_node.type == "MATH"
+                            and extract_string_between_patterns(related_node.name, NODE_NAME_SEPARATOR, "_Inv")
+                            == extract_string_between_patterns(sep_node.name, NODE_NAME_SEPARATOR, "_Break")
                         ):
-                            node3.location = 550, (
-                                node.location.y
-                                - node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
-                                + node3.dimensions.y * self.addon_prefs.Arrange_Scale_Param
-                                + MA_dimension_y
-                            )
-                            for node4 in reversed(node_tree.nodes):
-                                if (
-                                    node4.name[: node4.name.rfind("--")] == node.layer
-                                    and node4.type == "COMBINE_COLOR"
-                                ):
-                                    node4.location = 780, node3.location.y
-                            MA_dimension_y += (node3.dimensions.y + 20) * self.addon_prefs.Arrange_Scale_Param
-                    
-                    # Separate/Combine XYZ and Math nodes
-                    for node1 in reversed(node_tree.nodes):
+                            related_node.location = 660, sep_node.location.y
+                        # Combine XYZ node
                         if (
-                            node1.name[: node1.name.rfind("--")] == node.layer
-                            and node1.type in ("SEPARATE_XYZ", "SEPXYZ")
+                            related_node.type in ("COMBINE_XYZ", "COMBXYZ")
+                            and extract_string_between_patterns(related_node.name, NODE_NAME_SEPARATOR, "_Combine")
+                            == extract_string_between_patterns(sep_node.name, NODE_NAME_SEPARATOR, "_Break")
                         ):
-                            node1.location = 500, (
-                                node.location.y
-                                - node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
-                                + node1.dimensions.y * self.addon_prefs.Arrange_Scale_Param
-                                + MA_dimension_y
-                            )
-                            for node2 in reversed(node_tree.nodes):
-                                if node2.name[: node2.name.rfind("--")] == node.layer:
-                                    if (
-                                        node2.type == "MATH"
-                                        and extract_string_between_patterns(node2.name, "--", "_Inv")
-                                        == extract_string_between_patterns(node1.name, "--", "_Break")
-                                    ):
-                                        node2.location = 660, node1.location.y
-                                    if (
-                                        node2.type in ("COMBINE_XYZ", "COMBXYZ")
-                                        and extract_string_between_patterns(node2.name, "--", "_Combine")
-                                        == extract_string_between_patterns(node1.name, "--", "_Break")
-                                    ):
-                                        node2.location = 820, node1.location.y
-                            MA_dimension_y += (node1.dimensions.y + 20) * self.addon_prefs.Arrange_Scale_Param
-                    
-                    # Normalize nodes
-                    for node5 in reversed(node_tree.nodes):
-                        if (
-                            node5.name[: node5.name.rfind("--")] == node.layer
-                            and node5.type == "NORMALIZE"
-                        ):
-                            node5.location = 660, (
-                                node.location.y
-                                - node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
-                                + node5.dimensions.y * self.addon_prefs.Arrange_Scale_Param
-                                + MA_dimension_y
-                            )
+                            related_node.location = 820, sep_node.location.y
+                y_offset += (sep_node.dimensions.y + 20) * self.addon_prefs.Arrange_Scale_Param
+        return y_offset
+    
+    def _arrange_normalize_nodes(self, node_tree, render_node, view_layer, y_offset):
+        """Arrange Normalize nodes."""
+        for node in reversed(node_tree.nodes):
+            if (
+                node.name[: node.name.rfind(NODE_NAME_SEPARATOR)] == render_node.layer
+                and node.type == "NORMALIZE"
+            ):
+                node.location = 660, (
+                    render_node.location.y
+                    - render_node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                    + node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                    + y_offset
+                )
     
     def arrange_data_horizontal(self):
         """Move DATA layer nodes to right side of non-DATA layers"""
@@ -1203,7 +1237,7 @@ class NodeArranger:
         
         data_layers = [
             node for node in node_tree.nodes
-            if node.type == "R_LAYERS" and (node.layer[:7] == "-_-exP_" or "_DATA" in node.layer)
+            if node.type == "R_LAYERS" and is_data_layer(node.layer)
         ]
         
         y_position = 0
@@ -1226,7 +1260,7 @@ class NodeArranger:
     def frame_data_layers(self):
         """Create frame for DATA layers"""
         node_tree = CompositorHelper.get_node_tree(self.scene)
-        do = any("-_-exP_" in node.name for node in node_tree.nodes)
+        do = any(DATA_LAYER_PREFIX in node.name for node in node_tree.nodes)
         
         if do:
             for node in node_tree.nodes:
@@ -1234,11 +1268,11 @@ class NodeArranger:
                     node_tree.nodes.remove(node)
             FrameNode = node_tree.nodes.new("NodeFrame")
             FrameNode.name = "DataFramE"
-            FrameNode.label = "Industrial AOV Connector DATA Layers-_-exP_"
+            FrameNode.label = f"Industrial AOV Connector DATA Layers{DATA_LAYER_PREFIX}"
             FrameNode.use_custom_color = True
             FrameNode.color = (0.04, 0.04, 0.227)
             for node in node_tree.nodes:
-                if node.name[:7] == "-_-exP_":
+                if node.name.startswith(DATA_LAYER_PREFIX):
                     node.parent = FrameNode
     
     def rename_outputs(self):
