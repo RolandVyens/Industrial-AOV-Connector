@@ -6,7 +6,7 @@ import bpy
 
 from ..handy_functions import DataLayerHelper, BlenderCompat
 from ..path_modify_v2 import PathManager
-from ..core import node_builder
+from ..core.node_builder import NodeConnector, NodeArranger
 
 
 class IDS_OT_Make_Tree(bpy.types.Operator):
@@ -16,16 +16,20 @@ class IDS_OT_Make_Tree(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
+        connector = NodeConnector()
+        arranger = NodeArranger()
+        
         if (
             bpy.context.scene.IDS_AdvMode is True
             and bpy.context.scene.IDS_UseDATALayer is True
         ):
-            node_builder.auto_connect_adv()
+            connector.connect_all_adv()
             DataLayerHelper.auto_sample()
         else:
-            node_builder.auto_connect()
-        node_builder.arrange_All()
-        node_builder.auto_rename()
+            connector.connect_all()
+        
+        arranger.arrange_all()
+        arranger.rename_outputs()
         PathManager().move_to_trash_output()
         self.report({"INFO"}, bpy.app.translations.pgettext("All Outputs Updated"))
 
@@ -39,16 +43,20 @@ class IDS_OT_Update_Tree(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
+        connector = NodeConnector()
+        arranger = NodeArranger()
+        
         if (
             bpy.context.scene.IDS_AdvMode is True
             and bpy.context.scene.IDS_UseDATALayer is True
         ):
-            node_builder.update_connect_adv()
+            connector.connect_current_adv()
             DataLayerHelper.update_sample()
         else:
-            node_builder.update_connect()
-        node_builder.arrange_All()
-        node_builder.auto_rename()
+            connector.connect_current()
+        
+        arranger.arrange_all()
+        arranger.rename_outputs()
         PathManager().move_to_trash_output()
         self.report(
             {"INFO"}, bpy.app.translations.pgettext("Viewlayer Outputs Updated")
@@ -64,17 +72,19 @@ class IDS_OT_Arr_Tree(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        node_builder.frame_DATA()
-        node_builder.auto_arrange_viewlayer()
-        node_builder.auto_arr_denoisenode()
-        node_builder.auto_arr_outputnode()
-        node_builder.auto_arr_mathnode()
+        arranger = NodeArranger()
+        
+        arranger.frame_data_layers()
+        arranger.arrange_viewlayers()
+        arranger.arrange_denoise()
+        arranger.arrange_outputs()
+        arranger.arrange_math()
         
         # Horizontal DATA arrangement if enabled
         preferences = bpy.context.preferences
         addon_prefs = preferences.addons[BlenderCompat.addon_package].preferences
         if addon_prefs.Horizontal_DATA_Arrange and bpy.context.scene.IDS_AdvMode:
-            node_builder.arrange_data_layers_horizontal()
+            arranger.arrange_data_horizontal()
         
         self.report({"INFO"}, bpy.app.translations.pgettext("Arrange finished"))
 

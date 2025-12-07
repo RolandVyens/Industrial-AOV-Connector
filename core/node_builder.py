@@ -234,231 +234,367 @@ def connect_denoise_passes(node_tree, view_layer, denoise_nodes, output_node_nam
         links.new(nodes[dn_name].outputs["Image"], nodes[output_node_name].inputs[node])
 
 
-def auto_arrange_viewlayer():  # 自动排列视图层节点
-    addon_prefs = get_addon_prefs()
-    viewlayers_raw = []
-    # bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers_raw.append(view_layer.name)
-    renderlayer_node_position = 0
-    renderlayer_node_y = []
-    viewlayers = arrange_list(viewlayers_raw)
-    for view_layer in viewlayers:
-        #        for node in bpy.context.scene.node_tree.nodes:
-        #            if node.type == "R_LAYERS" and node.layer == view_layer:
-        node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
-        node = node_tree.nodes.get(f"{view_layer}")
-        node.location = 0, renderlayer_node_position
-        renderlayer_node_y.append(renderlayer_node_position)
-        spacing = BlenderCompat.node_spacing
-        renderlayer_node_position -= (
-            node.dimensions.y + spacing
-        ) * addon_prefs.Arrange_Scale_Param
+# =============================================================================
+# Class-based API (Recommended)
+# =============================================================================
 
-
-def make_tree_denoise():  # 主要功能函数之建立节点
-    """Create compositor nodes for all view layers."""
-    addon_prefs = get_addon_prefs()
-    current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full, viewlayers = PassSorter().sort()
-    tree = CompositorHelper.get_node_tree(bpy.context.scene)
-    material_aovs = get_material_aovs()
-
-    if bpy.context.scene.IDS_DelNodE is True:
-        for node in tree.nodes:
-            if node.type != "R_LAYERS":
-                tree.nodes.remove(node)
-
-    if (
-        bpy.context.scene.IDS_ConfIg == "OPTION1"
-        or bpy.context.scene.IDS_AdvMode is True
-    ):  # config 1: Separate RGBA and DATA files
-        for view_layer in viewlayers:
-            for node in tree.nodes:
-                if node.type == "R_LAYERS" and node.layer == view_layer:
-                    # Create RGBA output node
-                    codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_RGBACompression
-                    FO_RGB_node = create_output_file_node(tree, view_layer, "RgBA", "RGBA", "16", codec)
-                    CompositorHelper.set_output_path(
-                        FO_RGB_node,
-                        PathManager().create_final_path(view_layer, "RGBA"),
-                    )
-                    for input in viewlayer_full[f"{view_layer}Color"]:
-                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-
-                    # Create denoise nodes if enabled
-                    if (
-                        bpy.context.scene.IDS_UsedN is True
-                        and bpy.context.scene.render.engine == "CYCLES"
-                    ):
-                        color_sockets = viewlayer_full.get(f"{view_layer}Color", [])
-                        create_denoise_nodes(
-                            tree, view_layer, color_sockets,
-                            material_aovs, addon_prefs.Denoise_Col
-                        )
-
-                    # Create DATA output node if needed
-                    if viewlayer_full.get(f"{view_layer}Data") or (
-                        viewlayer_full.get(f"{view_layer}Crypto")
-                        and not bpy.context.scene.IDS_SepCryptO
-                    ):
-                        data_codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_DATACompression
-                        FO_DATA_node = create_output_file_node(tree, view_layer, "DaTA", "DATA", "32", data_codec)
-                        CompositorHelper.set_output_path(
-                            FO_DATA_node,
-                            PathManager().create_final_path(view_layer, "DATA"),
-                        )
-                        CompositorHelper.add_slot(FO_DATA_node, "Image")
-                        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
-                        for input in datatemp:
-                            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
-
-                        # Normalize node for artistic depth
-                        if bpy.context.scene.IDS_ArtDepth == True:
-                            Normalize_node = tree.nodes.new("CompositorNodeNormalize")
-                            Normalize_node.name = f"{view_layer}--Denoising Depth_Normalize"
-                            Normalize_node.label = f"{view_layer}_Denoising Depth_Normalize"
-                            Normalize_node.hide = True
-                            Normalize_node.location = 660, 0
-
-                        # Vector pass conversion nodes
-                        if "Vector" in viewlayer_full.get(f"{view_layer}Data", []):
-                            Vector_Con_node = tree.nodes.new("CompositorNodeSeparateColor")
-                            Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
-                            Vector_Con_node.label = f"{view_layer}_Vector_VECTORIN"
-                            Vector_Con_node.hide = True
-                            Vector_Con_node.location = 550, 0
-                            Vector_Con_node = tree.nodes.new("CompositorNodeCombineColor")
-                            Vector_Con_node.name = f"{view_layer}--Vector_VectorOut"
-                            Vector_Con_node.label = f"{view_layer}_Vector_VECTOROUT"
-                            Vector_Con_node.hide = True
-                            Vector_Con_node.location = 780, 0
-
-                    # Create vector conversion nodes (Normal, Position)
-                    vector_sockets = viewlayer_full.get(f"{view_layer}Vector", [])
-                    if vector_sockets:
-                        create_vector_conversion_nodes(tree, view_layer, vector_sockets)
-
-                    # Create Cryptomatte output node
-                    if viewlayer_full.get(f"{view_layer}Crypto"):
-                        if bpy.context.scene.IDS_SepCryptO is True:
-                            crypto_codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_CryptoCompression
-                            FO_Crypto_node = create_output_file_node(tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32", crypto_codec)
-                            CompositorHelper.set_output_path(
-                                FO_Crypto_node,
-                                PathManager().create_final_path(view_layer, "Cryptomatte"),
-                            )
-                            CompositorHelper.add_slot(FO_Crypto_node, "Image")
-                            for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
-                        else:
-                            for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                CompositorHelper.add_slot(FO_DATA_node, f"{input}")
-
-    elif bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2: All in one file
-        for view_layer in viewlayers:
-            for node in tree.nodes:
-                if node.type == "R_LAYERS" and node.layer == view_layer:
-                    # Create ALL output node (single file with everything)
-                    FO_RGB_node = create_output_file_node(tree, view_layer, "AlL", "ALL", "32", "ZIPS")
-                    CompositorHelper.set_output_path(
-                        FO_RGB_node,
-                        PathManager().create_final_path(view_layer, "All"),
-                    )
-                    for input in viewlayer_full[f"{view_layer}Color"]:
-                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-
-                    # Create denoise nodes if enabled
-                    if (
-                        bpy.context.scene.IDS_UsedN is True
-                        and bpy.context.scene.render.engine == "CYCLES"
-                    ):
-                        color_sockets = viewlayer_full.get(f"{view_layer}Color", [])
-                        create_denoise_nodes(
-                            tree, view_layer, color_sockets,
-                            material_aovs, addon_prefs.Denoise_Col
-                        )
-
-                    # Add DATA passes to ALL output
-                    if viewlayer_full.get(f"{view_layer}Data"):
-                        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
-                        for input in datatemp:
-                            CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-
-                        if bpy.context.scene.IDS_ArtDepth == True:
-                            Normalize_node = tree.nodes.new("CompositorNodeNormalize")
-                            Normalize_node.name = f"{view_layer}--Denoising Depth_Normalize"
-                            Normalize_node.label = f"{view_layer}_Denoising Depth_Normalize"
-                            Normalize_node.hide = True
-                            Normalize_node.location = 660, 0
-
-                        if "Vector" in viewlayer_full.get(f"{view_layer}Data", []):
-                            Vector_Con_node = tree.nodes.new("CompositorNodeSeparateColor")
-                            Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
-                            Vector_Con_node.label = f"{view_layer}_Vector_VECTORIN"
-                            Vector_Con_node.hide = True
-                            Vector_Con_node.location = 550, 0
-                            Vector_Con_node = tree.nodes.new("CompositorNodeCombineColor")
-                            Vector_Con_node.name = f"{view_layer}--Vector_VectorOut"
-                            Vector_Con_node.label = f"{view_layer}_Vector_VECTOROUT"
-                            Vector_Con_node.hide = True
-                            Vector_Con_node.location = 780, 0
-
-                    # Create vector conversion nodes
-                    vector_sockets = viewlayer_full.get(f"{view_layer}Vector", [])
-                    if vector_sockets:
-                        create_vector_conversion_nodes(tree, view_layer, vector_sockets)
-
-                    # Add Crypto passes to ALL output
-                    if viewlayer_full.get(f"{view_layer}Crypto"):
-                        for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-
-    return viewlayer_full, viewlayers
-
-
-def auto_connect():  # 主要功能函数之建立连接
-    """Connect all compositor nodes for all view layers."""
-    denoise_nodes_all = []
-    denoise_nodes = {}
-    denoise_nodes_temp = []
-    viewlayer_full, viewlayers = make_tree_denoise()
-    material_aovs = get_material_aovs()
-    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
+class TreeBuilder:
+    """负责创建和更新 compositor 节点树"""
     
-    # Collect all denoise nodes
-    for node in node_tree.nodes:
-        if node.type == "DENOISE":
-            denoise_nodes_all.append(node.name)
+    def __init__(self, scene=None):
+        self.scene = scene or bpy.context.scene
+        self.addon_prefs = get_addon_prefs()
+        self.tree = CompositorHelper.get_node_tree(self.scene)
+        self.material_aovs = get_material_aovs()
+    
+    def build_all(self):
+        """Create compositor nodes for all view layers."""
+        viewlayer_full, viewlayers = PassSorter().sort()
 
-    # Group denoise nodes by view layer
-    for view_layer in viewlayers:
-        for node in denoise_nodes_all:
-            if view_layer == node[: node.rfind("--")]:
-                denoise_nodes_temp.append(
-                    extract_string_between_patterns(node, "--", "_Dn")
+        if self.scene.IDS_DelNodE is True:
+            for node in self.tree.nodes:
+                if node.type != "R_LAYERS":
+                    self.tree.nodes.remove(node)
+
+        if self.scene.IDS_ConfIg == "OPTION1" or self.scene.IDS_AdvMode is True:
+            self._build_separate_config(viewlayer_full, viewlayers)
+        elif self.scene.IDS_ConfIg == "OPTION2":
+            self._build_all_in_one_config(viewlayer_full, viewlayers)
+
+        return viewlayer_full, viewlayers
+    
+    def build_current(self):
+        """Create compositor nodes for the current view layer only."""
+        viewlayer_full, viewlayers = PassSorter().sort()
+        view_layer = bpy.context.view_layer.name
+
+        # Remove existing nodes for this view layer
+        for node in self.tree.nodes:
+            if node.type != "R_LAYERS" and node.name[: node.name.rfind("--")] == view_layer:
+                self.tree.nodes.remove(node)
+
+        if self.scene.IDS_ConfIg == "OPTION1" or self.scene.IDS_AdvMode is True:
+            self._build_single_layer_separate(viewlayer_full, view_layer)
+        elif self.scene.IDS_ConfIg == "OPTION2":
+            self._build_single_layer_all_in_one(viewlayer_full, view_layer)
+
+        return viewlayer_full, viewlayers
+    
+    def _build_separate_config(self, viewlayer_full, viewlayers):
+        """Build Config 1: Separate RGBA and DATA files for all layers"""
+        for view_layer in viewlayers:
+            self._build_single_layer_separate(viewlayer_full, view_layer)
+    
+    def _build_all_in_one_config(self, viewlayer_full, viewlayers):
+        """Build Config 2: All in one file for all layers"""
+        for view_layer in viewlayers:
+            self._build_single_layer_all_in_one(viewlayer_full, view_layer)
+    
+    def _build_single_layer_separate(self, viewlayer_full, view_layer):
+        """Build separate RGBA/DATA files for a single layer"""
+        for node in self.tree.nodes:
+            if node.type == "R_LAYERS" and node.layer == view_layer:
+                codec = "ZIPS" if not self.scene.IDS_AdvMode else self.scene.IDS_RGBACompression
+                FO_RGB_node = create_output_file_node(self.tree, view_layer, "RgBA", "RGBA", "16", codec)
+                CompositorHelper.set_output_path(FO_RGB_node, PathManager().create_final_path(view_layer, "RGBA"))
+                for input in viewlayer_full[f"{view_layer}Color"]:
+                    CompositorHelper.add_slot(FO_RGB_node, f"{input}")
+
+                if self.scene.IDS_UsedN is True and self.scene.render.engine == "CYCLES":
+                    create_denoise_nodes(self.tree, view_layer, viewlayer_full.get(f"{view_layer}Color", []),
+                                       self.material_aovs, self.addon_prefs.Denoise_Col)
+
+                if viewlayer_full.get(f"{view_layer}Data") or (viewlayer_full.get(f"{view_layer}Crypto") and not self.scene.IDS_SepCryptO):
+                    self._create_data_nodes(view_layer, viewlayer_full)
+
+                vector_sockets = viewlayer_full.get(f"{view_layer}Vector", [])
+                if vector_sockets:
+                    create_vector_conversion_nodes(self.tree, view_layer, vector_sockets)
+
+                if viewlayer_full.get(f"{view_layer}Crypto"):
+                    self._create_crypto_nodes(view_layer, viewlayer_full)
+    
+    def _build_single_layer_all_in_one(self, viewlayer_full, view_layer):
+        """Build all-in-one file for a single layer"""
+        for node in self.tree.nodes:
+            if node.type == "R_LAYERS" and node.layer == view_layer:
+                FO_RGB_node = create_output_file_node(self.tree, view_layer, "AlL", "ALL", "32", "ZIPS")
+                CompositorHelper.set_output_path(FO_RGB_node, PathManager().create_final_path(view_layer, "All"))
+                for input in viewlayer_full[f"{view_layer}Color"]:
+                    CompositorHelper.add_slot(FO_RGB_node, f"{input}")
+
+                if self.scene.IDS_UsedN is True and self.scene.render.engine == "CYCLES":
+                    create_denoise_nodes(self.tree, view_layer, viewlayer_full.get(f"{view_layer}Color", []),
+                                       self.material_aovs, self.addon_prefs.Denoise_Col)
+
+                if viewlayer_full.get(f"{view_layer}Data"):
+                    datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+                    for input in datatemp:
+                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
+                    self._create_auxiliary_nodes(view_layer, viewlayer_full)
+
+                vector_sockets = viewlayer_full.get(f"{view_layer}Vector", [])
+                if vector_sockets:
+                    create_vector_conversion_nodes(self.tree, view_layer, vector_sockets)
+
+                if viewlayer_full.get(f"{view_layer}Crypto"):
+                    for input in viewlayer_full[f"{view_layer}Crypto"]:
+                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
+    
+    def _create_data_nodes(self, view_layer, viewlayer_full):
+        """Create DATA output nodes and auxiliary nodes"""
+        data_codec = "ZIPS" if not self.scene.IDS_AdvMode else self.scene.IDS_DATACompression
+        FO_DATA_node = create_output_file_node(self.tree, view_layer, "DaTA", "DATA", "32", data_codec)
+        CompositorHelper.set_output_path(FO_DATA_node, PathManager().create_final_path(view_layer, "DATA"))
+        CompositorHelper.add_slot(FO_DATA_node, "Image")
+        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+        for input in datatemp:
+            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
+        self._create_auxiliary_nodes(view_layer, viewlayer_full)
+        return FO_DATA_node
+    
+    def _create_auxiliary_nodes(self, view_layer, viewlayer_full):
+        """Create Normalize and Vector conversion nodes"""
+        if self.scene.IDS_ArtDepth == True:
+            norm = self.tree.nodes.new("CompositorNodeNormalize")
+            norm.name = f"{view_layer}--Denoising Depth_Normalize"
+            norm.label = f"{view_layer}_Denoising Depth_Normalize"
+            norm.hide = True
+            norm.location = 660, 0
+        if "Vector" in viewlayer_full.get(f"{view_layer}Data", []):
+            vin = self.tree.nodes.new("CompositorNodeSeparateColor")
+            vin.name = f"{view_layer}--Vector_VectorIn"
+            vin.label = f"{view_layer}_Vector_VECTORIN"
+            vin.hide = True
+            vin.location = 550, 0
+            vout = self.tree.nodes.new("CompositorNodeCombineColor")
+            vout.name = f"{view_layer}--Vector_VectorOut"
+            vout.label = f"{view_layer}_Vector_VECTOROUT"
+            vout.hide = True
+            vout.location = 780, 0
+    
+    def _create_crypto_nodes(self, view_layer, viewlayer_full):
+        """Create Cryptomatte output nodes"""
+        if self.scene.IDS_SepCryptO is True:
+            crypto_codec = "ZIPS" if not self.scene.IDS_AdvMode else self.scene.IDS_CryptoCompression
+            FO_Crypto_node = create_output_file_node(self.tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32", crypto_codec)
+            CompositorHelper.set_output_path(FO_Crypto_node, PathManager().create_final_path(view_layer, "Cryptomatte"))
+            CompositorHelper.add_slot(FO_Crypto_node, "Image")
+            for input in viewlayer_full[f"{view_layer}Crypto"]:
+                CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
+    
+    def build_all_adv(self):
+        """Create compositor nodes for all view layers in advanced mode.
+        
+        Advanced mode adds:
+        - Path handling with -_-exP_ prefix stripping
+        - Separate handling of DATA layers  
+        - Advanced Cryptomatte options (IDS_UseAdvCrypto)
+        - Fake Deep node for depth antialiasing
+        """
+        addon_prefs = get_addon_prefs()
+        viewlayer_full, viewlayers = PassSorter().sort()
+        
+        if self.scene.IDS_DelNodE is True:
+            for node in self.tree.nodes:
+                if node.type != "R_LAYERS":
+                    self.tree.nodes.remove(node)
+
+        for view_layer in viewlayers:
+            for node in self.tree.nodes:
+                if node.type == "R_LAYERS" and node.layer == view_layer:
+                    is_data_or_exp_layer = node.layer[:7] == "-_-exP_" or "_DATA" in node.layer
+                    
+                    if not is_data_or_exp_layer:
+                        self._build_adv_regular_layer(view_layer, viewlayer_full, addon_prefs)
+                    else:
+                        self._build_adv_data_layer(view_layer, viewlayer_full, addon_prefs)
+
+        return viewlayer_full, viewlayers
+    
+    def _build_adv_regular_layer(self, view_layer, viewlayer_full, addon_prefs):
+        """Build nodes for regular view layers in advanced mode"""
+        # Create RGBA output node
+        FO_RGB_node = create_output_file_node(
+            self.tree, view_layer, "RgBA", "RGBA", "16",
+            self.scene.IDS_RGBACompression
+        )
+        CompositorHelper.set_output_path(
+            FO_RGB_node,
+            PathManager().create_final_path(view_layer, "RGBA"),
+        )
+        for input in viewlayer_full[f"{view_layer}Color"]:
+            CompositorHelper.add_slot(FO_RGB_node, f"{input}")
+
+        # Create denoise nodes if enabled
+        if self.scene.IDS_UsedN is True and self.scene.render.engine == "CYCLES":
+            color_sockets = viewlayer_full.get(f"{view_layer}Color", [])
+            create_denoise_nodes(
+                self.tree, view_layer, color_sockets,
+                self.material_aovs, addon_prefs.Denoise_Col
+            )
+
+        # Create Cryptomatte output for advanced crypto mode
+        if self.scene.IDS_UseAdvCrypto is True and viewlayer_full.get(f"{view_layer}Crypto"):
+            if self.scene.IDS_SepCryptO is True:
+                FO_Crypto_node = create_output_file_node(
+                    self.tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
+                    self.scene.IDS_CryptoCompression
                 )
-        denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
-        denoise_nodes_temp.clear()
+                base_path = PathManager().create_final_path(view_layer, "Cryptomatte")
+                CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
+                CompositorHelper.add_slot(FO_Crypto_node, "Image")
+                for input in viewlayer_full[f"{view_layer}Crypto"]:
+                    CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
+    
+    def _build_adv_data_layer(self, view_layer, viewlayer_full, addon_prefs):
+        """Build nodes for DATA and -_-exP_ layers in advanced mode"""
+        FO_DATA_node = None
+        
+        if viewlayer_full.get(f"{view_layer}Data") or (
+            viewlayer_full.get(f"{view_layer}Crypto") and not self.scene.IDS_SepCryptO
+        ):
+            FO_DATA_node = create_output_file_node(
+                self.tree, view_layer, "DaTA", "DATA", "32",
+                self.scene.IDS_DATACompression
+            )
+            base_path = PathManager().create_final_path(view_layer, "DATA")
+            CompositorHelper.set_output_path(FO_DATA_node, base_path.replace("-_-exP_", ""))
+            CompositorHelper.add_slot(FO_DATA_node, "Image")
+            datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+            for input in datatemp:
+                CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
-    if (
-        bpy.context.scene.IDS_ConfIg == "OPTION2"
-        and bpy.context.scene.IDS_AdvMode is False
-    ):  # config 2: All in one file
+            if self.scene.IDS_ArtDepth == True:
+                Normalize_node = self.tree.nodes.new("CompositorNodeNormalize")
+                Normalize_node.name = f"{view_layer}--Denoising Depth_Normalize"
+                Normalize_node.label = f"{view_layer}_Denoising Depth_Normalize"
+                Normalize_node.hide = True
+                Normalize_node.location = 660, 0
+
+            # Create Fake Deep node for depth antialiasing
+            if (
+                self.scene.IDS_fakeDeep == True
+                and self.scene.IDS_DataMatType in {
+                    "Antialias Depth Material",
+                    "Antialias Depth & Position Material",
+                }
+                and "Depth_AA$$aoP" in viewlayer_full[f"{view_layer}Data"]
+            ):
+                FakeDeep_node = self.tree.nodes.new(BlenderCompat.math_node_id)
+                FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
+                FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
+                FakeDeep_node.operation = "DIVIDE"
+                FakeDeep_node.inputs[0].default_value = 1
+                FakeDeep_node.hide = True
+                FakeDeep_node.location = 660, 0
+
+            if "Vector" in viewlayer_full.get(f"{view_layer}Data", []):
+                Vector_Con_node = self.tree.nodes.new("CompositorNodeSeparateColor")
+                Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
+                Vector_Con_node.label = f"{view_layer}_Vector_VECTORIN"
+                Vector_Con_node.hide = True
+                Vector_Con_node.location = 550, 0
+                Vector_Con_node = self.tree.nodes.new("CompositorNodeCombineColor")
+                Vector_Con_node.name = f"{view_layer}--Vector_VectorOut"
+                Vector_Con_node.label = f"{view_layer}_Vector_VECTOROUT"
+                Vector_Con_node.hide = True
+                Vector_Con_node.location = 780, 0
+
+        # Create vector conversion nodes
+        vector_sockets = viewlayer_full.get(f"{view_layer}Vector", [])
+        if vector_sockets:
+            create_vector_conversion_nodes(self.tree, view_layer, vector_sockets)
+
+        # Create Cryptomatte output for non-advanced crypto mode
+        if self.scene.IDS_SepCryptO is True:
+            if self.scene.IDS_UseAdvCrypto is False and viewlayer_full.get(f"{view_layer}Crypto"):
+                FO_Crypto_node = create_output_file_node(
+                    self.tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
+                    self.scene.IDS_CryptoCompression
+                )
+                base_path = PathManager().create_final_path(view_layer, "Cryptomatte")
+                CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
+                CompositorHelper.add_slot(FO_Crypto_node, "Image")
+                for input in viewlayer_full[f"{view_layer}Crypto"]:
+                    CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
+        elif FO_DATA_node:
+            for input in viewlayer_full.get(f"{view_layer}Crypto", []):
+                CompositorHelper.add_slot(FO_DATA_node, f"{input}")
+    
+    def build_current_adv(self):
+        """Create compositor nodes for current view layer in advanced mode.
+        
+        Works on one view layer at a time with advanced mode features like
+        -_-exP_ path handling and FakeDeep node creation.
+        """
+        addon_prefs = get_addon_prefs()
+        viewlayer_full, viewlayers = PassSorter().sort()
+        view_layer = bpy.context.view_layer.name
+
+        # Remove existing nodes for this view layer
+        for node in self.tree.nodes:
+            if node.type != "R_LAYERS" and node.name[: node.name.rfind("--")] == view_layer:
+                self.tree.nodes.remove(node)
+
+        for node in self.tree.nodes:
+            if node.type == "R_LAYERS" and node.layer == view_layer:
+                is_data_or_exp_layer = node.layer[:7] == "-_-exP_" or "_DATA" in node.layer
+                
+                if not is_data_or_exp_layer:
+                    self._build_adv_regular_layer(view_layer, viewlayer_full, addon_prefs)
+                else:
+                    self._build_adv_data_layer(view_layer, viewlayer_full, addon_prefs)
+
+        return viewlayer_full, viewlayers
+
+
+
+class NodeConnector:
+    """负责连接各类节点"""
+    
+    def __init__(self, scene=None):
+        self.scene = scene or bpy.context.scene
+        self.addon_prefs = get_addon_prefs()
+    
+    def connect_all(self):
+        """Connect all compositor nodes for all view layers."""
+        denoise_nodes_all = []
+        denoise_nodes = {}
+        denoise_nodes_temp = []
+        viewlayer_full, viewlayers = TreeBuilder(self.scene).build_all()
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        
+        # Collect all denoise nodes
+        for node in node_tree.nodes:
+            if node.type == "DENOISE":
+                denoise_nodes_all.append(node.name)
+
+        # Group denoise nodes by view layer
+        for view_layer in viewlayers:
+            for node in denoise_nodes_all:
+                if view_layer == node[: node.rfind("--")]:
+                    denoise_nodes_temp.append(extract_string_between_patterns(node, "--", "_Dn"))
+            denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
+            denoise_nodes_temp.clear()
+
+        if self.scene.IDS_ConfIg == "OPTION2" and self.scene.IDS_AdvMode is False:
+            self._connect_all_in_one(node_tree, viewlayer_full, viewlayers, denoise_nodes)
+        elif self.scene.IDS_ConfIg == "OPTION1" or self.scene.IDS_AdvMode is True:
+            self._connect_separate(node_tree, viewlayer_full, viewlayers, denoise_nodes)
+    
+    def _connect_all_in_one(self, node_tree, viewlayer_full, viewlayers, denoise_nodes):
+        """Connect nodes for Config 2: All in one file"""
         for view_layer in viewlayers:
             output_node = f"{view_layer}--AlL"
-            
-            # Connect denoise passes
             connect_denoise_passes(node_tree, view_layer, denoise_nodes[view_layer], output_node)
             
-            # Connect non-denoise color passes
             for node in set(viewlayer_full[f"{view_layer}Color"]) - set(denoise_nodes[view_layer]):
                 node_tree.links.new(
                     node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                     node_tree.nodes[output_node].inputs[f"{node}"],
                 )
             
-            # Connect Crypto and DATA passes
             if viewlayer_full[f"{view_layer}Crypto"] or viewlayer_full[f"{view_layer}Data"]:
                 for node in viewlayer_full[f"{view_layer}Crypto"]:
                     node_tree.links.new(
@@ -472,38 +608,29 @@ def auto_connect():  # 主要功能函数之建立连接
                             node_tree.nodes[output_node].inputs[f"{node}"],
                         )
                     elif node == "Vector":
-                        _connect_vector_pass(node_tree, view_layer, output_node)
+                        self._connect_vector_pass(node_tree, view_layer, output_node)
                     elif node == "Denoising Depth":
-                        _connect_denoising_depth(node_tree, view_layer, output_node)
+                        self._connect_denoising_depth(node_tree, view_layer, output_node)
             
-            # Connect vector passes (Normal, Position)
             if viewlayer_full[f"{view_layer}Vector"]:
                 for node in viewlayer_full[f"{view_layer}Vector"]:
                     connect_vector_nodes(node_tree, view_layer, node, output_node)
-                    
-    elif (
-        bpy.context.scene.IDS_ConfIg == "OPTION1"
-        or bpy.context.scene.IDS_AdvMode is True
-    ):  # config 1: Separate RGBA and DATA files
+    
+    def _connect_separate(self, node_tree, viewlayer_full, viewlayers, denoise_nodes):
+        """Connect nodes for Config 1: Separate RGBA and DATA files"""
         for view_layer in viewlayers:
             rgba_output = f"{view_layer}--RgBA"
             data_output = f"{view_layer}--DaTA"
             
-            # Connect denoise passes to RGBA
             connect_denoise_passes(node_tree, view_layer, denoise_nodes[view_layer], rgba_output)
             
-            # Connect non-denoise color passes to RGBA
             for node in set(viewlayer_full[f"{view_layer}Color"]) - set(denoise_nodes[view_layer]):
                 node_tree.links.new(
                     node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                     node_tree.nodes[rgba_output].inputs[f"{node}"],
                 )
             
-            # Connect DATA passes
-            if (
-                viewlayer_full.get(f"{view_layer}Crypto")
-                and not bpy.context.scene.IDS_SepCryptO
-            ) or viewlayer_full.get(f"{view_layer}Data"):
+            if (viewlayer_full.get(f"{view_layer}Crypto") and not self.scene.IDS_SepCryptO) or viewlayer_full.get(f"{view_layer}Data"):
                 node_tree.links.new(
                     node_tree.nodes[f"{view_layer}"].outputs["Image"],
                     node_tree.nodes[data_output].inputs["Image"],
@@ -515,19 +642,17 @@ def auto_connect():  # 主要功能函数之建立连接
                             node_tree.nodes[data_output].inputs[f"{node}"],
                         )
                     elif node == "Vector":
-                        _connect_vector_pass(node_tree, view_layer, data_output)
+                        self._connect_vector_pass(node_tree, view_layer, data_output)
                     elif node == "Denoising Depth":
-                        _connect_denoising_depth(node_tree, view_layer, data_output)
+                        self._connect_denoising_depth(node_tree, view_layer, data_output)
             
-            # Connect vector passes (Normal, Position)
             if viewlayer_full[f"{view_layer}Vector"]:
                 for node in viewlayer_full[f"{view_layer}Vector"]:
                     connect_vector_nodes(node_tree, view_layer, node, data_output)
             
-            # Connect Cryptomatte passes
             if viewlayer_full.get(f"{view_layer}Crypto"):
                 for node in viewlayer_full[f"{view_layer}Crypto"]:
-                    if bpy.context.scene.IDS_SepCryptO is False:
+                    if self.scene.IDS_SepCryptO is False:
                         node_tree.links.new(
                             node_tree.nodes[f"{view_layer}"].outputs["Image"],
                             node_tree.nodes[data_output].inputs["Image"],
@@ -546,215 +671,39 @@ def auto_connect():  # 主要功能函数之建立连接
                             node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                             node_tree.nodes[crypto_output].inputs[f"{node}"],
                         )
-
-
-def _connect_vector_pass(node_tree, view_layer, output_node):
-    """Helper to connect Vector pass through VectorIn/VectorOut nodes."""
-    nodes = node_tree.nodes
-    links = node_tree.links
-    links.new(nodes[f"{view_layer}"].outputs["Vector"], nodes[f"{view_layer}--Vector_VectorIn"].inputs["Image"])
-    links.new(nodes[f"{view_layer}--Vector_VectorOut"].outputs["Image"], nodes[output_node].inputs["Vector"])
-    links.new(nodes[f"{view_layer}--Vector_VectorIn"].outputs["Green"], nodes[f"{view_layer}--Vector_VectorOut"].inputs["Blue"])
-    links.new(nodes[f"{view_layer}--Vector_VectorIn"].outputs["Blue"], nodes[f"{view_layer}--Vector_VectorOut"].inputs["Red"])
-    links.new(nodes[f"{view_layer}--Vector_VectorIn"].outputs["Blue"], nodes[f"{view_layer}--Vector_VectorOut"].inputs["Alpha"])
-    links.new(nodes[f"{view_layer}--Vector_VectorIn"].outputs["Alpha"], nodes[f"{view_layer}--Vector_VectorOut"].inputs["Green"])
-
-
-def _connect_denoising_depth(node_tree, view_layer, output_node):
-    """Helper to connect Denoising Depth through Normalize node."""
-    nodes = node_tree.nodes
-    links = node_tree.links
-    normalize_node = f"{view_layer}--Denoising Depth_Normalize"
-    links.new(nodes[f"{view_layer}"].outputs["Denoising Depth"], nodes[normalize_node].inputs["Value"])
-    links.new(nodes[normalize_node].outputs["Value"], nodes[output_node].inputs["Denoising Depth"])
-
-
-def update_tree_denoise():  # 新建当前视图层的节点
-    """Create compositor nodes for the current view layer only."""
-    addon_prefs = get_addon_prefs()
-    current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full, viewlayers = PassSorter().sort()
-    tree = CompositorHelper.get_node_tree(bpy.context.scene)
-    view_layer = bpy.context.view_layer.name
-    material_aovs = get_material_aovs()
-
-    # Remove existing nodes for this view layer
-    for node in tree.nodes:
-        if node.type != "R_LAYERS" and node.name[: node.name.rfind("--")] == view_layer:
-            tree.nodes.remove(node)
-
-    if (
-        bpy.context.scene.IDS_ConfIg == "OPTION1"
-        or bpy.context.scene.IDS_AdvMode is True
-    ):  # config 1: Separate RGBA and DATA files
-        for node in tree.nodes:
-            if node.type == "R_LAYERS" and node.layer == view_layer:
-                # Create RGBA output node
-                codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_RGBACompression
-                FO_RGB_node = create_output_file_node(tree, view_layer, "RgBA", "RGBA", "16", codec)
-                CompositorHelper.set_output_path(
-                    FO_RGB_node,
-                    PathManager().create_final_path(view_layer, "RGBA"),
-                )
-                for input in viewlayer_full[f"{view_layer}Color"]:
-                    CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-
-                # Create denoise nodes if enabled
-                if (
-                    bpy.context.scene.IDS_UsedN is True
-                    and bpy.context.scene.render.engine == "CYCLES"
-                ):
-                    color_sockets = viewlayer_full.get(f"{view_layer}Color", [])
-                    create_denoise_nodes(
-                        tree, view_layer, color_sockets,
-                        material_aovs, addon_prefs.Denoise_Col
-                    )
-
-                # Create DATA output node if needed
-                if viewlayer_full.get(f"{view_layer}Data") or (
-                    viewlayer_full.get(f"{view_layer}Crypto")
-                    and not bpy.context.scene.IDS_SepCryptO
-                ):
-                    data_codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_DATACompression
-                    FO_DATA_node = create_output_file_node(tree, view_layer, "DaTA", "DATA", "32", data_codec)
-                    CompositorHelper.set_output_path(
-                        FO_DATA_node,
-                        PathManager().create_final_path(view_layer, "DATA"),
-                    )
-                    CompositorHelper.add_slot(FO_DATA_node, "Image")
-                    datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
-                    for input in datatemp:
-                        CompositorHelper.add_slot(FO_DATA_node, f"{input}")
-
-                    if bpy.context.scene.IDS_ArtDepth == True:
-                        Normalize_node = tree.nodes.new("CompositorNodeNormalize")
-                        Normalize_node.name = f"{view_layer}--Denoising Depth_Normalize"
-                        Normalize_node.label = f"{view_layer}_Denoising Depth_Normalize"
-                        Normalize_node.hide = True
-                        Normalize_node.location = 660, 0
-
-                    if "Vector" in viewlayer_full.get(f"{view_layer}Data", []):
-                        Vector_Con_node = tree.nodes.new("CompositorNodeSeparateColor")
-                        Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
-                        Vector_Con_node.label = f"{view_layer}_Vector_VECTORIN"
-                        Vector_Con_node.hide = True
-                        Vector_Con_node.location = 550, 0
-                        Vector_Con_node = tree.nodes.new("CompositorNodeCombineColor")
-                        Vector_Con_node.name = f"{view_layer}--Vector_VectorOut"
-                        Vector_Con_node.label = f"{view_layer}_Vector_VECTOROUT"
-                        Vector_Con_node.hide = True
-                        Vector_Con_node.location = 780, 0
-
-                # Create vector conversion nodes (Normal, Position)
-                vector_sockets = viewlayer_full.get(f"{view_layer}Vector", [])
-                if vector_sockets:
-                    create_vector_conversion_nodes(tree, view_layer, vector_sockets)
-
-                # Create Cryptomatte output node
-                if viewlayer_full.get(f"{view_layer}Crypto"):
-                    if bpy.context.scene.IDS_SepCryptO is True:
-                        crypto_codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_CryptoCompression
-                        FO_Crypto_node = create_output_file_node(tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32", crypto_codec)
-                        CompositorHelper.set_output_path(
-                            FO_Crypto_node,
-                            PathManager().create_final_path(view_layer, "Cryptomatte"),
-                        )
-                        CompositorHelper.add_slot(FO_Crypto_node, "Image")
-                        for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
-                    else:
-                        for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
-
-    elif bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2: All in one file
-        for node in tree.nodes:
-            if node.type == "R_LAYERS" and node.layer == view_layer:
-                # Create ALL output node
-                FO_RGB_node = create_output_file_node(tree, view_layer, "AlL", "ALL", "32", "ZIPS")
-                CompositorHelper.set_output_path(
-                    FO_RGB_node,
-                    PathManager().create_final_path(view_layer, "All"),
-                )
-                for input in viewlayer_full[f"{view_layer}Color"]:
-                    CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-
-                # Create denoise nodes if enabled
-                if (
-                    bpy.context.scene.IDS_UsedN is True
-                    and bpy.context.scene.render.engine == "CYCLES"
-                ):
-                    color_sockets = viewlayer_full.get(f"{view_layer}Color", [])
-                    create_denoise_nodes(
-                        tree, view_layer, color_sockets,
-                        material_aovs, addon_prefs.Denoise_Col
-                    )
-
-                # Add DATA passes to ALL output
-                if viewlayer_full.get(f"{view_layer}Data"):
-                    datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
-                    for input in datatemp:
-                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-
-                    if bpy.context.scene.IDS_ArtDepth == True:
-                        Normalize_node = tree.nodes.new("CompositorNodeNormalize")
-                        Normalize_node.name = f"{view_layer}--Denoising Depth_Normalize"
-                        Normalize_node.label = f"{view_layer}_Denoising Depth_Normalize"
-                        Normalize_node.hide = True
-                        Normalize_node.location = 660, 0
-
-                    if "Vector" in viewlayer_full.get(f"{view_layer}Data", []):
-                        Vector_Con_node = tree.nodes.new("CompositorNodeSeparateColor")
-                        Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
-                        Vector_Con_node.label = f"{view_layer}_Vector_VECTORIN"
-                        Vector_Con_node.hide = True
-                        Vector_Con_node.location = 550, 0
-                        Vector_Con_node = tree.nodes.new("CompositorNodeCombineColor")
-                        Vector_Con_node.name = f"{view_layer}--Vector_VectorOut"
-                        Vector_Con_node.label = f"{view_layer}_Vector_VECTOROUT"
-                        Vector_Con_node.hide = True
-                        Vector_Con_node.location = 780, 0
-
-                # Create vector conversion nodes
-                vector_sockets = viewlayer_full.get(f"{view_layer}Vector", [])
-                if vector_sockets:
-                    create_vector_conversion_nodes(tree, view_layer, vector_sockets)
-
-                # Add Crypto passes to ALL output
-                if viewlayer_full.get(f"{view_layer}Crypto"):
-                    for input in viewlayer_full[f"{view_layer}Crypto"]:
-                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-
-    return viewlayer_full, viewlayers
-
-
-def update_connect():  # 新建当前视图层的连接
-    """Connect compositor nodes for the current view layer only."""
-    denoise_nodes_all = []
-    denoise_nodes = {}
-    denoise_nodes_temp = []
-    view_layer = bpy.context.view_layer.name
-    viewlayer_full, viewlayers = update_tree_denoise()
-    material_aovs = get_material_aovs()
-    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
     
-    # Collect all denoise nodes
-    for node in node_tree.nodes:
-        if node.type == "DENOISE":
-            denoise_nodes_all.append(node.name)
+    def connect_current(self):
+        """Connect compositor nodes for current view layer only."""
+        view_layer = bpy.context.view_layer.name
+        denoise_nodes_all = []
+        denoise_nodes = {}
+        denoise_nodes_temp = []
         
-        # Group denoise nodes by view layer
-        for dn_node in denoise_nodes_all:
-            if view_layer == dn_node[: dn_node.rfind("--")]:
-                denoise_nodes_temp.append(
-                    extract_string_between_patterns(dn_node, "--", "_Dn")
-                )
-        denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
-        denoise_nodes_temp.clear()
+        # Build nodes for current view layer
+        viewlayer_full, viewlayers = TreeBuilder(self.scene).build_current()
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        
+        # Collect all denoise nodes for current view layer
+        for node in node_tree.nodes:
+            if node.type == "DENOISE":
+                denoise_nodes_all.append(node.name)
+            
+            for dn_node in denoise_nodes_all:
+                if view_layer == dn_node[: dn_node.rfind("--")]:
+                    denoise_nodes_temp.append(
+                        extract_string_between_patterns(dn_node, "--", "_Dn")
+                    )
+            denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
+            denoise_nodes_temp.clear()
 
-    if (
-        bpy.context.scene.IDS_ConfIg == "OPTION2"
-        and bpy.context.scene.IDS_AdvMode is False
-    ):  # config 2: All in one file
+        # Connect based on configuration
+        if self.scene.IDS_ConfIg == "OPTION2" and self.scene.IDS_AdvMode is False:
+            self._connect_current_all_in_one(node_tree, viewlayer_full, view_layer, denoise_nodes)
+        elif self.scene.IDS_ConfIg == "OPTION1" or self.scene.IDS_AdvMode is True:
+            self._connect_current_separate(node_tree, viewlayer_full, view_layer, denoise_nodes)
+    
+    def _connect_current_all_in_one(self, node_tree, viewlayer_full, view_layer, denoise_nodes):
+        """Connect current view layer nodes for Config 2: All in one file"""
         output_node = f"{view_layer}--AlL"
         
         # Connect denoise passes
@@ -781,19 +730,17 @@ def update_connect():  # 新建当前视图层的连接
                         node_tree.nodes[output_node].inputs[f"{node}"],
                     )
                 elif node == "Vector":
-                    _connect_vector_pass(node_tree, view_layer, output_node)
+                    self._connect_vector_pass(node_tree, view_layer, output_node)
                 elif node == "Denoising Depth":
-                    _connect_denoising_depth(node_tree, view_layer, output_node)
+                    self._connect_denoising_depth(node_tree, view_layer, output_node)
         
         # Connect vector passes (Normal, Position)
         if viewlayer_full[f"{view_layer}Vector"]:
             for node in viewlayer_full[f"{view_layer}Vector"]:
                 connect_vector_nodes(node_tree, view_layer, node, output_node)
-                
-    elif (
-        bpy.context.scene.IDS_ConfIg == "OPTION1"
-        or bpy.context.scene.IDS_AdvMode is True
-    ):  # config 1: Separate RGBA and DATA files
+    
+    def _connect_current_separate(self, node_tree, viewlayer_full, view_layer, denoise_nodes):
+        """Connect current view layer nodes for Config 1: Separate RGBA and DATA files"""
         rgba_output = f"{view_layer}--RgBA"
         data_output = f"{view_layer}--DaTA"
         
@@ -810,7 +757,7 @@ def update_connect():  # 新建当前视图层的连接
         # Connect DATA passes
         if (
             viewlayer_full.get(f"{view_layer}Crypto")
-            and not bpy.context.scene.IDS_SepCryptO
+            and not self.scene.IDS_SepCryptO
         ) or viewlayer_full.get(f"{view_layer}Data"):
             node_tree.links.new(
                 node_tree.nodes[f"{view_layer}"].outputs["Image"],
@@ -823,9 +770,9 @@ def update_connect():  # 新建当前视图层的连接
                         node_tree.nodes[data_output].inputs[f"{node}"],
                     )
                 elif node == "Vector":
-                    _connect_vector_pass(node_tree, view_layer, data_output)
+                    self._connect_vector_pass(node_tree, view_layer, data_output)
                 elif node == "Denoising Depth":
-                    _connect_denoising_depth(node_tree, view_layer, data_output)
+                    self._connect_denoising_depth(node_tree, view_layer, data_output)
         
         # Connect vector passes (Normal, Position)
         if viewlayer_full[f"{view_layer}Vector"]:
@@ -835,7 +782,7 @@ def update_connect():  # 新建当前视图层的连接
         # Connect Cryptomatte passes
         if viewlayer_full.get(f"{view_layer}Crypto"):
             for node in viewlayer_full[f"{view_layer}Crypto"]:
-                if bpy.context.scene.IDS_SepCryptO is False:
+                if self.scene.IDS_SepCryptO is False:
                     node_tree.links.new(
                         node_tree.nodes[f"{view_layer}"].outputs["Image"],
                         node_tree.nodes[data_output].inputs["Image"],
@@ -854,704 +801,46 @@ def update_connect():  # 新建当前视图层的连接
                         node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         node_tree.nodes[crypto_output].inputs[f"{node}"],
                     )
-
-
-def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
-    addon_prefs = get_addon_prefs()
-    # viewlayers = []
-    # for view_layer in bpy.context.scene.view_layers:
-    #     viewlayers.append(view_layer.name)
-    # for view_layer in viewlayers:
-    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
-    for node in node_tree.nodes:
-        # if node.type == "R_LAYERS" and node.layer == view_layer:
-        #     for node1 in bpy.context.scene.node_tree.nodes:
-        if node.type == "OUTPUT_FILE":
-            for slot in CompositorHelper.get_slots(node):
-                if slot.name != "Deep_From_Image_z":
-                    slot.name = slot.name.replace("Image", "rgba")
-                slot.name = slot.name.replace("Combined", "RGBA")
-                slot.name = slot.name.replace("$$aoP", "")
-                if addon_prefs.Use_Old_Layer_Naming is False:
-                    slot.name = slot.name.replace("Position", "Pworld")
-                    if slot.name != "Artistic_Depth":
-                        slot.name = slot.name.replace("Depth", "z")
-                slot.name = slot.name.replace("Denoising z", "Artistic_Depth")
-
-
-def auto_arr_outputnode():  # 排列输出节点
-    addon_prefs = get_addon_prefs()
-    viewlayers = []
-    RGBA_location_y = {}
-    RGBA_dimension_y = {}
-    DATA_location_y = {}
-    DATA_dimension_y = {}
-    VIEWLAYER_location_y = {}
-    outnode_positions = []
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
-    for view_layer in viewlayers:
-        node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
-        for node in node_tree.nodes:
-            if node.type == "R_LAYERS" and node.layer == view_layer:
-                VIEWLAYER_location_y[node.name] = node.location.y
-                for node1 in node_tree.nodes:
-                    if (
-                        node1.type == "OUTPUT_FILE"
-                        and node1.name[: node1.name.rfind("--")] == node.layer
-                        and "RgBA" in node1.name
-                    ):
-                        node1.location = 1200, node.location.y
-                        node1.width = 420
-                        RGBA_location_y[node1.name] = node1.location.y
-                        RGBA_dimension_y[node1.name] = (
-                            node1.dimensions.y * addon_prefs.Arrange_Scale_Param
-                        )
-                    elif (
-                        node1.type == "OUTPUT_FILE"
-                        and node1.name[: node1.name.rfind("--")] == node.layer
-                        and "AlL" in node1.name
-                    ):
-                        node1.location = 1200, node.location.y
-                        node1.width = 420
-                        RGBA_location_y[node1.name] = node1.location.y
-                        RGBA_dimension_y[node1.name] = (
-                            node1.dimensions.y * addon_prefs.Arrange_Scale_Param
-                        )
-    # print(RGBA_dimension_y)
-    # print(RGBA_location_y)
-    # print(RGBA_location_y.get(node.name[: node.name.rfind("_")] + "_RgBA"))
-    for node in node_tree.nodes:
-        if node.type == "OUTPUT_FILE" and "DaTA" in node.name:
-            if node.name[: node.name.rfind("--")] + "--RgBA" in RGBA_location_y:
-                node.location = 1200, (
-                    RGBA_location_y.get(node.name[: node.name.rfind("--")] + "--RgBA")
-                    - RGBA_dimension_y.get(
-                        node.name[: node.name.rfind("--")] + "--RgBA"
-                    )
-                    - 20 * addon_prefs.Arrange_Scale_Param
-                )
-            else:
-                node.location = 1200, VIEWLAYER_location_y.get(
-                    node.name[: node.name.rfind("--")]
-                )
-            node.width = 420
-            DATA_location_y[node.name] = node.location.y
-            DATA_dimension_y[node.name] = (
-                node.dimensions.y * addon_prefs.Arrange_Scale_Param
-            )
-    for node in node_tree.nodes:
-        if node.type == "OUTPUT_FILE" and "CryptoMaTTe" in node.name:
-            if node.name[: node.name.rfind("--")] + "--DaTA" in DATA_location_y:
-                node.location = 1200, (
-                    DATA_location_y.get(node.name[: node.name.rfind("--")] + "--DaTA")
-                    - DATA_dimension_y.get(
-                        node.name[: node.name.rfind("--")] + "--DaTA"
-                    )
-                    - 20
-                )
-            elif node.name[: node.name.rfind("--")] + "--RgBA" in RGBA_location_y:
-                node.location = 1200, (
-                    RGBA_location_y.get(node.name[: node.name.rfind("--")] + "--RgBA")
-                    - RGBA_dimension_y.get(
-                        node.name[: node.name.rfind("--")] + "--RgBA"
-                    )
-                    - 20 * addon_prefs.Arrange_Scale_Param
-                )
-            else:
-                node.location = 1200, VIEWLAYER_location_y.get(
-                    node.name[: node.name.rfind("--")]
-                )
-
-            node.width = 420
-
-
-def auto_arr_denoisenode():  # 排列降噪节点
-    addon_prefs = get_addon_prefs()
-    viewlayers = []
-    DN_location_y = 0
-    DN_dimension_y = 0
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
-    for view_layer in viewlayers:
-        node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
-        for node in node_tree.nodes:
-            if node.type == "R_LAYERS" and node.layer == view_layer:
-                for node1 in node_tree.nodes:
-                    if (
-                        node1.type == "DENOISE"
-                        and node1.name[: node1.name.rfind("--")] == node.layer
-                    ):
-                        node1.location = 600, (
-                            node.location.y - DN_location_y - DN_dimension_y
-                        )
-                        # print(node1.dimensions.y)
-                        DN_dimension_y += (
-                            node1.dimensions.y * addon_prefs.Arrange_Scale_Param
-                        )
-                        DN_location_y += 10 * addon_prefs.Arrange_Scale_Param
-                        node1.width = 260
-        DN_location_y = 0
-        DN_dimension_y = 0
-
-
-def auto_arr_mathnode():  # 排列数学运算节点
-    addon_prefs = get_addon_prefs()
-    viewlayers = []
-    MA_location_y = 0
-    MA_dimension_y = 0
-    for view_layer in bpy.context.scene.view_layers:
-        viewlayers.append(view_layer.name)
-    for view_layer in viewlayers:
-        node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
-        for node in node_tree.nodes:
-            if node.type == "R_LAYERS" and node.layer == view_layer:
-                for node6 in reversed(node_tree.nodes):
-                    if node6.name == f"{view_layer}--Depth_AA_Re":
-                        node6.location = 660, (
-                            node.location.y
-                            - node.dimensions.y * addon_prefs.Arrange_Scale_Param
-                            + node6.dimensions.y * addon_prefs.Arrange_Scale_Param
-                            + MA_dimension_y
-                        )
-                        MA_location_y += (
-                            node6.location.y * addon_prefs.Arrange_Scale_Param
-                        )
-                        MA_dimension_y += (
-                            node6.dimensions.y + 20
-                        ) * addon_prefs.Arrange_Scale_Param
-                for node3 in reversed(node_tree.nodes):
-                    if (
-                        node3.name[: node3.name.rfind("--")] == node.layer
-                        and node3.type == "SEPARATE_COLOR"
-                    ):
-                        node3.location = 550, (
-                            node.location.y
-                            - node.dimensions.y * addon_prefs.Arrange_Scale_Param
-                            + node3.dimensions.y * addon_prefs.Arrange_Scale_Param
-                            + MA_dimension_y
-                        )
-                        for node4 in reversed(node_tree.nodes):
-                            if (
-                                node4.name[: node4.name.rfind("--")] == node.layer
-                                and node4.type == "COMBINE_COLOR"
-                            ):
-                                node4.location = 780, node3.location.y
-                        MA_location_y += (
-                            node3.location.y * addon_prefs.Arrange_Scale_Param
-                        )
-                        MA_dimension_y += (
-                            node3.dimensions.y + 20
-                        ) * addon_prefs.Arrange_Scale_Param
-                for node1 in reversed(node_tree.nodes):
-                    if (
-                        node1.name[: node1.name.rfind("--")] == node.layer
-                        and node1.type in ("SEPARATE_XYZ", "SEPXYZ")
-                    ):
-                        node1.location = 500, (
-                            node.location.y
-                            - node.dimensions.y * addon_prefs.Arrange_Scale_Param
-                            + node1.dimensions.y * addon_prefs.Arrange_Scale_Param
-                            + MA_dimension_y
-                        )
-                        for node2 in reversed(node_tree.nodes):
-                            if (
-                                node2.name[: node2.name.rfind("--")] == node.layer
-                                and node2.type == "MATH"
-                                and extract_string_between_patterns(
-                                    node2.name, "--", "_Inv"
-                                )
-                                == extract_string_between_patterns(
-                                    node1.name, "--", "_Break"
-                                )
-                            ):
-                                node2.location = 660, node1.location.y
-                            if (
-                                node2.name[: node2.name.rfind("--")] == node.layer
-                                and node2.type in ("COMBINE_XYZ", "COMBXYZ")
-                                and extract_string_between_patterns(
-                                    node2.name, "--", "_Combine"
-                                )
-                                == extract_string_between_patterns(
-                                    node1.name, "--", "_Break"
-                                )
-                            ):
-                                node2.location = 820, node1.location.y
-                        MA_location_y += (
-                            node1.location.y * addon_prefs.Arrange_Scale_Param
-                        )
-                        MA_dimension_y += (
-                            node1.dimensions.y + 20
-                        ) * addon_prefs.Arrange_Scale_Param
-                for node5 in reversed(node_tree.nodes):
-                    if (
-                        node5.name[: node5.name.rfind("--")] == node.layer
-                        and node5.type == "NORMALIZE"
-                    ):
-                        node5.location = 660, (
-                            node.location.y
-                            - node.dimensions.y * addon_prefs.Arrange_Scale_Param
-                            + node5.dimensions.y * addon_prefs.Arrange_Scale_Param
-                            + MA_dimension_y
-                        )
-            MA_location_y = 0
-            MA_dimension_y = 0
-
-
-"""以下为高级模式使用的函数"""
-
-
-def make_tree_denoise_adv():  # 高级模式节点创建
-    """Create compositor nodes for all view layers in advanced mode.
     
-    Advanced mode adds:
-    - Path handling with -_-exP_ prefix stripping
-    - Separate handling of DATA layers  
-    - Advanced Cryptomatte options (IDS_UseAdvCrypto)
-    - Fake Deep node for depth antialiasing
-    """
-    addon_prefs = get_addon_prefs()
-    current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full, viewlayers = PassSorter().sort()
-    tree = CompositorHelper.get_node_tree(bpy.context.scene)
-    material_aovs = get_material_aovs()
-
-    if bpy.context.scene.IDS_DelNodE is True:
-        for node in tree.nodes:
-            if node.type != "R_LAYERS":
-                tree.nodes.remove(node)
-
-    for view_layer in viewlayers:
-        for node in tree.nodes:
-            if node.type == "R_LAYERS" and node.layer == view_layer:
-                is_data_or_exp_layer = node.layer[:7] == "-_-exP_" or "_DATA" in node.layer
-                
-                if not is_data_or_exp_layer:
-                    # Create RGBA output node for regular layers
-                    FO_RGB_node = create_output_file_node(
-                        tree, view_layer, "RgBA", "RGBA", "16",
-                        bpy.context.scene.IDS_RGBACompression
-                    )
-                    CompositorHelper.set_output_path(
-                        FO_RGB_node,
-                        PathManager().create_final_path(view_layer, "RGBA"),
-                    )
-                    for input in viewlayer_full[f"{view_layer}Color"]:
-                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-
-                    # Create denoise nodes if enabled
-                    if (
-                        bpy.context.scene.IDS_UsedN is True
-                        and bpy.context.scene.render.engine == "CYCLES"
-                    ):
-                        color_sockets = viewlayer_full.get(f"{view_layer}Color", [])
-                        create_denoise_nodes(
-                            tree, view_layer, color_sockets,
-                            material_aovs, addon_prefs.Denoise_Col
-                        )
-
-                    # Create Cryptomatte output for advanced crypto mode
-                    if (
-                        bpy.context.scene.IDS_UseAdvCrypto is True
-                        and viewlayer_full.get(f"{view_layer}Crypto")
-                    ):
-                        if bpy.context.scene.IDS_SepCryptO is True:
-                            FO_Crypto_node = create_output_file_node(
-                                tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
-                                bpy.context.scene.IDS_CryptoCompression
-                            )
-                            base_path = PathManager().create_final_path(
-                                view_layer, "Cryptomatte"
-                            )
-                            CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
-                            CompositorHelper.add_slot(FO_Crypto_node, "Image")
-                            for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
-                        elif bpy.context.scene.IDS_UseDATALayer is False:
-                            for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                CompositorHelper.add_slot(FO_DATA_node, f"{input}")
-
-                else:
-                    # Handle DATA and -_-exP_ layers
-                    if viewlayer_full.get(f"{view_layer}Data") or (
-                        viewlayer_full.get(f"{view_layer}Crypto")
-                        and not bpy.context.scene.IDS_SepCryptO
-                    ):
-                        FO_DATA_node = create_output_file_node(
-                            tree, view_layer, "DaTA", "DATA", "32",
-                            bpy.context.scene.IDS_DATACompression
-                        )
-                        base_path = PathManager().create_final_path(
-                            view_layer, "DATA"
-                        )
-                        CompositorHelper.set_output_path(FO_DATA_node, base_path.replace("-_-exP_", ""))
-                        CompositorHelper.add_slot(FO_DATA_node, "Image")
-                        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
-                        for input in datatemp:
-                            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
-
-                        if bpy.context.scene.IDS_ArtDepth == True:
-                            Normalize_node = tree.nodes.new("CompositorNodeNormalize")
-                            Normalize_node.name = f"{view_layer}--Denoising Depth_Normalize"
-                            Normalize_node.label = f"{view_layer}_Denoising Depth_Normalize"
-                            Normalize_node.hide = True
-                            Normalize_node.location = 660, 0
-
-                        # Create Fake Deep node for depth antialiasing
-                        if (
-                            bpy.context.scene.IDS_fakeDeep == True
-                            and bpy.context.scene.IDS_DataMatType in {
-                                "Antialias Depth Material",
-                                "Antialias Depth & Position Material",
-                            }
-                            and "Depth_AA$$aoP" in viewlayer_full[f"{view_layer}Data"]
-                        ):
-                            FakeDeep_node = tree.nodes.new(BlenderCompat.math_node_id)
-                            FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
-                            FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
-                            FakeDeep_node.operation = "DIVIDE"
-                            FakeDeep_node.inputs[0].default_value = 1
-                            FakeDeep_node.hide = True
-                            FakeDeep_node.location = 660, 0
-
-                        if "Vector" in viewlayer_full.get(f"{view_layer}Data", []):
-                            Vector_Con_node = tree.nodes.new("CompositorNodeSeparateColor")
-                            Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
-                            Vector_Con_node.label = f"{view_layer}_Vector_VECTORIN"
-                            Vector_Con_node.hide = True
-                            Vector_Con_node.location = 550, 0
-                            Vector_Con_node = tree.nodes.new("CompositorNodeCombineColor")
-                            Vector_Con_node.name = f"{view_layer}--Vector_VectorOut"
-                            Vector_Con_node.label = f"{view_layer}_Vector_VECTOROUT"
-                            Vector_Con_node.hide = True
-                            Vector_Con_node.location = 780, 0
-
-                    # Create vector conversion nodes
-                    vector_sockets = viewlayer_full.get(f"{view_layer}Vector", [])
-                    if vector_sockets:
-                        create_vector_conversion_nodes(tree, view_layer, vector_sockets)
-
-                    # Create Cryptomatte output for non-advanced crypto mode
-                    if bpy.context.scene.IDS_SepCryptO is True:
-                        if (
-                            bpy.context.scene.IDS_UseAdvCrypto is False
-                            and viewlayer_full.get(f"{view_layer}Crypto")
-                        ):
-                            FO_Crypto_node = create_output_file_node(
-                                tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
-                                bpy.context.scene.IDS_CryptoCompression
-                            )
-                            base_path = PathManager().create_final_path(
-                                view_layer, "Cryptomatte"
-                            )
-                            CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
-                            CompositorHelper.add_slot(FO_Crypto_node, "Image")
-                            for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
-                    else:
-                        for input in viewlayer_full.get(f"{view_layer}Crypto", []):
-                            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
-
-    return viewlayer_full, viewlayers
-
-
-def auto_connect_adv():  # 高级模式建立连接
-    """Connect all compositor nodes for all view layers in advanced mode.
-    
-    Advanced mode adds:
-    - Filtering of -_-exP_ and _DATA view layers for RGBA connections
-    - IDS_UseAdvCrypto handling for Cryptomatte
-    - Deep_From_Image_z connection for fake depth
-    """
-    denoise_nodes_all = []
-    denoise_nodes = {}
-    denoise_nodes_temp = []
-    viewlayer_full, viewlayers = make_tree_denoise_adv()
-    material_aovs = get_material_aovs()
-    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
-    
-    # Collect all denoise nodes
-    for node in node_tree.nodes:
-        if node.type == "DENOISE":
-            denoise_nodes_all.append(node.name)
-
-    # Group denoise nodes by view layer
-    for view_layer in viewlayers:
-        for node in denoise_nodes_all:
-            if view_layer == node[: node.rfind("--")]:
-                denoise_nodes_temp.append(
-                    extract_string_between_patterns(node, "--", "_Dn")
-                )
-        denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
-        denoise_nodes_temp.clear()
-
-    for view_layer in viewlayers:
-        is_data_or_exp_layer = view_layer[:7] == "-_-exP_" or "_DATA" in view_layer
+    def connect_all_adv(self):
+        """Connect all compositor nodes for all view layers in advanced mode.
         
-        if not is_data_or_exp_layer:
-            rgba_output = f"{view_layer}--RgBA"
-            
-            # Connect denoise passes
-            connect_denoise_passes(node_tree, view_layer, denoise_nodes[view_layer], rgba_output)
-            
-            # Connect non-denoise color passes
-            for node in set(viewlayer_full[f"{view_layer}Color"]) - set(denoise_nodes[view_layer]):
-                node_tree.links.new(
-                    node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                    node_tree.nodes[rgba_output].inputs[f"{node}"],
-                )
-            
-            # Connect Cryptomatte for advanced crypto mode
-            if (
-                bpy.context.scene.IDS_SepCryptO is True
-                and bpy.context.scene.IDS_UseAdvCrypto is True
-                and viewlayer_full.get(f"{view_layer}Crypto")
-            ):
-                crypto_output = f"{view_layer}--CryptoMaTTe"
-                for node in viewlayer_full[f"{view_layer}Crypto"]:
-                    node_tree.links.new(
-                        node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                        node_tree.nodes[crypto_output].inputs["Image"],
+        Advanced mode adds:
+        - Filtering of -_-exP_ and _DATA view layers for RGBA connections
+        - IDS_UseAdvCrypto handling for Cryptomatte
+        - Deep_From_Image_z connection for fake depth
+        """
+        denoise_nodes_all = []
+        denoise_nodes = {}
+        denoise_nodes_temp = []
+        viewlayer_full, viewlayers = TreeBuilder(self.scene).build_all_adv()
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        
+        # Collect all denoise nodes
+        for node in node_tree.nodes:
+            if node.type == "DENOISE":
+                denoise_nodes_all.append(node.name)
+
+        # Group denoise nodes by view layer
+        for view_layer in viewlayers:
+            for node in denoise_nodes_all:
+                if view_layer == node[: node.rfind("--")]:
+                    denoise_nodes_temp.append(
+                        extract_string_between_patterns(node, "--", "_Dn")
                     )
-                    node_tree.links.new(
-                        node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                        node_tree.nodes[crypto_output].inputs[f"{node}"],
-                    )
-        else:
-            # Handle DATA and -_-exP_ layers
-            data_output = f"{view_layer}--DaTA"
-            
-            if (
-                viewlayer_full.get(f"{view_layer}Crypto")
-                and not bpy.context.scene.IDS_SepCryptO
-            ) or viewlayer_full.get(f"{view_layer}Data"):
-                node_tree.links.new(
-                    node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                    node_tree.nodes[data_output].inputs["Image"],
-                )
-                for node in set(viewlayer_full[f"{view_layer}Data"]) - set(viewlayer_full[f"{view_layer}Vector"]):
-                    if node != "Vector" and node != "Denoising Depth" and node != "Deep_From_Image_z":
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            node_tree.nodes[data_output].inputs[f"{node}"],
-                        )
-                    elif node == "Vector":
-                        _connect_vector_pass(node_tree, view_layer, data_output)
-                    elif node == "Denoising Depth":
-                        _connect_denoising_depth(node_tree, view_layer, data_output)
-                    elif node == "Deep_From_Image_z":
-                        # Connect Fake Deep node for depth antialiasing
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs["Depth_AA$$aoP"],
-                            node_tree.nodes[f"{view_layer}--Depth_AA_Re"].inputs[1],
-                        )
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}--Depth_AA_Re"].outputs["Value"],
-                            node_tree.nodes[data_output].inputs["Deep_From_Image_z"],
-                        )
-            
-            # Connect vector passes (Normal, Position)
-            if viewlayer_full[f"{view_layer}Vector"]:
-                for node in viewlayer_full[f"{view_layer}Vector"]:
-                    connect_vector_nodes(node_tree, view_layer, node, data_output)
-            
-            # Connect Cryptomatte passes
-            if viewlayer_full.get(f"{view_layer}Crypto"):
-                for node in viewlayer_full[f"{view_layer}Crypto"]:
-                    if bpy.context.scene.IDS_SepCryptO is False:
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                            node_tree.nodes[data_output].inputs["Image"],
-                        )
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            node_tree.nodes[data_output].inputs[f"{node}"],
-                        )
-                    elif bpy.context.scene.IDS_UseAdvCrypto is False:
-                        crypto_output = f"{view_layer}--CryptoMaTTe"
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs["Image"],
-                            node_tree.nodes[crypto_output].inputs["Image"],
-                        )
-                        node_tree.links.new(
-                            node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
-                            node_tree.nodes[crypto_output].inputs[f"{node}"],
-                        )
+            denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
+            denoise_nodes_temp.clear()
 
-
-def update_tree_denoise_adv():  # 高级模式节点创建
-    """Create compositor nodes for the current view layer in advanced mode.
-    
-    Works on one view layer at a time, similar to update_tree_denoise but with
-    advanced mode features like -_-exP_ path handling and FakeDeep node creation.
-    """
-    addon_prefs = get_addon_prefs()
-    current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full, viewlayers = PassSorter().sort()
-    tree = CompositorHelper.get_node_tree(bpy.context.scene)
-    view_layer = bpy.context.view_layer.name
-    material_aovs = get_material_aovs()
-
-    # Remove existing nodes for this view layer
-    for node in tree.nodes:
-        if node.type != "R_LAYERS" and node.name[: node.name.rfind("--")] == view_layer:
-            tree.nodes.remove(node)
-
-    for node in tree.nodes:
-        if node.type == "R_LAYERS" and node.layer == view_layer:
-            is_data_or_exp_layer = node.layer[:7] == "-_-exP_" or "_DATA" in node.layer
+        for view_layer in viewlayers:
+            is_data_or_exp_layer = view_layer[:7] == "-_-exP_" or "_DATA" in view_layer
             
             if not is_data_or_exp_layer:
-                # Create RGBA output node
-                FO_RGB_node = create_output_file_node(
-                    tree, view_layer, "RgBA", "RGBA", "16",
-                    bpy.context.scene.IDS_RGBACompression
-                )
-                CompositorHelper.set_output_path(
-                    FO_RGB_node,
-                    PathManager().create_final_path(view_layer, "RGBA"),
-                )
-                for input in viewlayer_full[f"{view_layer}Color"]:
-                    CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-
-                # Create denoise nodes if enabled
-                if (
-                    bpy.context.scene.IDS_UsedN is True
-                    and bpy.context.scene.render.engine == "CYCLES"
-                ):
-                    color_sockets = viewlayer_full.get(f"{view_layer}Color", [])
-                    create_denoise_nodes(
-                        tree, view_layer, color_sockets,
-                        material_aovs, addon_prefs.Denoise_Col
-                    )
-
-                # Create Cryptomatte output for advanced crypto mode
-                if bpy.context.scene.IDS_UseAdvCrypto is True and viewlayer_full.get(f"{view_layer}Crypto"):
-                    if bpy.context.scene.IDS_SepCryptO is True:
-                        FO_Crypto_node = create_output_file_node(
-                            tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
-                            bpy.context.scene.IDS_CryptoCompression
-                        )
-                        base_path = PathManager().create_final_path(view_layer, "Cryptomatte")
-                        CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
-                        CompositorHelper.add_slot(FO_Crypto_node, "Image")
-                        for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
-                    elif bpy.context.scene.IDS_UseDATALayer is False:
-                        for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
-
+                self._connect_adv_regular_layer(node_tree, view_layer, viewlayer_full, denoise_nodes)
             else:
-                # Handle DATA and -_-exP_ layers
-                if viewlayer_full.get(f"{view_layer}Data") or (
-                    viewlayer_full.get(f"{view_layer}Crypto")
-                    and not bpy.context.scene.IDS_SepCryptO
-                ):
-                    FO_DATA_node = create_output_file_node(
-                        tree, view_layer, "DaTA", "DATA", "32",
-                        bpy.context.scene.IDS_DATACompression
-                    )
-                    base_path = PathManager().create_final_path(view_layer, "DATA")
-                    CompositorHelper.set_output_path(FO_DATA_node, base_path.replace("-_-exP_", ""))
-                    CompositorHelper.add_slot(FO_DATA_node, "Image")
-                    datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
-                    for input in datatemp:
-                        CompositorHelper.add_slot(FO_DATA_node, f"{input}")
-
-                    if bpy.context.scene.IDS_ArtDepth == True:
-                        Normalize_node = tree.nodes.new("CompositorNodeNormalize")
-                        Normalize_node.name = f"{view_layer}--Denoising Depth_Normalize"
-                        Normalize_node.label = f"{view_layer}_Denoising Depth_Normalize"
-                        Normalize_node.hide = True
-                        Normalize_node.location = 660, 0
-
-                    # Create Fake Deep node for depth antialiasing
-                    if (
-                        bpy.context.scene.IDS_fakeDeep == True
-                        and bpy.context.scene.IDS_DataMatType in {
-                            "Antialias Depth Material",
-                            "Antialias Depth & Position Material",
-                        }
-                        and "Depth_AA$$aoP" in viewlayer_full[f"{view_layer}Data"]
-                    ):
-                        FakeDeep_node = tree.nodes.new(BlenderCompat.math_node_id)
-                        FakeDeep_node.name = f"{view_layer}--Depth_AA_Re"
-                        FakeDeep_node.label = f"{view_layer}_Depth_AA_Re"
-                        FakeDeep_node.operation = "DIVIDE"
-                        FakeDeep_node.inputs[0].default_value = 1
-                        FakeDeep_node.hide = True
-                        FakeDeep_node.location = 660, 0
-
-                    if "Vector" in viewlayer_full.get(f"{view_layer}Data", []):
-                        Vector_Con_node = tree.nodes.new("CompositorNodeSeparateColor")
-                        Vector_Con_node.name = f"{view_layer}--Vector_VectorIn"
-                        Vector_Con_node.label = f"{view_layer}_Vector_VECTORIN"
-                        Vector_Con_node.hide = True
-                        Vector_Con_node.location = 550, 0
-                        Vector_Con_node = tree.nodes.new("CompositorNodeCombineColor")
-                        Vector_Con_node.name = f"{view_layer}--Vector_VectorOut"
-                        Vector_Con_node.label = f"{view_layer}_Vector_VECTOROUT"
-                        Vector_Con_node.hide = True
-                        Vector_Con_node.location = 780, 0
-
-                # Create vector conversion nodes
-                vector_sockets = viewlayer_full.get(f"{view_layer}Vector", [])
-                if vector_sockets:
-                    create_vector_conversion_nodes(tree, view_layer, vector_sockets)
-
-                # Create Cryptomatte output for non-advanced crypto mode
-                if bpy.context.scene.IDS_SepCryptO is True:
-                    if (
-                        bpy.context.scene.IDS_UseAdvCrypto is False
-                        and viewlayer_full.get(f"{view_layer}Crypto")
-                    ):
-                        FO_Crypto_node = create_output_file_node(
-                            tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
-                            bpy.context.scene.IDS_CryptoCompression
-                        )
-                        base_path = PathManager().create_final_path(view_layer, "Cryptomatte")
-                        CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
-                        CompositorHelper.add_slot(FO_Crypto_node, "Image")
-                        for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
-                else:
-                    for input in viewlayer_full.get(f"{view_layer}Crypto", []):
-                        CompositorHelper.add_slot(FO_DATA_node, f"{input}")
-
-    return viewlayer_full, viewlayers
-
-
-def update_connect_adv():  # 高级模式建立连接
-    """Connect compositor nodes for the current view layer in advanced mode.
+                self._connect_adv_data_layer(node_tree, view_layer, viewlayer_full)
     
-    Works on one view layer at a time, similar to update_connect but with
-    advanced mode features like -_-exP_ handling and Deep_From_Image_z connections.
-    """
-    denoise_nodes_all = []
-    denoise_nodes = {}
-    denoise_nodes_temp = []
-    view_layer = bpy.context.view_layer.name
-    viewlayer_full, viewlayers = update_tree_denoise_adv()
-    material_aovs = get_material_aovs()
-    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
-    
-    # Collect all denoise nodes
-    for node in node_tree.nodes:
-        if node.type == "DENOISE":
-            denoise_nodes_all.append(node.name)
-        
-        # Group denoise nodes by view layer
-        for dn_node in denoise_nodes_all:
-            if view_layer == dn_node[: dn_node.rfind("--")]:
-                denoise_nodes_temp.append(
-                    extract_string_between_patterns(dn_node, "--", "_Dn")
-                )
-        denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
-        denoise_nodes_temp.clear()
-
-    is_data_or_exp_layer = view_layer[:7] == "-_-exP_" or "_DATA" in view_layer
-    
-    if not is_data_or_exp_layer:
+    def _connect_adv_regular_layer(self, node_tree, view_layer, viewlayer_full, denoise_nodes):
+        """Connect regular view layer nodes in advanced mode"""
         rgba_output = f"{view_layer}--RgBA"
         
         # Connect denoise passes
@@ -1566,8 +855,8 @@ def update_connect_adv():  # 高级模式建立连接
         
         # Connect Cryptomatte for advanced crypto mode
         if (
-            bpy.context.scene.IDS_SepCryptO is True
-            and bpy.context.scene.IDS_UseAdvCrypto is True
+            self.scene.IDS_SepCryptO is True
+            and self.scene.IDS_UseAdvCrypto is True
             and viewlayer_full.get(f"{view_layer}Crypto")
         ):
             crypto_output = f"{view_layer}--CryptoMaTTe"
@@ -1580,13 +869,14 @@ def update_connect_adv():  # 高级模式建立连接
                     node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                     node_tree.nodes[crypto_output].inputs[f"{node}"],
                 )
-    else:
-        # Handle DATA and -_-exP_ layers
+    
+    def _connect_adv_data_layer(self, node_tree, view_layer, viewlayer_full):
+        """Connect DATA and -_-exP_ layer nodes in advanced mode"""
         data_output = f"{view_layer}--DaTA"
         
         if (
             viewlayer_full.get(f"{view_layer}Crypto")
-            and not bpy.context.scene.IDS_SepCryptO
+            and not self.scene.IDS_SepCryptO
         ) or viewlayer_full.get(f"{view_layer}Data"):
             node_tree.links.new(
                 node_tree.nodes[f"{view_layer}"].outputs["Image"],
@@ -1599,9 +889,9 @@ def update_connect_adv():  # 高级模式建立连接
                         node_tree.nodes[data_output].inputs[f"{node}"],
                     )
                 elif node == "Vector":
-                    _connect_vector_pass(node_tree, view_layer, data_output)
+                    self._connect_vector_pass(node_tree, view_layer, data_output)
                 elif node == "Denoising Depth":
-                    _connect_denoising_depth(node_tree, view_layer, data_output)
+                    self._connect_denoising_depth(node_tree, view_layer, data_output)
                 elif node == "Deep_From_Image_z":
                     # Connect Fake Deep node for depth antialiasing
                     node_tree.links.new(
@@ -1621,7 +911,7 @@ def update_connect_adv():  # 高级模式建立连接
         # Connect Cryptomatte passes
         if viewlayer_full.get(f"{view_layer}Crypto"):
             for node in viewlayer_full[f"{view_layer}Crypto"]:
-                if bpy.context.scene.IDS_SepCryptO is False:
+                if self.scene.IDS_SepCryptO is False:
                     node_tree.links.new(
                         node_tree.nodes[f"{view_layer}"].outputs["Image"],
                         node_tree.nodes[data_output].inputs["Image"],
@@ -1630,7 +920,7 @@ def update_connect_adv():  # 高级模式建立连接
                         node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         node_tree.nodes[data_output].inputs[f"{node}"],
                     )
-                elif bpy.context.scene.IDS_UseAdvCrypto is False:
+                elif self.scene.IDS_UseAdvCrypto is False:
                     crypto_output = f"{view_layer}--CryptoMaTTe"
                     node_tree.links.new(
                         node_tree.nodes[f"{view_layer}"].outputs["Image"],
@@ -1640,96 +930,329 @@ def update_connect_adv():  # 高级模式建立连接
                         node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                         node_tree.nodes[crypto_output].inputs[f"{node}"],
                     )
-
-
-def frame_DATA():
-    do = False
-    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
-    for node in node_tree.nodes:
-        if "-_-exP_" in node.name:
-            do = True
-    if do is True:
+    
+    def connect_current_adv(self):
+        """Connect compositor nodes for current view layer in advanced mode.
+        
+        Works on one view layer at a time with advanced mode features like
+        -_-exP_ handling and Deep_From_Image_z connections.
+        """
+        denoise_nodes_all = []
+        denoise_nodes = {}
+        denoise_nodes_temp = []
+        view_layer = bpy.context.view_layer.name
+        viewlayer_full, viewlayers = TreeBuilder(self.scene).build_current_adv()
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        
+        # Collect all denoise nodes for current view layer
         for node in node_tree.nodes:
-            if node.name == "DataFramE":
-                node_tree.nodes.remove(node)
-        tree = node_tree
-        FrameNode = tree.nodes.new("NodeFrame")
-        FrameNode.name = "DataFramE"
-        FrameNode.label = "Industrial AOV Connector DATA Layers-_-exP_"
-        FrameNode.use_custom_color = True
-        FrameNode.color = (0.04, 0.04, 0.227)
+            if node.type == "DENOISE":
+                denoise_nodes_all.append(node.name)
+            
+            for dn_node in denoise_nodes_all:
+                if view_layer == dn_node[: dn_node.rfind("--")]:
+                    denoise_nodes_temp.append(
+                        extract_string_between_patterns(dn_node, "--", "_Dn")
+                    )
+            denoise_nodes[f"{view_layer}"] = denoise_nodes_temp[:]
+            denoise_nodes_temp.clear()
+
+        is_data_or_exp_layer = view_layer[:7] == "-_-exP_" or "_DATA" in view_layer
+        
+        if not is_data_or_exp_layer:
+            self._connect_adv_regular_layer(node_tree, view_layer, viewlayer_full, denoise_nodes)
+        else:
+            self._connect_adv_data_layer(node_tree, view_layer, viewlayer_full)
+    
+    @staticmethod
+    def _connect_vector_pass(node_tree, view_layer, output_node):
+        """Helper to connect Vector pass through VectorIn/VectorOut nodes."""
+        nodes = node_tree.nodes
+        links = node_tree.links
+        links.new(nodes[f"{view_layer}"].outputs["Vector"], nodes[f"{view_layer}--Vector_VectorIn"].inputs["Image"])
+        links.new(nodes[f"{view_layer}--Vector_VectorOut"].outputs["Image"], nodes[output_node].inputs["Vector"])
+        links.new(nodes[f"{view_layer}--Vector_VectorIn"].outputs["Green"], nodes[f"{view_layer}--Vector_VectorOut"].inputs["Blue"])
+        links.new(nodes[f"{view_layer}--Vector_VectorIn"].outputs["Blue"], nodes[f"{view_layer}--Vector_VectorOut"].inputs["Red"])
+        links.new(nodes[f"{view_layer}--Vector_VectorIn"].outputs["Blue"], nodes[f"{view_layer}--Vector_VectorOut"].inputs["Alpha"])
+        links.new(nodes[f"{view_layer}--Vector_VectorIn"].outputs["Alpha"], nodes[f"{view_layer}--Vector_VectorOut"].inputs["Green"])
+
+    @staticmethod
+    def _connect_denoising_depth(node_tree, view_layer, output_node):
+        """Helper to connect Denoising Depth through Normalize node."""
+        nodes = node_tree.nodes
+        links = node_tree.links
+        normalize_node = f"{view_layer}--Denoising Depth_Normalize"
+        links.new(nodes[f"{view_layer}"].outputs["Denoising Depth"], nodes[normalize_node].inputs["Value"])
+        links.new(nodes[normalize_node].outputs["Value"], nodes[output_node].inputs["Denoising Depth"])
+
+
+class NodeArranger:
+    """负责节点位置排列和布局"""
+    
+    def __init__(self, scene=None):
+        self.scene = scene or bpy.context.scene
+        self.addon_prefs = get_addon_prefs()
+    
+    def arrange_all(self):
+        """Arrange all connector nodes (master function)"""
+        all_areas = bpy.context.screen.areas[:]
+        area_types = [area.ui_type for area in all_areas]
+        if self.scene.IDS_Autoarr is False or "CompositorNodeTree" not in area_types:
+            self.frame_data_layers()
+        else:
+            if not bpy.app.background:
+                bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+            self.frame_data_layers()
+            self.arrange_viewlayers()
+            self.arrange_denoise()
+            self.arrange_outputs()
+            self.arrange_math()
+            
+            if self.addon_prefs.Horizontal_DATA_Arrange and self.scene.IDS_AdvMode:
+                self.arrange_data_horizontal()
+    
+    def arrange_viewlayers(self):
+        """Arrange view layer nodes vertically"""
+        viewlayers_raw = [vl.name for vl in self.scene.view_layers]
+        renderlayer_node_position = 0
+        viewlayers = arrange_list(viewlayers_raw)
+        for view_layer in viewlayers:
+            node_tree = CompositorHelper.get_node_tree(self.scene)
+            node = node_tree.nodes.get(view_layer)
+            if node:
+                node.location = 0, renderlayer_node_position
+                spacing = BlenderCompat.node_spacing
+                renderlayer_node_position -= (
+                    node.dimensions.y + spacing
+                ) * self.addon_prefs.Arrange_Scale_Param
+    
+    def arrange_outputs(self):
+        """Arrange output file nodes"""
+        viewlayers = [vl.name for vl in self.scene.view_layers]
+        RGBA_location_y = {}
+        RGBA_dimension_y = {}
+        DATA_location_y = {}
+        DATA_dimension_y = {}
+        VIEWLAYER_location_y = {}
+        
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        for view_layer in viewlayers:
+            for node in node_tree.nodes:
+                if node.type == "R_LAYERS" and node.layer == view_layer:
+                    VIEWLAYER_location_y[node.name] = node.location.y
+                    for node1 in node_tree.nodes:
+                        if (
+                            node1.type == "OUTPUT_FILE"
+                            and node1.name[: node1.name.rfind("--")] == node.layer
+                            and ("RgBA" in node1.name or "AlL" in node1.name)
+                        ):
+                            node1.location = 1200, node.location.y
+                            node1.width = 420
+                            RGBA_location_y[node1.name] = node1.location.y
+                            RGBA_dimension_y[node1.name] = (
+                                node1.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                            )
+        
         for node in node_tree.nodes:
-            if node.name[:7] == "-_-exP_":
-                node.parent = FrameNode
-
-
-def arrange_All():
-    all_aeras = bpy.context.screen.areas[:]
-    area_types = []
-    for i in all_aeras:
-        area_types.append(i.ui_type)
-    if bpy.context.scene.IDS_Autoarr is False or "CompositorNodeTree" not in area_types:
-        frame_DATA()
-    else:
-        if not bpy.app.background:
-            bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
-        frame_DATA()
-        auto_arrange_viewlayer()
-        auto_arr_denoisenode()
-        auto_arr_outputnode()
-        auto_arr_mathnode()
-        
-        # Horizontal DATA arrangement if enabled
-        addon_prefs = get_addon_prefs()
-        if addon_prefs.Horizontal_DATA_Arrange and bpy.context.scene.IDS_AdvMode:
-            arrange_data_layers_horizontal()
-
-
-def arrange_data_layers_horizontal():
-    """Move DATA layer nodes to the right side of non-DATA layers.
-    
-    Called after normal arrangement. Relocates all DATA layer
-    render nodes and their children (output, math nodes) horizontally.
-    All DATA layers are stacked from y=0 going down.
-    """
-    addon_prefs = get_addon_prefs()
-    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
-    
-    # Constants: 1200 (output x) + 420 (output width) + 450 (gap) = 2070
-    DATA_LAYER_X_OFFSET = 2070
-    
-    # Find all DATA layer render nodes
-    data_layers = []
-    for node in node_tree.nodes:
-        if node.type == "R_LAYERS":
-            if node.layer[:7] == "-_-exP_" or "_DATA" in node.layer:
-                data_layers.append(node)
-    
-    # Stack DATA layers from y=0 going down
-    y_position = 0
-    spacing = BlenderCompat.node_spacing
-    
-    for render_node in data_layers:
-        old_x = render_node.location.x
-        old_y = render_node.location.y
-        
-        # Move render layer node
-        render_node.location = DATA_LAYER_X_OFFSET, y_position
-        
-        # Calculate offset to apply to children
-        x_offset = DATA_LAYER_X_OFFSET - old_x
-        y_offset = y_position - old_y
-        
-        # Move associated child nodes (those starting with "viewlayer_name--")
-        view_layer = render_node.layer
-        for child in node_tree.nodes:
-            if child.name.startswith(f"{view_layer}--"):
-                child.location = (
-                    child.location.x + x_offset,
-                    child.location.y + y_offset
+            if node.type == "OUTPUT_FILE" and "DaTA" in node.name:
+                rgba_key = node.name[: node.name.rfind("--")] + "--RgBA"
+                if rgba_key in RGBA_location_y:
+                    node.location = 1200, (
+                        RGBA_location_y[rgba_key]
+                        - RGBA_dimension_y[rgba_key]
+                        - 20 * self.addon_prefs.Arrange_Scale_Param
+                    )
+                else:
+                    vl_key = node.name[: node.name.rfind("--")]
+                    node.location = 1200, VIEWLAYER_location_y.get(vl_key, 0)
+                node.width = 420
+                DATA_location_y[node.name] = node.location.y
+                DATA_dimension_y[node.name] = (
+                    node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
                 )
         
-        # Update y for next DATA layer
-        y_position -= (
-            render_node.dimensions.y + spacing
-        ) * addon_prefs.Arrange_Scale_Param
+        for node in node_tree.nodes:
+            if node.type == "OUTPUT_FILE" and "CryptoMaTTe" in node.name:
+                data_key = node.name[: node.name.rfind("--")] + "--DaTA"
+                rgba_key = node.name[: node.name.rfind("--")] + "--RgBA"
+                if data_key in DATA_location_y:
+                    node.location = 1200, (
+                        DATA_location_y[data_key] - DATA_dimension_y[data_key] - 20
+                    )
+                elif rgba_key in RGBA_location_y:
+                    node.location = 1200, (
+                        RGBA_location_y[rgba_key]
+                        - RGBA_dimension_y[rgba_key]
+                        - 20 * self.addon_prefs.Arrange_Scale_Param
+                    )
+                else:
+                    vl_key = node.name[: node.name.rfind("--")]
+                    node.location = 1200, VIEWLAYER_location_y.get(vl_key, 0)
+                node.width = 420
+    
+    def arrange_denoise(self):
+        """Arrange denoise nodes"""
+        viewlayers = [vl.name for vl in self.scene.view_layers]
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        
+        for view_layer in viewlayers:
+            DN_location_y = 0
+            DN_dimension_y = 0
+            for node in node_tree.nodes:
+                if node.type == "R_LAYERS" and node.layer == view_layer:
+                    for node1 in node_tree.nodes:
+                        if (
+                            node1.type == "DENOISE"
+                            and node1.name[: node1.name.rfind("--")] == node.layer
+                        ):
+                            node1.location = 600, (
+                                node.location.y - DN_location_y - DN_dimension_y
+                            )
+                            DN_dimension_y += (
+                                node1.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                            )
+                            DN_location_y += 10 * self.addon_prefs.Arrange_Scale_Param
+                            node1.width = 260
+    
+    def arrange_math(self):
+        """Arrange math nodes (Break, Combine, Invert, Normalize, etc.)"""
+        viewlayers = [vl.name for vl in self.scene.view_layers]
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        
+        for view_layer in viewlayers:
+            MA_location_y = 0
+            MA_dimension_y = 0
+            for node in node_tree.nodes:
+                if node.type == "R_LAYERS" and node.layer == view_layer:
+                    # Depth_AA_Re nodes
+                    for node6 in reversed(node_tree.nodes):
+                        if node6.name == f"{view_layer}--Depth_AA_Re":
+                            node6.location = 660, (
+                                node.location.y
+                                - node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                                + node6.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                                + MA_dimension_y
+                            )
+                            MA_dimension_y += (node6.dimensions.y + 20) * self.addon_prefs.Arrange_Scale_Param
+                    
+                    # Separate/Combine Color nodes
+                    for node3 in reversed(node_tree.nodes):
+                        if (
+                            node3.name[: node3.name.rfind("--")] == node.layer
+                            and node3.type == "SEPARATE_COLOR"
+                        ):
+                            node3.location = 550, (
+                                node.location.y
+                                - node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                                + node3.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                                + MA_dimension_y
+                            )
+                            for node4 in reversed(node_tree.nodes):
+                                if (
+                                    node4.name[: node4.name.rfind("--")] == node.layer
+                                    and node4.type == "COMBINE_COLOR"
+                                ):
+                                    node4.location = 780, node3.location.y
+                            MA_dimension_y += (node3.dimensions.y + 20) * self.addon_prefs.Arrange_Scale_Param
+                    
+                    # Separate/Combine XYZ and Math nodes
+                    for node1 in reversed(node_tree.nodes):
+                        if (
+                            node1.name[: node1.name.rfind("--")] == node.layer
+                            and node1.type in ("SEPARATE_XYZ", "SEPXYZ")
+                        ):
+                            node1.location = 500, (
+                                node.location.y
+                                - node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                                + node1.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                                + MA_dimension_y
+                            )
+                            for node2 in reversed(node_tree.nodes):
+                                if node2.name[: node2.name.rfind("--")] == node.layer:
+                                    if (
+                                        node2.type == "MATH"
+                                        and extract_string_between_patterns(node2.name, "--", "_Inv")
+                                        == extract_string_between_patterns(node1.name, "--", "_Break")
+                                    ):
+                                        node2.location = 660, node1.location.y
+                                    if (
+                                        node2.type in ("COMBINE_XYZ", "COMBXYZ")
+                                        and extract_string_between_patterns(node2.name, "--", "_Combine")
+                                        == extract_string_between_patterns(node1.name, "--", "_Break")
+                                    ):
+                                        node2.location = 820, node1.location.y
+                            MA_dimension_y += (node1.dimensions.y + 20) * self.addon_prefs.Arrange_Scale_Param
+                    
+                    # Normalize nodes
+                    for node5 in reversed(node_tree.nodes):
+                        if (
+                            node5.name[: node5.name.rfind("--")] == node.layer
+                            and node5.type == "NORMALIZE"
+                        ):
+                            node5.location = 660, (
+                                node.location.y
+                                - node.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                                + node5.dimensions.y * self.addon_prefs.Arrange_Scale_Param
+                                + MA_dimension_y
+                            )
+    
+    def arrange_data_horizontal(self):
+        """Move DATA layer nodes to right side of non-DATA layers"""
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        DATA_LAYER_X_OFFSET = 2070
+        
+        data_layers = [
+            node for node in node_tree.nodes
+            if node.type == "R_LAYERS" and (node.layer[:7] == "-_-exP_" or "_DATA" in node.layer)
+        ]
+        
+        y_position = 0
+        spacing = BlenderCompat.node_spacing
+        
+        for render_node in data_layers:
+            old_x, old_y = render_node.location.x, render_node.location.y
+            render_node.location = DATA_LAYER_X_OFFSET, y_position
+            
+            x_offset = DATA_LAYER_X_OFFSET - old_x
+            y_offset = y_position - old_y
+            
+            view_layer = render_node.layer
+            for child in node_tree.nodes:
+                if child.name.startswith(f"{view_layer}--"):
+                    child.location = (child.location.x + x_offset, child.location.y + y_offset)
+            
+            y_position -= (render_node.dimensions.y + spacing) * self.addon_prefs.Arrange_Scale_Param
+    
+    def frame_data_layers(self):
+        """Create frame for DATA layers"""
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        do = any("-_-exP_" in node.name for node in node_tree.nodes)
+        
+        if do:
+            for node in node_tree.nodes:
+                if node.name == "DataFramE":
+                    node_tree.nodes.remove(node)
+            FrameNode = node_tree.nodes.new("NodeFrame")
+            FrameNode.name = "DataFramE"
+            FrameNode.label = "Industrial AOV Connector DATA Layers-_-exP_"
+            FrameNode.use_custom_color = True
+            FrameNode.color = (0.04, 0.04, 0.227)
+            for node in node_tree.nodes:
+                if node.name[:7] == "-_-exP_":
+                    node.parent = FrameNode
+    
+    def rename_outputs(self):
+        """Rename output slots to Nuke-compatible names"""
+        node_tree = CompositorHelper.get_node_tree(self.scene)
+        for node in node_tree.nodes:
+            if node.type == "OUTPUT_FILE":
+                for slot in CompositorHelper.get_slots(node):
+                    if slot.name != "Deep_From_Image_z":
+                        slot.name = slot.name.replace("Image", "rgba")
+                    slot.name = slot.name.replace("Combined", "RGBA")
+                    slot.name = slot.name.replace("$$aoP", "")
+                    if self.addon_prefs.Use_Old_Layer_Naming is False:
+                        slot.name = slot.name.replace("Position", "Pworld")
+                        if slot.name != "Artistic_Depth":
+                            slot.name = slot.name.replace("Depth", "z")
+                    slot.name = slot.name.replace("Denoising z", "Artistic_Depth")
