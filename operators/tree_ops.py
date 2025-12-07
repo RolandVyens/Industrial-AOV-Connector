@@ -4,8 +4,8 @@
 
 import bpy
 
-from ..handy_functions import auto_data_sample, update_data_sample, BlenderCompat
-from ..path_modify_v2 import origin_render_path_change_loc
+from ..handy_functions import DataLayerHelper, BlenderCompat
+from ..path_modify_v2 import PathManager
 from ..core import node_builder
 
 
@@ -21,12 +21,12 @@ class IDS_OT_Make_Tree(bpy.types.Operator):
             and bpy.context.scene.IDS_UseDATALayer is True
         ):
             node_builder.auto_connect_adv()
-            auto_data_sample()
+            DataLayerHelper.auto_sample()
         else:
             node_builder.auto_connect()
         node_builder.arrange_All()
         node_builder.auto_rename()
-        origin_render_path_change_loc()
+        PathManager().move_to_trash_output()
         self.report({"INFO"}, bpy.app.translations.pgettext("All Outputs Updated"))
 
         return {"FINISHED"}
@@ -44,12 +44,12 @@ class IDS_OT_Update_Tree(bpy.types.Operator):
             and bpy.context.scene.IDS_UseDATALayer is True
         ):
             node_builder.update_connect_adv()
-            update_data_sample()
+            DataLayerHelper.update_sample()
         else:
             node_builder.update_connect()
         node_builder.arrange_All()
         node_builder.auto_rename()
-        origin_render_path_change_loc()
+        PathManager().move_to_trash_output()
         self.report(
             {"INFO"}, bpy.app.translations.pgettext("Viewlayer Outputs Updated")
         )
@@ -79,4 +79,3 @@ class IDS_OT_Arr_Tree(bpy.types.Operator):
         self.report({"INFO"}, bpy.app.translations.pgettext("Arrange finished"))
 
         return {"FINISHED"}
-

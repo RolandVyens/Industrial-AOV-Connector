@@ -8,11 +8,12 @@ import shutil
 
 from ..handy_functions import (
     BlenderCompat,
+    CompositorHelper,
+    DataLayerHelper,
     has_subfolder,
-    enable_compositing,
-    auto_set_material_aov,
 )
-from ..renderpath_preset import replaceTokens, restoreTokens
+from ..renderpath_preset import TokenReplacer
+from ..constants import TRASH_OUTPUT_FOLDER
 
 
 
@@ -23,7 +24,7 @@ class Compositor_OT_enable_use_nodes(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        enable_compositing(bpy.context.scene)
+        CompositorHelper.enable(bpy.context.scene)
         return {"FINISHED"}
 
 
@@ -48,14 +49,15 @@ class IDS_OT_CloudMode(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
+        replacer = TokenReplacer()
         if context.scene.IDS_CloudModeActive:
-            restoreTokens(context.scene)
+            replacer.restore()
             context.scene.IDS_CloudModeActive = False
             self.report(
                 {"INFO"}, bpy.app.translations.pgettext("Restored all naming presets")
             )
         else:
-            replaceTokens(context.scene)
+            replacer.replace()
             context.scene.IDS_CloudModeActive = True
             self.report(
                 {"INFO"}, bpy.app.translations.pgettext("Pre-replaced all naming presets")
@@ -79,15 +81,16 @@ class IDS_OT_Delete_Trash(bpy.types.Operator):
 
     def execute(self, context):
         current_render_path = bpy.context.scene.render.filepath
+        trash_folder_pattern = f"{TRASH_OUTPUT_FOLDER}\\\\"
         if (
-            "trash_output\\" in current_render_path
+            trash_folder_pattern in current_render_path
             and os.path.exists(current_render_path)
             and has_subfolder(current_render_path) is False
         ):
             shutil.rmtree(current_render_path)
             self.report({"INFO"}, bpy.app.translations.pgettext("Deleted"))
         elif (
-            "trash_output\\" in current_render_path
+            trash_folder_pattern in current_render_path
             and os.path.exists(current_render_path)
             and has_subfolder(current_render_path) is True
         ):
@@ -111,6 +114,6 @@ class IDS_OT_Set_Material_AOV(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        auto_set_material_aov()
+        DataLayerHelper.auto_set_aov()
 
         return {"FINISHED"}

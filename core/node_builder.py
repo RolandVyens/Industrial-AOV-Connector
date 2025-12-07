@@ -8,18 +8,30 @@ compositor nodes.
 
 import bpy
 
-from ..sort_passes import sort_passes
+from ..sort_passes import PassSorter
 from ..handy_functions import (
     BlenderCompat,
+    CompositorHelper,
     extract_string_between_patterns,
     arrange_list,
     sorting_data,
-    get_compositor_node_tree,
-    set_output_node_path,
-    add_file_slot,
-    get_file_slots,
 )
-from ..path_modify_v2 import create_final_path
+from ..path_modify_v2 import PathManager
+from ..constants import (
+    NODE_LOCATION_DENOISE,
+    NODE_LOCATION_BREAK,
+    NODE_LOCATION_COMBINE,
+    NODE_LOCATION_INVERT,
+    NODE_LOCATION_OUTPUT,
+    NODE_LOCATION_NORMALIZE,
+    NODE_LOCATION_VECTOR_IN,
+    NODE_LOCATION_VECTOR_OUT,
+    EXR_CODEC_DEFAULT,
+    EXR_COLOR_DEPTH_RGBA,
+    EXR_COLOR_DEPTH_DATA,
+    NODE_NAME_SEPARATOR,
+    DENOISE_EXCLUDE_PASSES,
+)
 
 
 def get_addon_prefs():
@@ -234,7 +246,7 @@ def auto_arrange_viewlayer():  # 自动排列视图层节点
     for view_layer in viewlayers:
         #        for node in bpy.context.scene.node_tree.nodes:
         #            if node.type == "R_LAYERS" and node.layer == view_layer:
-        node_tree = get_compositor_node_tree(bpy.context.scene)
+        node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
         node = node_tree.nodes.get(f"{view_layer}")
         node.location = 0, renderlayer_node_position
         renderlayer_node_y.append(renderlayer_node_position)
@@ -248,8 +260,8 @@ def make_tree_denoise():  # 主要功能函数之建立节点
     """Create compositor nodes for all view layers."""
     addon_prefs = get_addon_prefs()
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full, viewlayers = sort_passes()
-    tree = get_compositor_node_tree(bpy.context.scene)
+    viewlayer_full, viewlayers = PassSorter().sort()
+    tree = CompositorHelper.get_node_tree(bpy.context.scene)
     material_aovs = get_material_aovs()
 
     if bpy.context.scene.IDS_DelNodE is True:
@@ -267,12 +279,12 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                     # Create RGBA output node
                     codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_RGBACompression
                     FO_RGB_node = create_output_file_node(tree, view_layer, "RgBA", "RGBA", "16", codec)
-                    set_output_node_path(
+                    CompositorHelper.set_output_path(
                         FO_RGB_node,
-                        create_final_path(current_render_path, view_layer, "RGBA"),
+                        PathManager().create_final_path(view_layer, "RGBA"),
                     )
                     for input in viewlayer_full[f"{view_layer}Color"]:
-                        add_file_slot(FO_RGB_node, f"{input}")
+                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
 
                     # Create denoise nodes if enabled
                     if (
@@ -292,14 +304,14 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                     ):
                         data_codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_DATACompression
                         FO_DATA_node = create_output_file_node(tree, view_layer, "DaTA", "DATA", "32", data_codec)
-                        set_output_node_path(
+                        CompositorHelper.set_output_path(
                             FO_DATA_node,
-                            create_final_path(current_render_path, view_layer, "DATA"),
+                            PathManager().create_final_path(view_layer, "DATA"),
                         )
-                        add_file_slot(FO_DATA_node, "Image")
+                        CompositorHelper.add_slot(FO_DATA_node, "Image")
                         datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                         for input in datatemp:
-                            add_file_slot(FO_DATA_node, f"{input}")
+                            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
                         # Normalize node for artistic depth
                         if bpy.context.scene.IDS_ArtDepth == True:
@@ -332,16 +344,16 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                         if bpy.context.scene.IDS_SepCryptO is True:
                             crypto_codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_CryptoCompression
                             FO_Crypto_node = create_output_file_node(tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32", crypto_codec)
-                            set_output_node_path(
+                            CompositorHelper.set_output_path(
                                 FO_Crypto_node,
-                                create_final_path(current_render_path, view_layer, "Cryptomatte"),
+                                PathManager().create_final_path(view_layer, "Cryptomatte"),
                             )
-                            add_file_slot(FO_Crypto_node, "Image")
+                            CompositorHelper.add_slot(FO_Crypto_node, "Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                add_file_slot(FO_Crypto_node, f"{input}")
+                                CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
                         else:
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                add_file_slot(FO_DATA_node, f"{input}")
+                                CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
     elif bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2: All in one file
         for view_layer in viewlayers:
@@ -349,12 +361,12 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                 if node.type == "R_LAYERS" and node.layer == view_layer:
                     # Create ALL output node (single file with everything)
                     FO_RGB_node = create_output_file_node(tree, view_layer, "AlL", "ALL", "32", "ZIPS")
-                    set_output_node_path(
+                    CompositorHelper.set_output_path(
                         FO_RGB_node,
-                        create_final_path(current_render_path, view_layer, "All"),
+                        PathManager().create_final_path(view_layer, "All"),
                     )
                     for input in viewlayer_full[f"{view_layer}Color"]:
-                        add_file_slot(FO_RGB_node, f"{input}")
+                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
 
                     # Create denoise nodes if enabled
                     if (
@@ -371,7 +383,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                     if viewlayer_full.get(f"{view_layer}Data"):
                         datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                         for input in datatemp:
-                            add_file_slot(FO_RGB_node, f"{input}")
+                            CompositorHelper.add_slot(FO_RGB_node, f"{input}")
 
                         if bpy.context.scene.IDS_ArtDepth == True:
                             Normalize_node = tree.nodes.new("CompositorNodeNormalize")
@@ -400,7 +412,7 @@ def make_tree_denoise():  # 主要功能函数之建立节点
                     # Add Crypto passes to ALL output
                     if viewlayer_full.get(f"{view_layer}Crypto"):
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            add_file_slot(FO_RGB_node, f"{input}")
+                            CompositorHelper.add_slot(FO_RGB_node, f"{input}")
 
     return viewlayer_full, viewlayers
 
@@ -412,7 +424,7 @@ def auto_connect():  # 主要功能函数之建立连接
     denoise_nodes_temp = []
     viewlayer_full, viewlayers = make_tree_denoise()
     material_aovs = get_material_aovs()
-    node_tree = get_compositor_node_tree(bpy.context.scene)
+    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
     
     # Collect all denoise nodes
     for node in node_tree.nodes:
@@ -561,8 +573,8 @@ def update_tree_denoise():  # 新建当前视图层的节点
     """Create compositor nodes for the current view layer only."""
     addon_prefs = get_addon_prefs()
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full, viewlayers = sort_passes()
-    tree = get_compositor_node_tree(bpy.context.scene)
+    viewlayer_full, viewlayers = PassSorter().sort()
+    tree = CompositorHelper.get_node_tree(bpy.context.scene)
     view_layer = bpy.context.view_layer.name
     material_aovs = get_material_aovs()
 
@@ -580,12 +592,12 @@ def update_tree_denoise():  # 新建当前视图层的节点
                 # Create RGBA output node
                 codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_RGBACompression
                 FO_RGB_node = create_output_file_node(tree, view_layer, "RgBA", "RGBA", "16", codec)
-                set_output_node_path(
+                CompositorHelper.set_output_path(
                     FO_RGB_node,
-                    create_final_path(current_render_path, view_layer, "RGBA"),
+                    PathManager().create_final_path(view_layer, "RGBA"),
                 )
                 for input in viewlayer_full[f"{view_layer}Color"]:
-                    add_file_slot(FO_RGB_node, f"{input}")
+                    CompositorHelper.add_slot(FO_RGB_node, f"{input}")
 
                 # Create denoise nodes if enabled
                 if (
@@ -605,14 +617,14 @@ def update_tree_denoise():  # 新建当前视图层的节点
                 ):
                     data_codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_DATACompression
                     FO_DATA_node = create_output_file_node(tree, view_layer, "DaTA", "DATA", "32", data_codec)
-                    set_output_node_path(
+                    CompositorHelper.set_output_path(
                         FO_DATA_node,
-                        create_final_path(current_render_path, view_layer, "DATA"),
+                        PathManager().create_final_path(view_layer, "DATA"),
                     )
-                    add_file_slot(FO_DATA_node, "Image")
+                    CompositorHelper.add_slot(FO_DATA_node, "Image")
                     datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                     for input in datatemp:
-                        add_file_slot(FO_DATA_node, f"{input}")
+                        CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
                     if bpy.context.scene.IDS_ArtDepth == True:
                         Normalize_node = tree.nodes.new("CompositorNodeNormalize")
@@ -643,28 +655,28 @@ def update_tree_denoise():  # 新建当前视图层的节点
                     if bpy.context.scene.IDS_SepCryptO is True:
                         crypto_codec = "ZIPS" if not bpy.context.scene.IDS_AdvMode else bpy.context.scene.IDS_CryptoCompression
                         FO_Crypto_node = create_output_file_node(tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32", crypto_codec)
-                        set_output_node_path(
+                        CompositorHelper.set_output_path(
                             FO_Crypto_node,
-                            create_final_path(current_render_path, view_layer, "Cryptomatte"),
+                            PathManager().create_final_path(view_layer, "Cryptomatte"),
                         )
-                        add_file_slot(FO_Crypto_node, "Image")
+                        CompositorHelper.add_slot(FO_Crypto_node, "Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            add_file_slot(FO_Crypto_node, f"{input}")
+                            CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
                     else:
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            add_file_slot(FO_DATA_node, f"{input}")
+                            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
     elif bpy.context.scene.IDS_ConfIg == "OPTION2":  # config 2: All in one file
         for node in tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 # Create ALL output node
                 FO_RGB_node = create_output_file_node(tree, view_layer, "AlL", "ALL", "32", "ZIPS")
-                set_output_node_path(
+                CompositorHelper.set_output_path(
                     FO_RGB_node,
-                    create_final_path(current_render_path, view_layer, "All"),
+                    PathManager().create_final_path(view_layer, "All"),
                 )
                 for input in viewlayer_full[f"{view_layer}Color"]:
-                    add_file_slot(FO_RGB_node, f"{input}")
+                    CompositorHelper.add_slot(FO_RGB_node, f"{input}")
 
                 # Create denoise nodes if enabled
                 if (
@@ -681,7 +693,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                 if viewlayer_full.get(f"{view_layer}Data"):
                     datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                     for input in datatemp:
-                        add_file_slot(FO_RGB_node, f"{input}")
+                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
 
                     if bpy.context.scene.IDS_ArtDepth == True:
                         Normalize_node = tree.nodes.new("CompositorNodeNormalize")
@@ -710,7 +722,7 @@ def update_tree_denoise():  # 新建当前视图层的节点
                 # Add Crypto passes to ALL output
                 if viewlayer_full.get(f"{view_layer}Crypto"):
                     for input in viewlayer_full[f"{view_layer}Crypto"]:
-                        add_file_slot(FO_RGB_node, f"{input}")
+                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
 
     return viewlayer_full, viewlayers
 
@@ -723,7 +735,7 @@ def update_connect():  # 新建当前视图层的连接
     view_layer = bpy.context.view_layer.name
     viewlayer_full, viewlayers = update_tree_denoise()
     material_aovs = get_material_aovs()
-    node_tree = get_compositor_node_tree(bpy.context.scene)
+    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
     
     # Collect all denoise nodes
     for node in node_tree.nodes:
@@ -850,12 +862,12 @@ def auto_rename():  # 自动将各项输出名改为nuke可以直接用的名称
     # for view_layer in bpy.context.scene.view_layers:
     #     viewlayers.append(view_layer.name)
     # for view_layer in viewlayers:
-    node_tree = get_compositor_node_tree(bpy.context.scene)
+    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
     for node in node_tree.nodes:
         # if node.type == "R_LAYERS" and node.layer == view_layer:
         #     for node1 in bpy.context.scene.node_tree.nodes:
         if node.type == "OUTPUT_FILE":
-            for slot in get_file_slots(node):
+            for slot in CompositorHelper.get_slots(node):
                 if slot.name != "Deep_From_Image_z":
                     slot.name = slot.name.replace("Image", "rgba")
                 slot.name = slot.name.replace("Combined", "RGBA")
@@ -879,7 +891,7 @@ def auto_arr_outputnode():  # 排列输出节点
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.append(view_layer.name)
     for view_layer in viewlayers:
-        node_tree = get_compositor_node_tree(bpy.context.scene)
+        node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
         for node in node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 VIEWLAYER_location_y[node.name] = node.location.y
@@ -962,7 +974,7 @@ def auto_arr_denoisenode():  # 排列降噪节点
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.append(view_layer.name)
     for view_layer in viewlayers:
-        node_tree = get_compositor_node_tree(bpy.context.scene)
+        node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
         for node in node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 for node1 in node_tree.nodes:
@@ -991,7 +1003,7 @@ def auto_arr_mathnode():  # 排列数学运算节点
     for view_layer in bpy.context.scene.view_layers:
         viewlayers.append(view_layer.name)
     for view_layer in viewlayers:
-        node_tree = get_compositor_node_tree(bpy.context.scene)
+        node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
         for node in node_tree.nodes:
             if node.type == "R_LAYERS" and node.layer == view_layer:
                 for node6 in reversed(node_tree.nodes):
@@ -1100,8 +1112,8 @@ def make_tree_denoise_adv():  # 高级模式节点创建
     """
     addon_prefs = get_addon_prefs()
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full, viewlayers = sort_passes()
-    tree = get_compositor_node_tree(bpy.context.scene)
+    viewlayer_full, viewlayers = PassSorter().sort()
+    tree = CompositorHelper.get_node_tree(bpy.context.scene)
     material_aovs = get_material_aovs()
 
     if bpy.context.scene.IDS_DelNodE is True:
@@ -1120,12 +1132,12 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                         tree, view_layer, "RgBA", "RGBA", "16",
                         bpy.context.scene.IDS_RGBACompression
                     )
-                    set_output_node_path(
+                    CompositorHelper.set_output_path(
                         FO_RGB_node,
-                        create_final_path(current_render_path, view_layer, "RGBA"),
+                        PathManager().create_final_path(view_layer, "RGBA"),
                     )
                     for input in viewlayer_full[f"{view_layer}Color"]:
-                        add_file_slot(FO_RGB_node, f"{input}")
+                        CompositorHelper.add_slot(FO_RGB_node, f"{input}")
 
                     # Create denoise nodes if enabled
                     if (
@@ -1148,16 +1160,16 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                 tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
                                 bpy.context.scene.IDS_CryptoCompression
                             )
-                            base_path = create_final_path(
-                                current_render_path, view_layer, "Cryptomatte"
+                            base_path = PathManager().create_final_path(
+                                view_layer, "Cryptomatte"
                             )
-                            set_output_node_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
-                            add_file_slot(FO_Crypto_node, "Image")
+                            CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
+                            CompositorHelper.add_slot(FO_Crypto_node, "Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                add_file_slot(FO_Crypto_node, f"{input}")
+                                CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
                         elif bpy.context.scene.IDS_UseDATALayer is False:
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                add_file_slot(FO_DATA_node, f"{input}")
+                                CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
                 else:
                     # Handle DATA and -_-exP_ layers
@@ -1169,14 +1181,14 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                             tree, view_layer, "DaTA", "DATA", "32",
                             bpy.context.scene.IDS_DATACompression
                         )
-                        base_path = create_final_path(
-                            current_render_path, view_layer, "DATA"
+                        base_path = PathManager().create_final_path(
+                            view_layer, "DATA"
                         )
-                        set_output_node_path(FO_DATA_node, base_path.replace("-_-exP_", ""))
-                        add_file_slot(FO_DATA_node, "Image")
+                        CompositorHelper.set_output_path(FO_DATA_node, base_path.replace("-_-exP_", ""))
+                        CompositorHelper.add_slot(FO_DATA_node, "Image")
                         datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                         for input in datatemp:
-                            add_file_slot(FO_DATA_node, f"{input}")
+                            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
                         if bpy.context.scene.IDS_ArtDepth == True:
                             Normalize_node = tree.nodes.new("CompositorNodeNormalize")
@@ -1229,16 +1241,16 @@ def make_tree_denoise_adv():  # 高级模式节点创建
                                 tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
                                 bpy.context.scene.IDS_CryptoCompression
                             )
-                            base_path = create_final_path(
-                                current_render_path, view_layer, "Cryptomatte"
+                            base_path = PathManager().create_final_path(
+                                view_layer, "Cryptomatte"
                             )
-                            set_output_node_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
-                            add_file_slot(FO_Crypto_node, "Image")
+                            CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
+                            CompositorHelper.add_slot(FO_Crypto_node, "Image")
                             for input in viewlayer_full[f"{view_layer}Crypto"]:
-                                add_file_slot(FO_Crypto_node, f"{input}")
+                                CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
                     else:
                         for input in viewlayer_full.get(f"{view_layer}Crypto", []):
-                            add_file_slot(FO_DATA_node, f"{input}")
+                            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
     return viewlayer_full, viewlayers
 
@@ -1256,7 +1268,7 @@ def auto_connect_adv():  # 高级模式建立连接
     denoise_nodes_temp = []
     viewlayer_full, viewlayers = make_tree_denoise_adv()
     material_aovs = get_material_aovs()
-    node_tree = get_compositor_node_tree(bpy.context.scene)
+    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
     
     # Collect all denoise nodes
     for node in node_tree.nodes:
@@ -1375,8 +1387,8 @@ def update_tree_denoise_adv():  # 高级模式节点创建
     """
     addon_prefs = get_addon_prefs()
     current_render_path = bpy.context.scene.render.filepath
-    viewlayer_full, viewlayers = sort_passes()
-    tree = get_compositor_node_tree(bpy.context.scene)
+    viewlayer_full, viewlayers = PassSorter().sort()
+    tree = CompositorHelper.get_node_tree(bpy.context.scene)
     view_layer = bpy.context.view_layer.name
     material_aovs = get_material_aovs()
 
@@ -1395,12 +1407,12 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                     tree, view_layer, "RgBA", "RGBA", "16",
                     bpy.context.scene.IDS_RGBACompression
                 )
-                set_output_node_path(
+                CompositorHelper.set_output_path(
                     FO_RGB_node,
-                    create_final_path(current_render_path, view_layer, "RGBA"),
+                    PathManager().create_final_path(view_layer, "RGBA"),
                 )
                 for input in viewlayer_full[f"{view_layer}Color"]:
-                    add_file_slot(FO_RGB_node, f"{input}")
+                    CompositorHelper.add_slot(FO_RGB_node, f"{input}")
 
                 # Create denoise nodes if enabled
                 if (
@@ -1420,14 +1432,14 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                             tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
                             bpy.context.scene.IDS_CryptoCompression
                         )
-                        base_path = create_final_path(current_render_path, view_layer, "Cryptomatte")
-                        set_output_node_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
-                        add_file_slot(FO_Crypto_node, "Image")
+                        base_path = PathManager().create_final_path(view_layer, "Cryptomatte")
+                        CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
+                        CompositorHelper.add_slot(FO_Crypto_node, "Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            add_file_slot(FO_Crypto_node, f"{input}")
+                            CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
                     elif bpy.context.scene.IDS_UseDATALayer is False:
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            add_file_slot(FO_DATA_node, f"{input}")
+                            CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
             else:
                 # Handle DATA and -_-exP_ layers
@@ -1439,12 +1451,12 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                         tree, view_layer, "DaTA", "DATA", "32",
                         bpy.context.scene.IDS_DATACompression
                     )
-                    base_path = create_final_path(current_render_path, view_layer, "DATA")
-                    set_output_node_path(FO_DATA_node, base_path.replace("-_-exP_", ""))
-                    add_file_slot(FO_DATA_node, "Image")
+                    base_path = PathManager().create_final_path(view_layer, "DATA")
+                    CompositorHelper.set_output_path(FO_DATA_node, base_path.replace("-_-exP_", ""))
+                    CompositorHelper.add_slot(FO_DATA_node, "Image")
                     datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
                     for input in datatemp:
-                        add_file_slot(FO_DATA_node, f"{input}")
+                        CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
                     if bpy.context.scene.IDS_ArtDepth == True:
                         Normalize_node = tree.nodes.new("CompositorNodeNormalize")
@@ -1497,14 +1509,14 @@ def update_tree_denoise_adv():  # 高级模式节点创建
                             tree, view_layer, "CryptoMaTTe", "CryptoMatte", "32",
                             bpy.context.scene.IDS_CryptoCompression
                         )
-                        base_path = create_final_path(current_render_path, view_layer, "Cryptomatte")
-                        set_output_node_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
-                        add_file_slot(FO_Crypto_node, "Image")
+                        base_path = PathManager().create_final_path(view_layer, "Cryptomatte")
+                        CompositorHelper.set_output_path(FO_Crypto_node, base_path.replace("-_-exP_", ""))
+                        CompositorHelper.add_slot(FO_Crypto_node, "Image")
                         for input in viewlayer_full[f"{view_layer}Crypto"]:
-                            add_file_slot(FO_Crypto_node, f"{input}")
+                            CompositorHelper.add_slot(FO_Crypto_node, f"{input}")
                 else:
                     for input in viewlayer_full.get(f"{view_layer}Crypto", []):
-                        add_file_slot(FO_DATA_node, f"{input}")
+                        CompositorHelper.add_slot(FO_DATA_node, f"{input}")
 
     return viewlayer_full, viewlayers
 
@@ -1521,7 +1533,7 @@ def update_connect_adv():  # 高级模式建立连接
     view_layer = bpy.context.view_layer.name
     viewlayer_full, viewlayers = update_tree_denoise_adv()
     material_aovs = get_material_aovs()
-    node_tree = get_compositor_node_tree(bpy.context.scene)
+    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
     
     # Collect all denoise nodes
     for node in node_tree.nodes:
@@ -1632,7 +1644,7 @@ def update_connect_adv():  # 高级模式建立连接
 
 def frame_DATA():
     do = False
-    node_tree = get_compositor_node_tree(bpy.context.scene)
+    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
     for node in node_tree.nodes:
         if "-_-exP_" in node.name:
             do = True
@@ -1681,7 +1693,7 @@ def arrange_data_layers_horizontal():
     All DATA layers are stacked from y=0 going down.
     """
     addon_prefs = get_addon_prefs()
-    node_tree = get_compositor_node_tree(bpy.context.scene)
+    node_tree = CompositorHelper.get_node_tree(bpy.context.scene)
     
     # Constants: 1200 (output x) + 420 (output width) + 450 (gap) = 2070
     DATA_LAYER_X_OFFSET = 2070

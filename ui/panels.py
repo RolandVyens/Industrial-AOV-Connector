@@ -4,7 +4,7 @@
 
 import bpy
 
-from ..handy_functions import BlenderCompat, is_compositing_enabled, IDS_OT_Open_Preference
+from ..handy_functions import BlenderCompat, CompositorHelper, IDS_OT_Open_Preference
 from ..operators import (
     Compositor_OT_enable_use_nodes,
     IDS_OT_Turn_Denoise,
@@ -60,7 +60,7 @@ class IDS_PT_OutputPanel_Base:
         addon_prefs = preferences.addons[BlenderCompat.addon_package].preferences
 
         layout = self.layout
-        if is_compositing_enabled(bpy.context.scene) is False:
+        if CompositorHelper.is_enabled(bpy.context.scene) is False:
             box = layout.box()
             box.label(text="↓↓↓Turn on Use Nodes in compositor.↓↓↓", icon="ERROR")
             box.operator(Compositor_OT_enable_use_nodes.bl_idname)
