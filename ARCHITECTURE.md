@@ -109,44 +109,30 @@ The addon supports "Data Layers" - specific View Layers dedicated to non-beauty 
 
 ```mermaid
 graph TD
-    User([User / 用户]) -->|Click 'Cook Nodetree'| Operator[IDS_OT_Make_Tree]
+    User([User / 用户]) -->|Click 'Cook Nodetree'| Start[IDS_OT_Make_Tree]
     
-    subgraph Execution [Execution Flow / 执行流程]
-        Operator --> Connector[NodeConnector.connect_all]
-        
-        %% Phase 1: Creation
-        subgraph Creation [Phase 1: Creation / 创建阶段]
-            Connector -->|1. Build Nodes| Builder[TreeBuilder.build_all]
-            Builder --> Sorter[sort_passes.py]
-            Sorter -->|Return Dict| Builder
-            
-            Builder --> CreateRGBA[Create RGBA Nodes]
-            Builder --> CreateData[Create DATA Nodes]
-            Builder --> CreateDenoise[Create Denoise Nodes]
-            Builder --> CreateVector[Create Vector Nodes]
-        end
-        
-        %% Phase 2: Connection
-        subgraph Connection [Phase 2: Connection / 连接阶段]
-            Connector -->|2. Link Nodes| LinkLogic{Config Logic}
-            LinkLogic -->|Option 1/Adv| LinkSep[_connect_separate]
-            LinkLogic -->|Option 2| LinkAll[_connect_all_in_one]
-            
-            LinkSep & LinkAll --> LinkDenoise[Link Denoise]
-            LinkSep & LinkAll --> LinkVector[Link Vector Conversion]
-            LinkSep & LinkAll --> LinkOutput[Link to FileOutput]
-        end
-        
-        %% Phase 3: Arrangement
-        subgraph Arrangement [Phase 3: Arrangement / 排列阶段]
-            Operator -->|3. Arrange| Arranger[NodeArranger]
-            Arranger --> Frame[Frame Data Layers]
-            Arranger --> Stack[Stack Textures]
-            Arranger --> Rename[Rename Sockets]
-        end
-    end
+    %% 1. Creation Phase
+    Start -->|1. Build Nodes| Creator[TreeBuilder.build_all]
+    Creator --> Sorter[sort_passes.py]
+    Sorter -->|ViewLayer Dict| Creator
+    Creator --> CreateLoop[Create Nodes Loop]
     
-    Rename --> Finish([Ready to Render / 准备完毕])
+    %% 2. Connection Phase
+    CreateLoop -->|2. Connect Nodes| Connector[NodeConnector.connect_all]
+    Connector --> LinkLogic{Config Logic}
+    LinkLogic -->|Std/Adv| ConnectLinks[Connect Sockets]
+    
+    %% 3. Arrangement Phase
+    ConnectLinks -->|3. Arrange Nodes| Arranger[NodeArranger.arrange_all]
+    Arranger --> Frame[Frame Data Layers]
+    Frame --> Stack[Stack Textures]
+    
+    Stack --> Finish([Ready to Render / 准备完毕])
+
+    style Start fill:#f9f,stroke:#333
+    style Creator fill:#ddf,stroke:#333
+    style Connector fill:#ddf,stroke:#333
+    style Arranger fill:#ddf,stroke:#333
 ```
 
 > *Note: Diagram uses Mermaid syntax. If not rendering, view the simplified ASCII version below.*
@@ -156,26 +142,16 @@ graph TD
 [User] -> [IDS_OT_Make_Tree]
              |
              v
-      [NodeConnector]
-             |
-             +---> 1. CREATION (TreeBuilder)
-             |       |
-             |       +-> [sort_passes] -> [ViewLayer Dict]
-             |       +-> [Create FileOutput Nodes]
-             |       +-> [Create Utility Nodes (Denoise/Vector)]
-             |
-             +---> 2. CONNECTION (NodeConnector)
-             |       |
-             |       +-> [Connect RenderLayer -> Denoise -> Output]
-             |       +-> [Connect RenderLayer -> Vector -> Output]
+   1. [TreeBuilder.build_all]  <-- (Creates Nodes)
              |
              v
-      [NodeArranger]
+   2. [NodeConnector.connect_all] <-- (Links Nodes)
              |
-             +---> 3. ARRANGEMENT
-                     +-> [Frame Layers]
-                     +-> [Stack Nodes]
-                     +-> [Rename Outputs]
+             v
+   3. [NodeArranger.arrange_all] <-- (Organizes Layout)
+             |
+             v
+        [Ready to Render]
 ```
 
 ---
