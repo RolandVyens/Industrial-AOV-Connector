@@ -359,7 +359,7 @@ Both inherit from `IDS_PT_OutputPanel_Base` which contains all drawing logic.
 
 | Directory | Files |
 |-----------|-------|
-| Root | `__init__.py`, `constants.py`, `handy_functions.py`, `language_lib.py`, `sort_passes.py`, `path_modify_v2.py`, `renderpath_preset.py`, `asset.blend`, `blender_manifest.toml`, `LICENSE` |
+| Root | `__init__.py`, `constants.py`, `handy_functions.py`, `language_lib.py`, `sort_passes.py`, `path_modify_v2.py`, `renderpath_preset.py`, `asset.blend`, `blender_manifest.toml` |
 | `core/` | `__init__.py`, `node_builder.py`, `preferences.py`, `properties.py` |
 | `operators/` | `__init__.py`, `basic_ops.py`, `data_layer_ops.py`, `tree_ops.py` |
 | `ui/` | `__init__.py`, `panels.py` |
@@ -367,42 +367,40 @@ Both inherit from `IDS_PT_OutputPanel_Base` which contains all drawing logic.
 ### Files to Exclude
 
 - `.git/`, `__pycache__/` — Dev/build artifacts
-- `AGENT.md`, `README.md`, `manual/` — Documentation (not needed at runtime)
+- `AGENT.md`, `README.md`, `LICENSE`, `manual/` — Documentation (not needed at runtime)
 - `layer_demo.blend` — Test file
 - `.gitignore`
 
-### PowerShell Pack Script
+### Python Pack Script
 
-```powershell
-$source = "path\to\Industrial-AOV-Connector"
-$temp = "$env:TEMP\Industrial-AOV-Connector"
-$dest = "$source\Industrial-AOV-Connector.zip"
+> [!IMPORTANT]
+> Use Python's `zipfile` module—PowerShell's `Compress-Archive` creates backslash paths and missing directory entries, causing Blender's "manifest not found" error.
 
-# Clean up any existing temp folder
-if (Test-Path $temp) { Remove-Item $temp -Recurse -Force }
+```python
+import zipfile
+import os
 
-# Create folder structure
-New-Item -ItemType Directory -Path $temp -Force | Out-Null
-New-Item -ItemType Directory -Path "$temp\core" -Force | Out-Null
-New-Item -ItemType Directory -Path "$temp\operators" -Force | Out-Null
-New-Item -ItemType Directory -Path "$temp\ui" -Force | Out-Null
+source = r'path\to\Industrial-AOV-Connector'
+dest = os.path.join(source, 'Industrial-AOV-Connector.zip')
 
-# Copy root files
-@("__init__.py", "constants.py", "handy_functions.py", "language_lib.py", 
-  "sort_passes.py", "path_modify_v2.py", "renderpath_preset.py", 
-  "asset.blend", "blender_manifest.toml", "LICENSE") | ForEach-Object {
-    Copy-Item "$source\$_" $temp
-}
+files_to_include = [
+    '__init__.py', 'constants.py', 'handy_functions.py', 'language_lib.py',
+    'sort_passes.py', 'path_modify_v2.py', 'renderpath_preset.py',
+    'asset.blend', 'blender_manifest.toml',
+    'core/__init__.py', 'core/node_builder.py', 'core/preferences.py', 'core/properties.py',
+    'operators/__init__.py', 'operators/basic_ops.py', 'operators/data_layer_ops.py', 'operators/tree_ops.py',
+    'ui/__init__.py', 'ui/panels.py'
+]
 
-# Copy submodule files
-@("core", "operators", "ui") | ForEach-Object {
-    Get-ChildItem "$source\$_\*.py" | Copy-Item -Destination "$temp\$_\"
-}
+with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as zf:
+    # Add directory entries (required for Blender)
+    for folder in ['Industrial-AOV-Connector/', 'Industrial-AOV-Connector/core/', 
+                   'Industrial-AOV-Connector/operators/', 'Industrial-AOV-Connector/ui/']:
+        zf.writestr(folder, '')
+    
+    # Add files with forward slashes
+    for f in files_to_include:
+        zf.write(os.path.join(source, f), 'Industrial-AOV-Connector/' + f)
 
-# Remove old zip if exists, then create new one
-if (Test-Path $dest) { Remove-Item $dest -Force }
-Compress-Archive -Path $temp -DestinationPath $dest -Force
-
-# Clean up temp folder
-Remove-Item $temp -Recurse -Force
+print(f'Created: {dest}')
 ```
