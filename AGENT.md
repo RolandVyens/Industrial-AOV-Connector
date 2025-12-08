@@ -225,6 +225,126 @@ All version-specific code is abstracted through these classes.
 
 ---
 
+## Path Management
+
+### `path_modify_v2.py` — PathManager
+
+Manages output file paths for FileOutput nodes.
+
+| Method | Purpose |
+|--------|---------|
+| `get_single_folder_path()` | Get base render path (without trash_output) |
+| `get_subfolder_paths()` | Returns `[rgba_path, data_path, crypto_path]` |
+| `move_to_trash_output()` | Redirect Blender's default output to trash_output/ |
+| `create_final_path(view_layer, output_type)` | Generate full output path for a layer |
+
+### `renderpath_preset.py` — TokenReplacer
+
+Handles render farm path preparation with token replacement.
+
+**Supported Tokens:**
+| Token | Replacement |
+|-------|-------------|
+| `$scene$` | Scene name |
+| `$file$` | Blend filename (without extension) |
+| `$viewlayer$` | Current view layer name |
+| `$camera$` | Camera name (or "NoCamera") |
+| `$version$` | Last 4 chars of filename (e.g., "v001") |
+
+**Storage**: Original paths stored in node custom property `IDS_original_path`
+
+---
+
+## Addon Preferences Reference
+
+Stored in `core/preferences.py` as `IDS_AddonPrefs`:
+
+| Preference | Default | Purpose |
+|------------|---------|---------|
+| `Denoise_Col` | True | Denoise DiffCol/GlossCol/TransCol |
+| `Use_Old_Layer_Naming` | False | Legacy EXR layer names |
+| `Put_Default_To_trash_output` | False | Redirect default render to trash |
+| `Show_QuickDel` | False | Show delete trash button |
+| `Only_Create_Enabled_Viewlayer` | True | Skip disabled layers |
+| `Auto_Data_Sample` | False | Auto-optimize DATA layer samples |
+| `Custom_Data_Sample` | 10 | Sample count for DATA layers |
+| `Custom_Suffix` | `####` | Custom filename suffix with tokens |
+| `Arrange_Scale_Param` | 1.0 | Node spacing scale (for HiDPI) |
+| `Horizontal_DATA_Arrange` | True | Arrange DATA layers horizontally |
+| `UI_Show_In_Comp` | False | Show panel in Compositor N-panel |
+
+---
+
+## All Operators Reference
+
+### Tree Operations (`operators/tree_ops.py`)
+| Operator ID | Purpose |
+|-------------|---------|
+| `compositor.make_tree` | Build nodes for ALL view layers |
+| `compositor.update_tree` | Update CURRENT view layer only |
+| `compositor.arr_tree` | Arrange connector nodes |
+
+### Basic Operations (`operators/basic_ops.py`)
+| Operator ID | Purpose |
+|-------------|---------|
+| `compositor.use_nodes` | Enable compositor |
+| `rendering.use_denoise_passes` | Turn on denoise for all layers |
+| `compositor.cloudmodeids` | Toggle render farm path prep |
+| `render.delete_trashoutput` | Delete trash_output folder |
+| `scene.setmaterialaov` | Auto-set shader AOVs |
+
+### DATA Layer Operations (`operators/data_layer_ops.py`)
+| Operator ID | Purpose |
+|-------------|---------|
+| `viewlayer.makedatalayernew` | Create new empty DATA layer |
+| `viewlayer.makedatalayercopy` | Create DATA layer from current |
+| `viewlayer.convertdatalayer` | Convert current to DATA layer |
+| `viewlayer.overridedatamat` | Override material + create AOVs |
+| `wm.drawdatalayermenu` | Show DATA layer menu |
+
+### Utility (`handy_functions.py`)
+| Operator ID | Purpose |
+|-------------|---------|
+| `viewlayer.idspreference` | Open addon preferences |
+
+---
+
+## UI Panels
+
+### `ui/panels.py`
+
+| Panel Class | Location | ID |
+|-------------|----------|-----|
+| `IDS_PT_OutputPanel` | Properties > View Layer | `RENDER_PT_industrialoutput` |
+| `IDS_PT_OutputPanel_N` | Compositor > N-Panel | `COMP_PT_industrialoutput` |
+
+Both inherit from `IDS_PT_OutputPanel_Base` which contains all drawing logic.
+
+---
+
+## Constants Reference (`constants.py`)
+
+### Key Constants
+
+| Constant | Value | Usage |
+|----------|-------|-------|
+| `DATA_LAYER_PREFIX` | `-_-exP_` | Identifies DATA layers |
+| `DATA_LAYER_SUFFIX` | `_DATA` | Alternative DATA layer identifier |
+| `NODE_NAME_SEPARATOR` | `--` | Separates layer name from suffix |
+| `TRASH_OUTPUT_FOLDER` | `trash_output` | Default render redirect folder |
+
+### Output Folders
+- `RGBAs/` — RGBA outputs
+- `DATAs/` — DATA outputs  
+- `Cryptomatte/` — Cryptomatte outputs
+
+### Node Suffixes (for identification)
+- `RgBA`, `DaTA`, `CryptoMaTTe`, `AlL` — Output nodes
+- `_Dn` — Denoise nodes
+- `_Break`, `_Combine`, `_Inv` — Vector conversion nodes
+
+---
+
 ## Code Quality Notes
 
 - **Rating**: 7.5/10
