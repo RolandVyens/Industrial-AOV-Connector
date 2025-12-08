@@ -7,6 +7,7 @@ import os
 from bpy.types import Operator
 
 from ..handy_functions import extract_string_between_patterns, BlenderCompat
+from ..constants import DATA_LAYER_PREFIX, DATA_LAYER_SUFFIX
 
 
 class IDS_OT_Make_DatalayerNew(Operator):
