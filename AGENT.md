@@ -350,3 +350,59 @@ Both inherit from `IDS_PT_OutputPanel_Base` which contains all drawing logic.
 - **Rating**: 7.5/10
 - **Strengths**: Modular class architecture, good helper extraction, bilingual docs
 - **Opportunities**: Some duplication between `_adv` and non-`_adv` methods; consider factory pattern for node creation
+
+---
+
+## Packaging for Distribution
+
+### Files to Include
+
+| Directory | Files |
+|-----------|-------|
+| Root | `__init__.py`, `constants.py`, `handy_functions.py`, `language_lib.py`, `sort_passes.py`, `path_modify_v2.py`, `renderpath_preset.py`, `asset.blend`, `blender_manifest.toml`, `LICENSE` |
+| `core/` | `__init__.py`, `node_builder.py`, `preferences.py`, `properties.py` |
+| `operators/` | `__init__.py`, `basic_ops.py`, `data_layer_ops.py`, `tree_ops.py` |
+| `ui/` | `__init__.py`, `panels.py` |
+
+### Files to Exclude
+
+- `.git/`, `__pycache__/` — Dev/build artifacts
+- `AGENT.md`, `README.md`, `manual/` — Documentation (not needed at runtime)
+- `layer_demo.blend` — Test file
+- `.gitignore`
+
+### PowerShell Pack Script
+
+```powershell
+$source = "path\to\Industrial-AOV-Connector"
+$temp = "$env:TEMP\Industrial-AOV-Connector"
+$dest = "$source\Industrial-AOV-Connector.zip"
+
+# Clean up any existing temp folder
+if (Test-Path $temp) { Remove-Item $temp -Recurse -Force }
+
+# Create folder structure
+New-Item -ItemType Directory -Path $temp -Force | Out-Null
+New-Item -ItemType Directory -Path "$temp\core" -Force | Out-Null
+New-Item -ItemType Directory -Path "$temp\operators" -Force | Out-Null
+New-Item -ItemType Directory -Path "$temp\ui" -Force | Out-Null
+
+# Copy root files
+@("__init__.py", "constants.py", "handy_functions.py", "language_lib.py", 
+  "sort_passes.py", "path_modify_v2.py", "renderpath_preset.py", 
+  "asset.blend", "blender_manifest.toml", "LICENSE") | ForEach-Object {
+    Copy-Item "$source\$_" $temp
+}
+
+# Copy submodule files
+@("core", "operators", "ui") | ForEach-Object {
+    Get-ChildItem "$source\$_\*.py" | Copy-Item -Destination "$temp\$_\"
+}
+
+# Remove old zip if exists, then create new one
+if (Test-Path $dest) { Remove-Item $dest -Force }
+Compress-Archive -Path $temp -DestinationPath $dest -Force
+
+# Clean up temp folder
+Remove-Item $temp -Recurse -Force
+```
