@@ -368,10 +368,14 @@ class TreeBuilder:
         FO_DATA_node = create_output_file_node(self.tree, view_layer, OUTPUT_SUFFIX_DATA, LABEL_SUFFIX_DATA, "32", data_codec)
         CompositorHelper.set_output_path(FO_DATA_node, PathManager().create_final_path(view_layer, "DATA"))
         CompositorHelper.add_slot(FO_DATA_node, "Image")
-        datatemp = sorting_data(viewlayer_full[f"{view_layer}Data"][:])
+        datatemp = sorting_data(viewlayer_full.get(f"{view_layer}Data", [])[:])
         for input in datatemp:
             CompositorHelper.add_slot(FO_DATA_node, f"{input}")
         self._create_auxiliary_nodes(view_layer, viewlayer_full)
+        # Add Cryptomatte slots when separate crypto output is disabled
+        if not self.scene.IDS_SepCryptO and viewlayer_full.get(f"{view_layer}Crypto"):
+            for input in viewlayer_full[f"{view_layer}Crypto"]:
+                CompositorHelper.add_slot(FO_DATA_node, f"{input}")
         return FO_DATA_node
     
     def _create_auxiliary_nodes(self, view_layer, viewlayer_full):
