@@ -41,6 +41,8 @@ from ..constants import (
     LABEL_SUFFIX_DATA,
     LABEL_SUFFIX_CRYPTO,
     LABEL_SUFFIX_ALL,
+    AOV_CATEGORY_POSITION,
+    AOV_CATEGORY_NORMAL,
 )
 
 
@@ -186,12 +188,17 @@ def connect_vector_nodes(node_tree, view_layer, socket, output_node_name):
     links.new(nodes[comb_name].outputs["Vector"], nodes[output_node_name].inputs[socket])
     
     # XYZ remapping for Blender -> Nuke coordinate system
-    # Only apply to Normal and Position passes
-    if socket in ("Normal", "Position"):
+    # Only apply to Normal and Position category passes
+    if socket in AOV_CATEGORY_NORMAL or socket in AOV_CATEGORY_POSITION:
         links.new(nodes[brk_name].outputs["X"], nodes[comb_name].inputs["X"])
         links.new(nodes[brk_name].outputs["Z"], nodes[comb_name].inputs["Y"])
         links.new(nodes[brk_name].outputs["Y"], nodes[inv_name].inputs[0])
         links.new(nodes[inv_name].outputs[0], nodes[comb_name].inputs["Z"])
+    else:
+        # Standard connection for other vector passes
+        links.new(nodes[brk_name].outputs["X"], nodes[comb_name].inputs["X"])
+        links.new(nodes[brk_name].outputs["Y"], nodes[comb_name].inputs["Y"])
+        links.new(nodes[brk_name].outputs["Z"], nodes[comb_name].inputs["Z"])
 
 
 def create_output_file_node(tree, view_layer, name_suffix, label_suffix,
