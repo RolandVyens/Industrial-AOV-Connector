@@ -68,6 +68,12 @@ def register_properties():
         default=False,
     )
 
+    bpy.types.Scene.IDS_UseDeepEXR = bpy.props.BoolProperty(
+        name="Deep EXR Output (Custom Branch)",
+        description="Enable alpha-only Deep EXR file output (requires custom Blender branch)",
+        default=False,
+    )
+
     # Advanced mode settings
     bpy.types.Scene.IDS_AdvMode = bpy.props.BoolProperty(
         name="Use Advanced Mode",
@@ -239,6 +245,7 @@ def unregister_properties():
         "IDS_DelNodE",
         "IDS_SepCryptO",
         "IDS_ArtDepth",
+        "IDS_UseDeepEXR",
         "IDS_AdvMode",
         "IDS_UseDATALayer",
         "IDS_UseAdvCrypto",

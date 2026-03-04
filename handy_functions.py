@@ -150,6 +150,14 @@ class CompositorHelper:
                 return node.layer_slots
             return node.file_slots
 
+    @staticmethod
+    def supports_deep_exr() -> bool:
+        """检查当前 Blender 是否支持 DEEP_EXR 文件输出格式。"""
+        file_format_prop = bpy.types.ImageFormatSettings.bl_rna.properties.get("file_format")
+        if not file_format_prop:
+            return False
+        return any(item.identifier == "DEEP_EXR" for item in file_format_prop.enum_items)
+
 
 class DataLayerHelper:
     """数据层相关的辅助功能"""

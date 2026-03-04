@@ -71,6 +71,14 @@ language_dict = {
         ): "输出艺用Depth",
         (
             "*",
+            "Deep EXR Output (Custom Branch)",
+        ): "Deep EXR输出（自定义分支）",
+        (
+            "*",
+            "Enable alpha-only Deep EXR file output (requires custom Blender branch)",
+        ): "启用仅Alpha的Deep EXR文件输出（需要你的自定义Blender分支）",
+        (
+            "*",
             "Output Denoised Depth Pass as a 0-1 depth channel, should be much more precise in terms of pixel filtering, also way less noise. But the depth value will not be as correct as the default depth channel",
         ): "把降噪用Depth转换为一个0-1的深度通道，像素排列精确度将会更高，噪点会更少。但深度数值不如默认深度精确",
         (
@@ -468,6 +476,10 @@ language_dict["zh_CN"].update({
         "*",
         "Whether render paths are currently substituted for render farm",
     ): "渲染路径当前是否已替换用于渲染农场",
+    (
+        "*",
+        "Deep EXR output requires your custom Blender branch with DEEP_EXR compositor support",
+    ): "Deep EXR输出需要你的自定义Blender分支（并支持DEEP_EXR合成器输出）",
 })
 
 # Make zh_HANS reference the same dictionary as zh_CN

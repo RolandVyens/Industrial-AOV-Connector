@@ -37,10 +37,13 @@ from ..constants import (
     OUTPUT_SUFFIX_DATA,
     OUTPUT_SUFFIX_CRYPTO,
     OUTPUT_SUFFIX_ALL,
+    OUTPUT_SUFFIX_DEEP,
     LABEL_SUFFIX_RGBA,
     LABEL_SUFFIX_DATA,
     LABEL_SUFFIX_CRYPTO,
     LABEL_SUFFIX_ALL,
+    LABEL_SUFFIX_DEEP,
+    DEEP_OUTPUT_X_OFFSET,
     AOV_CATEGORY_POSITION,
     AOV_CATEGORY_NORMAL,
 )
@@ -327,6 +330,8 @@ class TreeBuilder:
                 CompositorHelper.set_output_path(FO_RGB_node, PathManager().create_final_path(view_layer, "RGBA"))
                 for input in viewlayer_full[f"{view_layer}Color"]:
                     CompositorHelper.add_slot(FO_RGB_node, f"{input}")
+                if self.scene.IDS_UseDeepEXR and not is_data_layer(view_layer):
+                    self._create_deep_output_node(view_layer)
 
                 if self.scene.IDS_UsedN is True and self.scene.render.engine == "CYCLES":
                     create_denoise_nodes(self.tree, view_layer, viewlayer_full.get(f"{view_layer}Color", []),
@@ -350,6 +355,8 @@ class TreeBuilder:
                 CompositorHelper.set_output_path(FO_RGB_node, PathManager().create_final_path(view_layer, "All"))
                 for input in viewlayer_full[f"{view_layer}Color"]:
                     CompositorHelper.add_slot(FO_RGB_node, f"{input}")
+                if self.scene.IDS_UseDeepEXR and not is_data_layer(view_layer):
+                    self._create_deep_output_node(view_layer)
 
                 if self.scene.IDS_UsedN is True and self.scene.render.engine == "CYCLES":
                     create_denoise_nodes(self.tree, view_layer, viewlayer_full.get(f"{view_layer}Color", []),
@@ -384,6 +391,30 @@ class TreeBuilder:
             for input in viewlayer_full[f"{view_layer}Crypto"]:
                 CompositorHelper.add_slot(FO_DATA_node, f"{input}")
         return FO_DATA_node
+
+    def _create_deep_output_node(self, view_layer):
+        """Create alpha-only Deep EXR output node for a regular view layer."""
+        fo_deep_node = create_output_file_node(
+            self.tree,
+            view_layer,
+            OUTPUT_SUFFIX_DEEP,
+            LABEL_SUFFIX_DEEP,
+            "16",
+            "ZIPS",
+        )
+        # File Output defaults to MULTI_LAYER_IMAGE, which only allows
+        # OPEN_EXR_MULTILAYER. Switch media type first to unlock DEEP_EXR.
+        if hasattr(fo_deep_node.format, "media_type"):
+            fo_deep_node.format.media_type = "IMAGE"
+        fo_deep_node.format.file_format = "DEEP_EXR"
+        fo_deep_node.format.exr_codec = "ZIPS"
+        fo_deep_node.format.color_depth = "16"
+        CompositorHelper.set_output_path(
+            fo_deep_node, PathManager().create_final_path(view_layer, "Deep")
+        )
+        fo_deep_node.inputs.clear()
+        CompositorHelper.add_slot(fo_deep_node, "alpha")
+        return fo_deep_node
     
     def _create_auxiliary_nodes(self, view_layer, viewlayer_full):
         """Create Normalize and Vector conversion nodes"""
@@ -457,6 +488,8 @@ class TreeBuilder:
         )
         for input in viewlayer_full[f"{view_layer}Color"]:
             CompositorHelper.add_slot(FO_RGB_node, f"{input}")
+        if self.scene.IDS_UseDeepEXR:
+            self._create_deep_output_node(view_layer)
 
         # Create denoise nodes if enabled
         if self.scene.IDS_UsedN is True and self.scene.render.engine == "CYCLES":
@@ -664,6 +697,8 @@ class NodeConnector:
                 node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                 node_tree.nodes[output_node].inputs[f"{node}"],
             )
+
+        self._connect_deep_alpha(node_tree, view_layer)
         
         # Connect Crypto and DATA passes
         if viewlayer_full[f"{view_layer}Crypto"] or viewlayer_full[f"{view_layer}Data"]:
@@ -702,6 +737,8 @@ class NodeConnector:
                 node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                 node_tree.nodes[rgba_output].inputs[f"{node}"],
             )
+
+        self._connect_deep_alpha(node_tree, view_layer)
         
         # Connect DATA passes
         if (
@@ -782,6 +819,8 @@ class NodeConnector:
                 node_tree.nodes[f"{view_layer}"].outputs[f"{node}"],
                 node_tree.nodes[rgba_output].inputs[f"{node}"],
             )
+
+        self._connect_deep_alpha(node_tree, view_layer)
         
         # Connect Cryptomatte for advanced crypto mode
         if (
@@ -898,6 +937,22 @@ class NodeConnector:
         links.new(nodes[f"{view_layer}"].outputs["Denoising Depth"], nodes[normalize_node].inputs["Value"])
         links.new(nodes[normalize_node].outputs["Value"], nodes[output_node].inputs["Denoising Depth"])
 
+    def _connect_deep_alpha(self, node_tree, view_layer):
+        """Connect RenderLayer Alpha to Deep output node when enabled."""
+        if not self.scene.IDS_UseDeepEXR:
+            return
+        deep_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_DEEP}"
+        if (
+            deep_output not in node_tree.nodes
+            or "alpha" not in node_tree.nodes[deep_output].inputs
+            or "Alpha" not in node_tree.nodes[view_layer].outputs
+        ):
+            return
+        node_tree.links.new(
+            node_tree.nodes[view_layer].outputs["Alpha"],
+            node_tree.nodes[deep_output].inputs["alpha"],
+        )
+
 
 class NodeArranger:
     """负责节点位置排列和布局"""
@@ -965,6 +1020,19 @@ class NodeArranger:
                                 node1.dimensions.y * self.addon_prefs.Arrange_Scale_Param
                             )
         
+        for node in self.node_tree.nodes:
+            if node.type == "OUTPUT_FILE" and node.name.endswith(f"{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_DEEP}"):
+                base_name = node.name[: node.name.rfind(NODE_NAME_SEPARATOR)]
+                rgba_key = base_name + NODE_NAME_SEPARATOR + OUTPUT_SUFFIX_RGBA
+                all_key = base_name + NODE_NAME_SEPARATOR + OUTPUT_SUFFIX_ALL
+                if rgba_key in RGBA_location_y:
+                    node.location = 1200 + DEEP_OUTPUT_X_OFFSET, RGBA_location_y[rgba_key]
+                elif all_key in RGBA_location_y:
+                    node.location = 1200 + DEEP_OUTPUT_X_OFFSET, RGBA_location_y[all_key]
+                else:
+                    node.location = 1200 + DEEP_OUTPUT_X_OFFSET, VIEWLAYER_location_y.get(base_name, 0)
+                node.width = 420
+
         for node in self.node_tree.nodes:
             if node.type == "OUTPUT_FILE" and OUTPUT_SUFFIX_DATA in node.name:
                 rgba_key = node.name[: node.name.rfind(NODE_NAME_SEPARATOR)] + NODE_NAME_SEPARATOR + OUTPUT_SUFFIX_RGBA
