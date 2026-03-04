@@ -69,8 +69,8 @@ def register_properties():
     )
 
     bpy.types.Scene.IDS_UseDeepEXR = bpy.props.BoolProperty(
-        name="Deep EXR Output (Custom Branch)",
-        description="Enable alpha-only Deep EXR file output (requires custom Blender branch)",
+        name="Output Deep",
+        description="Enable alpha-only deep output, use with my custom blender on my github",
         default=False,
     )
 

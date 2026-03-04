@@ -71,12 +71,12 @@ language_dict = {
         ): "输出艺用Depth",
         (
             "*",
-            "Deep EXR Output (Custom Branch)",
-        ): "Deep EXR输出（自定义分支）",
+            "Output Deep",
+        ): "输出Deep",
         (
             "*",
-            "Enable alpha-only Deep EXR file output (requires custom Blender branch)",
-        ): "启用仅Alpha的Deep EXR文件输出（需要你的自定义Blender分支）",
+            "Enable alpha-only deep output, use with my custom blender on my github",
+        ): "启用仅Alpha的Deep输出，需配合我GitHub上的魔改Blender使用",
         (
             "*",
             "Output Denoised Depth Pass as a 0-1 depth channel, should be much more precise in terms of pixel filtering, also way less noise. But the depth value will not be as correct as the default depth channel",
