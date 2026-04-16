@@ -6,7 +6,7 @@
 ### Simple But Powerful AOV Output Tool, born for professional compositing.
 ======================
 
-Support me on [superhive](https://superhivemarket.com/products/industrial-aov-connector)
+Support me on [superhive](https://superhivemarket.com/products/industrial-aov-connector) [爱发电](https://www.ifdian.net/a/mogubobi2)
 
 Install on [blender extensions](https://extensions.blender.org/add-ons/industrial-aov-connector/)
 
