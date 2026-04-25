@@ -91,10 +91,22 @@ class CompositorHelper:
     """合成器相关的辅助功能"""
     
     @staticmethod
+    def ensure_node_tree(scene):
+        """Ensure the scene has a compositor node tree."""
+        if bpy.app.version >= (5, 0, 0):
+            if scene.compositing_node_group is None:
+                scene.compositing_node_group = bpy.data.node_groups.new(
+                    "Compositor", "CompositorNodeTree"
+                )
+            return scene.compositing_node_group
+        else:
+            return scene.node_tree
+    
+    @staticmethod
     def get_node_tree(scene):
         """获取场景的合成器节点树"""
         if bpy.app.version >= (5, 0, 0):
-            return scene.compositing_node_group
+            return CompositorHelper.ensure_node_tree(scene)
         else:
             return scene.node_tree
     
@@ -102,7 +114,10 @@ class CompositorHelper:
     def is_enabled(scene) -> bool:
         """检查合成器是否启用"""
         if bpy.app.version >= (5, 0, 0):
-            return scene.render.use_compositing
+            return (
+                scene.render.use_compositing
+                and scene.compositing_node_group is not None
+            )
         else:
             return scene.use_nodes
     
@@ -111,6 +126,7 @@ class CompositorHelper:
         """启用合成器"""
         if bpy.app.version >= (5, 0, 0):
             scene.render.use_compositing = True
+            CompositorHelper.ensure_node_tree(scene)
         else:
             scene.use_nodes = True
     

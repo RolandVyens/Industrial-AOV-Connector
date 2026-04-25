@@ -118,9 +118,14 @@ class PassSorter:
             vector_data = [
                 d["NodeSocketVector"] for d in viewlayer_passes if "NodeSocketVector" in d
             ]
+            vector4d_data = [
+                d["NodeSocketVector4D"]
+                for d in viewlayer_passes
+                if "NodeSocketVector4D" in d
+            ]
             
             real_data = []
-            for i in float_data + vector_data:
+            for i in float_data + vector_data + vector4d_data:
                 if self.scene.IDS_ArtDepth is True:
                     if (
                         "Alpha" not in i
