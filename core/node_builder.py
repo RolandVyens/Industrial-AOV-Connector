@@ -69,6 +69,48 @@ def is_data_layer(layer_name: str) -> bool:
     """
     return layer_name.startswith(DATA_LAYER_PREFIX) or DATA_LAYER_SUFFIX in layer_name
 
+
+def supports_viewlayer_deep_toggle() -> bool:
+    """Return True when the custom Blender branch exposes ViewLayer.use_deep."""
+    return "use_deep" in bpy.types.ViewLayer.bl_rna.properties
+
+
+def supports_multilayer_output_media_type() -> bool:
+    """Return True when File Output EXRs are controlled by media_type."""
+    media_type_prop = bpy.types.ImageFormatSettings.bl_rna.properties.get("media_type")
+    if not media_type_prop:
+        return False
+    file_format_prop = bpy.types.ImageFormatSettings.bl_rna.properties.get("file_format")
+    if not file_format_prop:
+        return False
+    enum_ids = {item.identifier for item in file_format_prop.enum_items}
+    return "OPEN_EXR_MULTILAYER" not in enum_ids
+
+
+def is_deep_enabled(scene, view_layer_name: str) -> bool:
+    """Return whether deep output should be created for this view layer."""
+    if supports_viewlayer_deep_toggle():
+        view_layer = scene.view_layers.get(view_layer_name)
+        return bool(view_layer and getattr(view_layer, "use_deep", False))
+    return getattr(scene, "IDS_UseDeepEXR", False)
+
+
+def configure_deep_output_node(node):
+    """Apply branch-specific settings for the deep output File Output node."""
+    if hasattr(node.format, "exr_codec"):
+        node.format.exr_codec = "ZIPS"
+    node.format.color_depth = "16"
+
+    if supports_multilayer_output_media_type():
+        if hasattr(node.format, "media_type"):
+            node.format.media_type = "MULTI_LAYER_IMAGE"
+        return
+
+    if hasattr(node.format, "media_type"):
+        node.format.media_type = "IMAGE"
+    node.format.file_format = "DEEP_EXR"
+
+
 def get_material_aovs():
     """Collect all material AOVs from all scenes/layers."""
     material_aovs = set()
@@ -223,7 +265,11 @@ def create_output_file_node(tree, view_layer, name_suffix, label_suffix,
     fo_node.name = f"{view_layer}--{name_suffix}"
     fo_node.label = f"{view_layer}_{label_suffix}"
     fo_node.location = 1200, 0
-    fo_node.format.file_format = "OPEN_EXR_MULTILAYER"
+    if supports_multilayer_output_media_type():
+        if hasattr(fo_node.format, "media_type"):
+            fo_node.format.media_type = "MULTI_LAYER_IMAGE"
+    else:
+        fo_node.format.file_format = "OPEN_EXR_MULTILAYER"
     fo_node.format.color_depth = color_depth
     if codec:
         fo_node.format.exr_codec = codec
@@ -330,7 +376,7 @@ class TreeBuilder:
                 CompositorHelper.set_output_path(FO_RGB_node, PathManager().create_final_path(view_layer, "RGBA"))
                 for input in viewlayer_full[f"{view_layer}Color"]:
                     CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-                if self.scene.IDS_UseDeepEXR and not is_data_layer(view_layer):
+                if is_deep_enabled(self.scene, view_layer) and not is_data_layer(view_layer):
                     self._create_deep_output_node(view_layer)
 
                 if self.scene.IDS_UsedN is True and self.scene.render.engine == "CYCLES":
@@ -355,7 +401,7 @@ class TreeBuilder:
                 CompositorHelper.set_output_path(FO_RGB_node, PathManager().create_final_path(view_layer, "All"))
                 for input in viewlayer_full[f"{view_layer}Color"]:
                     CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-                if self.scene.IDS_UseDeepEXR and not is_data_layer(view_layer):
+                if is_deep_enabled(self.scene, view_layer) and not is_data_layer(view_layer):
                     self._create_deep_output_node(view_layer)
 
                 if self.scene.IDS_UsedN is True and self.scene.render.engine == "CYCLES":
@@ -402,13 +448,7 @@ class TreeBuilder:
             "16",
             "ZIPS",
         )
-        # File Output defaults to MULTI_LAYER_IMAGE, which only allows
-        # OPEN_EXR_MULTILAYER. Switch media type first to unlock DEEP_EXR.
-        if hasattr(fo_deep_node.format, "media_type"):
-            fo_deep_node.format.media_type = "IMAGE"
-        fo_deep_node.format.file_format = "DEEP_EXR"
-        fo_deep_node.format.exr_codec = "ZIPS"
-        fo_deep_node.format.color_depth = "16"
+        configure_deep_output_node(fo_deep_node)
         CompositorHelper.set_output_path(
             fo_deep_node, PathManager().create_final_path(view_layer, "Deep")
         )
@@ -488,7 +528,7 @@ class TreeBuilder:
         )
         for input in viewlayer_full[f"{view_layer}Color"]:
             CompositorHelper.add_slot(FO_RGB_node, f"{input}")
-        if self.scene.IDS_UseDeepEXR:
+        if is_deep_enabled(self.scene, view_layer):
             self._create_deep_output_node(view_layer)
 
         # Create denoise nodes if enabled
@@ -939,7 +979,7 @@ class NodeConnector:
 
     def _connect_deep_alpha(self, node_tree, view_layer):
         """Connect RenderLayer Alpha to Deep output node when enabled."""
-        if not self.scene.IDS_UseDeepEXR:
+        if not is_deep_enabled(self.scene, view_layer):
             return
         deep_output = f"{view_layer}{NODE_NAME_SEPARATOR}{OUTPUT_SUFFIX_DEEP}"
         if (

@@ -9,9 +9,23 @@ from ..path_modify_v2 import PathManager
 from ..core.node_builder import NodeConnector, NodeArranger
 
 
+def _supports_viewlayer_deep_toggle() -> bool:
+    return "use_deep" in bpy.types.ViewLayer.bl_rna.properties
+
+
+def _is_any_deep_enabled(scene) -> bool:
+    if _supports_viewlayer_deep_toggle():
+        return any(getattr(layer, "use_deep", False) for layer in scene.view_layers)
+    return scene.IDS_UseDeepEXR
+
+
+def _supports_deep_output() -> bool:
+    return _supports_viewlayer_deep_toggle() or CompositorHelper.supports_deep_exr()
+
+
 def _validate_deep_exr_support(operator, scene) -> bool:
     """Cancel operator when Deep EXR is enabled on unsupported Blender builds."""
-    if scene.IDS_UseDeepEXR and not CompositorHelper.supports_deep_exr():
+    if _is_any_deep_enabled(scene) and not _supports_deep_output():
         operator.report(
             {"ERROR"},
             bpy.app.translations.pgettext(
