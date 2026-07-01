@@ -4,36 +4,9 @@
 
 import bpy
 
-from ..handy_functions import DataLayerHelper, BlenderCompat, CompositorHelper
+from ..handy_functions import DataLayerHelper, BlenderCompat
 from ..path_modify_v2 import PathManager
 from ..core.node_builder import NodeConnector, NodeArranger
-
-
-def _supports_viewlayer_deep_toggle() -> bool:
-    return "use_deep" in bpy.types.ViewLayer.bl_rna.properties
-
-
-def _is_any_deep_enabled(scene) -> bool:
-    if _supports_viewlayer_deep_toggle():
-        return any(getattr(layer, "use_deep", False) for layer in scene.view_layers)
-    return scene.IDS_UseDeepEXR
-
-
-def _supports_deep_output() -> bool:
-    return _supports_viewlayer_deep_toggle() or CompositorHelper.supports_deep_exr()
-
-
-def _validate_deep_exr_support(operator, scene) -> bool:
-    """Cancel operator when Deep EXR is enabled on unsupported Blender builds."""
-    if _is_any_deep_enabled(scene) and not _supports_deep_output():
-        operator.report(
-            {"ERROR"},
-            bpy.app.translations.pgettext(
-                "Deep EXR output requires your custom Blender branch with DEEP_EXR compositor support"
-            ),
-        )
-        return False
-    return True
 
 
 class IDS_OT_Make_Tree(bpy.types.Operator):
@@ -43,9 +16,6 @@ class IDS_OT_Make_Tree(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        if not _validate_deep_exr_support(self, context.scene):
-            return {"CANCELLED"}
-
         connector = NodeConnector()
         arranger = NodeArranger()
         
@@ -73,9 +43,6 @@ class IDS_OT_Update_Tree(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        if not _validate_deep_exr_support(self, context.scene):
-            return {"CANCELLED"}
-
         connector = NodeConnector()
         arranger = NodeArranger()
         

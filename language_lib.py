@@ -71,14 +71,6 @@ language_dict = {
         ): "输出艺用Depth",
         (
             "*",
-            "Output Deep",
-        ): "输出Deep",
-        (
-            "*",
-            "Enable alpha-only deep output, use with my custom blender on my github",
-        ): "启用仅Alpha的Deep输出，需配合我GitHub上的魔改Blender使用",
-        (
-            "*",
             "Output Denoised Depth Pass as a 0-1 depth channel, should be much more precise in terms of pixel filtering, also way less noise. But the depth value will not be as correct as the default depth channel",
         ): "把降噪用Depth转换为一个0-1的深度通道，像素排列精确度将会更高，噪点会更少。但深度数值不如默认深度精确",
         (
@@ -478,8 +470,20 @@ language_dict["zh_CN"].update({
     ): "渲染路径当前是否已替换用于渲染农场",
     (
         "*",
-        "Deep EXR output requires your custom Blender branch with DEEP_EXR compositor support",
-    ): "Deep EXR输出需要你的自定义Blender分支（并支持DEEP_EXR合成器输出）",
+        "Viewlayer Deep Manage",
+    ): "视图层 Deep 管理",
+    (
+        "*",
+        "Manage Deep output intent for each view layer",
+    ): "管理每个视图层的 Deep 输出开关",
+    (
+        "*",
+        "No eligible view layers",
+    ): "没有可管理的视图层",
+    (
+        "*",
+        "Viewlayer Deep Manage requires ViewLayer.use_deep support. Use Industrial CG Platform 5.2+ to enable this feature.",
+    ): "视图层 Deep 管理需要 ViewLayer.use_deep 支持，请使用 Industrial CG Platform 5.2+。",
 })
 
 # Make zh_HANS reference the same dictionary as zh_CN

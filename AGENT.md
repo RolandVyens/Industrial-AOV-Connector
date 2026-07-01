@@ -33,6 +33,7 @@ Industrial-AOV-Connector/
 ├── operators/
 │   ├── basic_ops.py         # Denoise, CloudMode, DeleteTrash operators
 │   ├── data_layer_ops.py    # DATA layer creation/management
+│   ├── deep_ops.py          # Per-view-layer Deep output management
 │   └── tree_ops.py          # IDS_OT_Make_Tree, IDS_OT_Update_Tree, IDS_OT_Arr_Tree
 │
 └── ui/
@@ -152,6 +153,7 @@ Format: `{ViewLayerName}--{Suffix}`
 | `RgBA` | RGBA file output |
 | `DaTA` | DATA file output |
 | `CryptoMaTTe` | Cryptomatte output |
+| `Deep` | Alpha-only Deep EXR output |
 | `{pass}_Dn` | Denoise node |
 | `{pass}_Break` | Separate XYZ |
 | `{pass}_Combine` | Combine XYZ |
@@ -207,6 +209,12 @@ graph TD
 - `scene.node_tree` → `scene.compositor_node_tree`
 - File output `base_path` → `directory` + `file_name`
 - Node spacing increased (use `NODE_SPACING_BLENDER_5`)
+
+### Industrial CG Platform 5.2+ Deep Output
+- `ViewLayer.use_deep` enables Deep output per regular view layer
+- `operators/deep_ops.py` provides the popup manager for per-layer Deep toggles
+- DATA layers are hidden from the Deep manager and do not get Deep output nodes
+- Do not support DEEP_EXR-only builds that lack `ViewLayer.use_deep`
 
 ### Handled by `BlenderCompat` and `CompositorHelper`
 All version-specific code is abstracted through these classes.
@@ -302,6 +310,11 @@ Stored in `core/preferences.py` as `IDS_AddonPrefs`:
 | `viewlayer.overridedatamat` | Override material + create AOVs |
 | `wm.drawdatalayermenu` | Show DATA layer menu |
 
+### Deep Operations (`operators/deep_ops.py`)
+| Operator ID | Purpose |
+|-------------|---------|
+| `viewlayer.manage_deep` | Popup manager for per-view-layer Deep output toggles |
+
 ### Utility (`handy_functions.py`)
 | Operator ID | Purpose |
 |-------------|---------|
@@ -361,7 +374,7 @@ Both inherit from `IDS_PT_OutputPanel_Base` which contains all drawing logic.
 |-----------|-------|
 | Root | `__init__.py`, `constants.py`, `handy_functions.py`, `language_lib.py`, `sort_passes.py`, `path_modify_v2.py`, `renderpath_preset.py`, `asset.blend`, `blender_manifest.toml` |
 | `core/` | `__init__.py`, `node_builder.py`, `preferences.py`, `properties.py` |
-| `operators/` | `__init__.py`, `basic_ops.py`, `data_layer_ops.py`, `tree_ops.py` |
+| `operators/` | `__init__.py`, `basic_ops.py`, `data_layer_ops.py`, `deep_ops.py`, `tree_ops.py` |
 | `ui/` | `__init__.py`, `panels.py` |
 
 ### Files to Exclude
@@ -388,7 +401,7 @@ files_to_include = [
     'sort_passes.py', 'path_modify_v2.py', 'renderpath_preset.py',
     'asset.blend', 'blender_manifest.toml',
     'core/__init__.py', 'core/node_builder.py', 'core/preferences.py', 'core/properties.py',
-    'operators/__init__.py', 'operators/basic_ops.py', 'operators/data_layer_ops.py', 'operators/tree_ops.py',
+    'operators/__init__.py', 'operators/basic_ops.py', 'operators/data_layer_ops.py', 'operators/deep_ops.py', 'operators/tree_ops.py',
     'ui/__init__.py', 'ui/panels.py'
 ]
 

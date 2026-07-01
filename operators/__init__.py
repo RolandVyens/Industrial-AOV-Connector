@@ -22,6 +22,7 @@ from .data_layer_ops import (
     IDS_MT_Make_DatalayerMenu,
     IDS_OT_Draw_DataMenu,
 )
+from .deep_ops import IDS_OT_Manage_Deep
 
 __all__ = [
     # Basic operators
@@ -41,4 +42,6 @@ __all__ = [
     "IDS_OT_Override_DATAMaTadv",
     "IDS_MT_Make_DatalayerMenu",
     "IDS_OT_Draw_DataMenu",
+    # Deep operators
+    "IDS_OT_Manage_Deep",
 ]

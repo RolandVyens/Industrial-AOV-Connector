@@ -17,12 +17,8 @@ from ..operators import (
     IDS_OT_Convert_DATALayer,
     IDS_OT_Override_DATAMaTadv,
     IDS_OT_Set_Material_AOV,
+    IDS_OT_Manage_Deep,
 )
-
-
-def _supports_viewlayer_deep_toggle() -> bool:
-    return "use_deep" in bpy.types.ViewLayer.bl_rna.properties
-
 
 
 class IDS_PT_OutputPanel_Base:
@@ -90,10 +86,10 @@ class IDS_PT_OutputPanel_Base:
         row.prop(context.scene, "IDS_UsedN", toggle=True)
         box.prop(context.scene, "IDS_SepCryptO", toggle=True)
         box.prop(context.scene, "IDS_ArtDepth", toggle=True)
-        if _supports_viewlayer_deep_toggle():
-            box.prop(context.view_layer, "use_deep", toggle=True)
-        else:
-            box.prop(context.scene, "IDS_UseDeepEXR", toggle=True)
+        box.operator(
+            IDS_OT_Manage_Deep.bl_idname,
+            text="Viewlayer Deep Manage",
+        )
         if bpy.context.scene.IDS_AdvMode is True:
             box1 = layout.box()
             box1.label(text="Advanced:")

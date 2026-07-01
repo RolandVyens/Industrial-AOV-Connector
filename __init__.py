@@ -4,7 +4,7 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (5, 1, 2),
+    "version": (5, 2, 0),
     "blender": (4, 1, 0),
     "location": "Render > View layer Properties > Industrial AOV Connector",
     "description": "Industrial Render Output Plugin, creates multilayer EXR nodes automatically",
@@ -35,6 +35,7 @@ from .operators import (
     IDS_OT_Override_DATAMaTadv,
     IDS_MT_Make_DatalayerMenu,
     IDS_OT_Draw_DataMenu,
+    IDS_OT_Manage_Deep,
 )
 from .ui import IDS_PT_OutputPanel, IDS_PT_OutputPanel_N
 
@@ -59,6 +60,7 @@ reg_clss = [
     IDS_OT_Open_Preference,
     IDS_OT_CloudMode,
     IDS_OT_Set_Material_AOV,
+    IDS_OT_Manage_Deep,
 ]
 
 

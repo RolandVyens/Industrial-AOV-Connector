@@ -68,12 +68,6 @@ def register_properties():
         default=False,
     )
 
-    bpy.types.Scene.IDS_UseDeepEXR = bpy.props.BoolProperty(
-        name="Output Deep",
-        description="Enable alpha-only deep output, use with my custom blender on my github",
-        default=False,
-    )
-
     # Advanced mode settings
     bpy.types.Scene.IDS_AdvMode = bpy.props.BoolProperty(
         name="Use Advanced Mode",
@@ -245,7 +239,6 @@ def unregister_properties():
         "IDS_DelNodE",
         "IDS_SepCryptO",
         "IDS_ArtDepth",
-        "IDS_UseDeepEXR",
         "IDS_AdvMode",
         "IDS_UseDATALayer",
         "IDS_UseAdvCrypto",

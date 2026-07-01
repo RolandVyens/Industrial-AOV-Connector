@@ -89,10 +89,10 @@ def supports_multilayer_output_media_type() -> bool:
 
 def is_deep_enabled(scene, view_layer_name: str) -> bool:
     """Return whether deep output should be created for this view layer."""
-    if supports_viewlayer_deep_toggle():
-        view_layer = scene.view_layers.get(view_layer_name)
-        return bool(view_layer and getattr(view_layer, "use_deep", False))
-    return getattr(scene, "IDS_UseDeepEXR", False)
+    if not supports_viewlayer_deep_toggle():
+        return False
+    view_layer = scene.view_layers.get(view_layer_name)
+    return bool(view_layer and getattr(view_layer, "use_deep", False))
 
 
 def configure_deep_output_node(node):
