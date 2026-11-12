@@ -428,3 +428,11 @@ with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as zf:
 
 print(f'Created: {dest}')
 ```
+
+### Blender Extensions Publishing
+
+- `.github/workflows/publish-blender-extension.yml` uploads the existing ZIP and notes when a stable GitHub Release is published.
+- Configure repository secret `BLENDER_EXTENSIONS_TOKEN` using a token from https://extensions.blender.org/settings/tokens/ . Never store the token in source or release notes.
+- To publish an existing release, run the workflow manually with its tag. `dry_run` defaults to true; set false to upload.
+- The uploader checks the archive SHA-256 and manifest ID/version against the Release. It does not rebuild or rename the local package.
+- A successful upload is not proof of public availability; check the platform version/review status. Do not blindly retry an upload after a timeout.
