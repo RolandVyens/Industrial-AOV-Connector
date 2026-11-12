@@ -370,6 +370,12 @@ Both inherit from `IDS_PT_OutputPanel_Base` which contains all drawing logic.
 
 ## Packaging for Distribution
 
+### Package Destination and Naming
+
+- Write release ZIPs to `E:\各类素材\blender_plugins\selfmade\Industrial-AOV-Connector`.
+- Name packages `Industrial-AOV-Connector {version}.zip` (a space before the version), matching existing releases.
+- Keep packaged ZIPs out of the source repository.
+
 ### Files to Include
 
 | Directory | Files |
@@ -396,7 +402,10 @@ import zipfile
 import os
 
 source = r'path\to\Industrial-AOV-Connector'
-dest = os.path.join(source, 'Industrial-AOV-Connector.zip')
+version = '5.2.1'  # Match blender_manifest.toml
+output_dir = r'E:\各类素材\blender_plugins\selfmade\Industrial-AOV-Connector'
+os.makedirs(output_dir, exist_ok=True)
+dest = os.path.join(output_dir, f'Industrial-AOV-Connector {version}.zip')
 
 files_to_include = [
     '__init__.py', 'constants.py', 'handy_functions.py', 'language_lib.py',
