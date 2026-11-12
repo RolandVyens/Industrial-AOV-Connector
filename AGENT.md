@@ -215,6 +215,8 @@ graph TD
 - `operators/deep_ops.py` provides the popup manager for per-layer Deep toggles
 - DATA layers are hidden from the Deep manager and do not get Deep output nodes
 - Do not support DEEP_EXR-only builds that lack `ViewLayer.use_deep`
+- On unsupported Blender builds, silently skip Deep creation and connections; always allow regular outputs. Ignore saved legacy `IDS_UseDeepEXR` intent.
+- `supports_deep_output()` checks native per-layer support and the File Output format API before Deep nodes are created.
 
 ### Handled by `BlenderCompat` and `CompositorHelper`
 All version-specific code is abstracted through these classes.

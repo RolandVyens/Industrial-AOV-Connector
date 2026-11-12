@@ -87,9 +87,21 @@ def supports_multilayer_output_media_type() -> bool:
     return "OPEN_EXR_MULTILAYER" not in enum_ids
 
 
-def is_deep_enabled(scene, view_layer_name: str) -> bool:
-    """Return whether deep output should be created for this view layer."""
+def supports_deep_output() -> bool:
+    """Require native per-layer Deep support, never a saved scene property."""
     if not supports_viewlayer_deep_toggle():
+        return False
+    if supports_multilayer_output_media_type():
+        return True
+    file_format_prop = bpy.types.ImageFormatSettings.bl_rna.properties.get("file_format")
+    return bool(file_format_prop and any(
+        item.identifier == "DEEP_EXR" for item in file_format_prop.enum_items
+    ))
+
+
+def is_deep_enabled(scene, view_layer_name: str) -> bool:
+    """Silently skip Deep on unsupported builds, including saved legacy intent."""
+    if not supports_deep_output():
         return False
     view_layer = scene.view_layers.get(view_layer_name)
     return bool(view_layer and getattr(view_layer, "use_deep", False))
