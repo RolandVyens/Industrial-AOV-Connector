@@ -18,6 +18,11 @@
 
     Press to Arrange nodes associated to Industrial AOV Connector. 
 ---
+### **Automatic Default Render Output Control (5.3.0)**
+
+`Cook Nodetree` and `Update Current Viewlayer` automatically turn off scene `Save Output` when **Automatically Disable Default Render Output** is enabled. Find this preference under **Core Function**; it is enabled by default and requires Blender 5.2 or a build that supports this feature.
+
+---
 ### **UI hidden content**
 - **`Delete Useless Default Renders` button**: 
 

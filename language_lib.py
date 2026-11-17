@@ -486,5 +486,13 @@ language_dict["zh_CN"].update({
     ): "视图层 Deep 管理需要 ViewLayer.use_deep 支持，请使用 Industrial CG Platform 5.2+。",
 })
 
+language_dict["zh_CN"].update({
+    ("*", "Automatically Disable Default Render Output"): "自动关闭默认渲染输出",
+    (
+        "*",
+        "After creating or updating nodes, disable scene Save Output and save through File Output nodes. Requires Blender support for Save Output",
+    ): "创建或更新节点树后，关闭场景的 Save Output，通过文件输出节点保存结果。需要 Blender 支持 Save Output",
+})
+
 # Make zh_HANS reference the same dictionary as zh_CN
 language_dict["zh_HANS"] = language_dict["zh_CN"]

@@ -180,6 +180,7 @@ graph TD
     G --> H
     H --> I[NodeArranger.rename_outputs]
     I --> J[PathManager.move_to_trash_output]
+    J --> K[Apply automatic default render output preference]
 ```
 
 ---
@@ -276,6 +277,7 @@ Stored in `core/preferences.py` as `IDS_AddonPrefs`:
 | `Put_Default_To_trash_output` | False | Redirect default render to trash |
 | `Show_QuickDel` | False | Show delete trash button |
 | `Only_Create_Enabled_Viewlayer` | True | Skip disabled layers |
+| `Auto_Disable_Default_Render_Output` | True | Disable scene `render.save_output` after Cook/Update when supported; no extra output checks or warnings |
 | `Auto_Data_Sample` | False | Auto-optimize DATA layer samples |
 | `Custom_Data_Sample` | 10 | Sample count for DATA layers |
 | `Custom_Suffix` | `####` | Custom filename suffix with tokens |
@@ -402,7 +404,7 @@ import zipfile
 import os
 
 source = r'path\to\Industrial-AOV-Connector'
-version = '5.2.1'  # Match blender_manifest.toml
+version = '5.3.0'  # Match blender_manifest.toml
 output_dir = r'E:\各类素材\blender_plugins\selfmade\Industrial-AOV-Connector'
 os.makedirs(output_dir, exist_ok=True)
 dest = os.path.join(output_dir, f'Industrial-AOV-Connector {version}.zip')

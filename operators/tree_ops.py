@@ -9,6 +9,14 @@ from ..path_modify_v2 import PathManager
 from ..core.node_builder import NodeConnector, NodeArranger
 
 
+def disable_default_render_output(context):
+    """Disable scene output when requested and supported by Blender."""
+    scene = context.scene
+    prefs = context.preferences.addons[BlenderCompat.addon_package].preferences
+    if prefs.Auto_Disable_Default_Render_Output and hasattr(scene.render, "save_output"):
+        scene.render.save_output = False
+
+
 class IDS_OT_Make_Tree(bpy.types.Operator):
     bl_idname = "compositor.make_tree"
     bl_label = "Cook Nodetree"
@@ -32,6 +40,7 @@ class IDS_OT_Make_Tree(bpy.types.Operator):
         arranger.rename_outputs()
         PathManager().move_to_trash_output()
         self.report({"INFO"}, bpy.app.translations.pgettext("All Outputs Updated"))
+        disable_default_render_output(context)
 
         return {"FINISHED"}
 
@@ -61,6 +70,7 @@ class IDS_OT_Update_Tree(bpy.types.Operator):
         self.report(
             {"INFO"}, bpy.app.translations.pgettext("Viewlayer Outputs Updated")
         )
+        disable_default_render_output(context)
 
         return {"FINISHED"}
 

@@ -4,12 +4,12 @@
 bl_info = {
     "name": "Industrial AOV Connector",
     "author": "Roland Vyens",
-    "version": (5, 2, 1),
+    "version": (5, 3, 0),
     "blender": (4, 1, 0),
     "location": "Render > View layer Properties > Industrial AOV Connector",
     "description": "Industrial Render Output Plugin, creates multilayer EXR nodes automatically",
     "warning": "",
-    "doc_url": "https://rolandvyens.github.io/Industrial-AOV-Connector/english",
+    "doc_url": "https://cgweave.com/en/industrial-aov-connector/manual/",
     "category": "Render",
     "support": "COMMUNITY",
 }

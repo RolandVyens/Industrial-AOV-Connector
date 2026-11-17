@@ -14,7 +14,9 @@ Co-work with [Industrial Light AOV Splitter](https://github.com/RolandVyens/Indu
 
 ======================
 
-### [**`Documentation`**](https://github.com/RolandVyens/Industrial-AOV-Connector/blob/main/manual/00_catalogue.md) [**`文档`**](https://www.bilibili.com/read/cv40303823/) [**`Fr. document`**](https://github.com/RolandVyens/Industrial-AOV-Connector/blob/main/manual/Industrial-AOV-Connector_manual_French.pdf)
+### [**`Documentation`**](https://cgweave.com/en/industrial-aov-connector/manual/) [**`文档`**](https://cgweave.com/zh/industrial-aov-connector/manual/) [**`Documentation française`**](https://cgweave.com/fr/industrial-aov-connector/manual/)
+
+[Repository manual / 仓库手册](manual/00_catalogue.md)
 
 **插件面板位置：属性面板→视图层**
 
@@ -24,7 +26,11 @@ Co-work with [Industrial Light AOV Splitter](https://github.com/RolandVyens/Indu
 
 ![3 0界面](https://github.com/user-attachments/assets/a35ebfd8-acd5-495b-b23a-33b4fe298d75)
 
-目前支持3.3 - 最新版 Supports blender 3.3 - newest by now (2025.12.3)
+插件版本 / Add-on version: **5.3.0** · Blender **4.2+**
+
+**自动关闭默认渲染输出：** 在插件偏好设置 → 核心功能中配置，默认开启。创建或更新节点树后自动关闭场景 `Save Output`，通过 File Output 节点保存 AOV。此功能需要 Blender 5.2 或支持该功能的版本。
+
+**Automatically Disable Default Render Output:** Enabled by default under add-on Preferences → Core Function. Creating or updating the node tree disables scene `Save Output`, letting File Output nodes save AOVs. Requires Blender 5.2 or a build that supports this feature.
 
 **现在自定义路径tag功能需要修改格式，目前跟blender官方变量相同，兼容性有问题不能用。**
 
@@ -38,6 +44,20 @@ Join [Discord](https://discord.com/invite/qGyYXUNTnm) for discussion
 
 ---
 **Update Log:**
+
+2026.11.17: version 5.3.0
+
+- 新增“自动关闭默认渲染输出”，位于偏好设置 → 核心功能，默认开启。
+- 创建或更新节点树后，自动关闭场景 `Save Output`，避免额外生成默认渲染文件。
+- 不支持该接口的 Blender 版本自动跳过，设置项显示为不可用。
+
+**English**
+
+- Added **Automatically Disable Default Render Output** under Preferences → Core Function, enabled by default.
+- Creating or updating the node tree automatically disables scene `Save Output`, avoiding additional default render files.
+- Automatically skips unsupported Blender versions, where the preference is shown as unavailable.
+
+---
 
 2025.12.7: version 4.0.0
 - refactored the plugin to make life easier.

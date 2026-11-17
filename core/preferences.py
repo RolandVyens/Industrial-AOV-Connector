@@ -37,6 +37,11 @@ class IDS_AddonPrefs(AddonPreferences):
         description='Do not create nodes for viewlayers which their "Use For Rendering" checkbox is off',
         default=True,
     )  # type: ignore
+    Auto_Disable_Default_Render_Output: BoolProperty(
+        name="Automatically Disable Default Render Output",
+        description="After creating or updating nodes, disable scene Save Output and save through File Output nodes. Requires Blender support for Save Output",
+        default=True,
+    )  # type: ignore
     Use_Icon_Only_Preference_Button: BoolProperty(
         name="Use Icon-Only Preference Button",
         description="Use Icon-Only Style Preference Button",
@@ -97,6 +102,9 @@ class IDS_AddonPrefs(AddonPreferences):
         box1.prop(self, "Denoise_Col")
         box1.prop(self, "Use_Old_Layer_Naming")
         box1.prop(self, "Only_Create_Enabled_Viewlayer")
+        output_row = box1.row()
+        output_row.enabled = hasattr(context.scene.render, "save_output")
+        output_row.prop(self, "Auto_Disable_Default_Render_Output")
         box1.prop(self, "Auto_Data_Sample")
         if self.Auto_Data_Sample is True:
             box1.prop(self, "Custom_Data_Sample")
